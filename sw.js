@@ -1,5 +1,6 @@
 // Service worker ringkas: simpan fail paparan, data sentiasa dari pelayan
-var CACHE = 'kokosmart-v1';
+// Tukar nombor versi setiap kali index.html dikemas kini supaya cache lama dibuang.
+var CACHE = 'kokosmart-v2';
 var FAIL = ['./', './index.html', './config.js', './manifest.json', './icon-192.png', './icon-512.png'];
 self.addEventListener('install', function (e) {
   self.skipWaiting();
@@ -13,7 +14,18 @@ self.addEventListener('activate', function (e) {
 self.addEventListener('fetch', function (e) {
   var u = new URL(e.request.url);
   if (e.request.method !== 'GET' || u.origin !== location.origin) return;
-  e.respondWith(fetch(e.request).then(function (r) {
-    var cp = r.clone(); caches.open(CACHE).then(function (c) { c.put(e.request, cp); }); return r;
-  }).catch(function () { return caches.match(e.request); }));
+  var simpan = function (r) {
+    if (r && r.ok) { var cp = r.clone(); caches.open(CACHE).then(function (c) { c.put(e.request, cp); }); }
+    return r;
+  };
+  // Halaman & config: ambil versi terkini dahulu (kemas kini terus nampak), guna cache jika tiada internet
+  if (e.request.mode === 'navigate' || /\.(html|js)$/.test(u.pathname) || u.pathname.endsWith('/')) {
+    e.respondWith(fetch(e.request).then(simpan).catch(function () { return caches.match(e.request); }));
+    return;
+  }
+  // Ikon & manifest: terus dari cache (kilat), kemas kini di latar belakang
+  e.respondWith(caches.match(e.request).then(function (c) {
+    var net = fetch(e.request).then(simpan).catch(function () { return c; });
+    return c || net;
+  }));
 });
