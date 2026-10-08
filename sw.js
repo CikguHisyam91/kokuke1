@@ -1,7 +1,7 @@
 // Service worker ringkas: simpan fail paparan, data sentiasa dari pelayan
 // Tukar nombor versi setiap kali index.html dikemas kini supaya cache lama dibuang.
-var CACHE = 'kokosmart-v2';
-var FAIL = ['./', './index.html', './config.js', './manifest.json', './icon-192.png', './icon-512.png'];
+var CACHE = 'kokosmart-v3';
+var FAIL = ['./', './index.html', './config.js', './manifest.json', './icon-192.png', './icon-512.png', './logo.png'];
 self.addEventListener('install', function (e) {
   self.skipWaiting();
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(FAIL); }));
