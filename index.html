@@ -156,6 +156,22 @@ body[data-theme="dark"] .modal-box{background:#0f172a;}
 .skop-btn.aktif{background:var(--c1)!important;color:#000!important;border-color:var(--c1)!important;font-weight:700;}
 .jk-chip{cursor:pointer;font-size:12px;padding:7px 12px;background:rgba(6,182,212,.1);border:1px solid var(--c1);color:var(--txt);border-radius:6px;user-select:none;}
 .jk-chip:hover,.jk-chip:active{background:var(--c1);color:#000;}
+.pk-label{font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+.pk-seg{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+@media(min-width:768px){.pk-seg{grid-template-columns:repeat(4,1fr);}}
+.pk-seg button{background:var(--inp);border:2px solid var(--glow);color:var(--txt);border-radius:12px;padding:10px 8px;font-weight:700;font-size:13px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.pk-seg button small{font-size:10px;font-weight:600;color:var(--sub);}
+.pk-seg button.aktif{border-color:var(--c3);background:rgba(34,197,94,.15);}
+.pk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px;max-height:260px;overflow-y:auto;padding:2px;}
+.pk-chip{display:flex;align-items:center;gap:8px;background:var(--inp);border:1px solid var(--glow);border-radius:10px;padding:8px 10px;font-size:12px;font-weight:600;cursor:pointer;user-select:none;margin:0;}
+.pk-chip input{width:17px;height:17px;accent-color:#22c55e;flex-shrink:0;cursor:pointer;}
+.pk-chip:has(input:checked){border-color:rgba(34,197,94,.6);background:rgba(34,197,94,.1);}
+.pk-chip .pk-n{margin-left:auto;font-size:10px;color:var(--sub);background:rgba(0,0,0,.15);border-radius:6px;padding:1px 6px;}
+.pk-chip.kosong{opacity:.5;}
+.pk-row{display:flex;flex-wrap:wrap;gap:8px;}
+.pk-row .pk-chip{display:inline-flex;}
+.pk-btn{flex:1 1 140px;padding:12px;font-size:14px;}
+.pk-mini{background:transparent;border:1px solid var(--glow);color:var(--txt);border-radius:7px;padding:2px 8px;font-size:11px;cursor:pointer;text-transform:none;letter-spacing:0;}
 #opr-modal{display:none;position:fixed;inset:0;z-index:99990;background:rgba(0,0,0,.8);flex-direction:column;}
 #opr-modal.show{display:flex;}
 #opr-modal iframe{flex:1;border:none;width:100%;background:#040612;}
@@ -315,13 +331,44 @@ body[data-theme="dark"] .modal-box{background:#0f172a;}
       <div class="col-6 col-md-3 d-penasihat d-none"><label class="small mb-1">Jenis Unit</label><select id="f-jenis" class="form-select" onchange="filterPenasihat()"><option value="uniform">Uniform</option><option value="kelab">Kelab</option><option value="sukan">Sukan</option></select></div>
       <div class="col-6 col-md-3 d-penasihat d-none"><label class="small mb-1">Nama Unit</label><select id="f-unit" class="form-select" onchange="filterData()"></select></div>
       <div class="col-6 col-md-2 d-penasihat d-none"><label class="small mb-1">Tahun</label><select id="f-pthn" class="form-select" onchange="filterData()"><option value="">Semua</option><option value="1">Tahun 1</option><option value="2">Tahun 2</option><option value="3">Tahun 3</option><option value="4">Tahun 4</option><option value="5">Tahun 5</option><option value="6">Tahun 6</option></select></div>
-      <div class="col-12 d-penasihat d-none"><div style="background:rgba(34,197,94,.06);border:1px dashed rgba(34,197,94,.35);border-radius:10px;padding:10px 12px;font-size:12px;">
-        <b style="color:var(--c3);">📦 Pakej Semua Unit</b> — satu fail mengandungi senarai <u>setiap unit</u> dalam jenis dipilih (satu halaman satu unit), ikut tahun dipilih. Sesuai untuk diedarkan kepada guru penyelaras.
-        <div class="d-flex flex-wrap gap-2 mt-2"><button class="btn btn-success btn-sm fw-bold" onclick="pakejUnit('word')"><i class="fa-solid fa-file-word me-1"></i>Word Semua Unit</button><button class="btn btn-outline-success btn-sm fw-bold" onclick="pakejUnit('excel')"><i class="fa-solid fa-file-excel me-1"></i>Excel Semua Unit</button></div>
-      </div></div>
       <div class="col-12 d-admin d-none"><input id="f-cari" type="text" class="form-control" placeholder="Cari nama murid..." oninput="tunda('fd',filterData,150)"><button class="btn btn-danger mt-2 fw-bold" onclick="showModal('modalNaikTahun')"><i class="fa-solid fa-calendar-plus me-1"></i>Transisi Naik Kelas</button></div>
     </div>
   </div>
+  <!-- MUAT TURUN PUKAL -->
+  <div class="card-g no-print" id="pukal-card" style="border:1px solid rgba(34,197,94,.35);">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+      <h5 class="mb-0"><i class="fa-solid fa-box-open me-2" style="color:var(--c3);"></i>Muat Turun Pukal</h5>
+      <span style="font-size:11px;color:var(--sub);">Tick → Muat Turun. Satu halaman / satu helaian Excel bagi setiap unit.</span>
+    </div>
+    <div class="pk-label">1. Pilih jenis senarai</div>
+    <div class="pk-seg mb-3" id="pk-jenis">
+      <button data-j="rumah" class="aktif" onclick="pkJenis('rumah')">🏠 Rumah Sukan<small>Tahun 1–6</small></button>
+      <button data-j="uniform" onclick="pkJenis('uniform')">🛡️ Uniform<small>Tahun 4–6</small></button>
+      <button data-j="kelab" onclick="pkJenis('kelab')">🧠 Kelab &amp; Persatuan<small>Tahun 4–6</small></button>
+      <button data-j="sukan" onclick="pkJenis('sukan')">⚽ Sukan &amp; Permainan<small>Tahun 4–6</small></button>
+    </div>
+    <div class="pk-label">2. Tahun</div>
+    <div class="pk-row mb-3" id="pk-tahun"></div>
+    <div class="pk-label" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
+      <span>3. Pilih unit</span>
+      <span><button class="pk-mini" onclick="pkSemua(true)">✔ Pilih semua</button> <button class="pk-mini" onclick="pkSemua(false)">✖ Kosongkan</button></span>
+    </div>
+    <div class="pk-grid mb-3" id="pk-unit"></div>
+    <div class="pk-label">4. Susunan</div>
+    <div class="pk-row mb-3">
+      <label class="pk-chip"><input type="checkbox" id="pk-asing" onchange="pkRingkas()"> Asingkan halaman ikut tahun</label>
+      <label class="pk-chip"><input type="checkbox" id="pk-kelas"> Lajur Rumah/Unit lain</label>
+      <label class="pk-chip"><input type="checkbox" id="pk-catatan" checked> Lajur Catatan kosong</label>
+      <label class="pk-chip"><input type="checkbox" id="pk-ttd" checked> Ruang tandatangan guru</label>
+    </div>
+    <div id="pk-ringkas" style="background:rgba(34,197,94,.08);border-radius:10px;padding:10px 12px;font-size:12px;font-weight:700;color:var(--c3);margin-bottom:10px;">—</div>
+    <div class="pk-row">
+      <button class="btn btn-danger fw-bold pk-btn" onclick="pkMuatTurun('pdf')"><i class="fa-solid fa-file-pdf me-1"></i>PDF / Cetak</button>
+      <button class="btn btn-success fw-bold pk-btn" onclick="pkMuatTurun('excel')"><i class="fa-solid fa-file-excel me-1"></i>Excel</button>
+      <button class="btn btn-primary fw-bold pk-btn" onclick="pkMuatTurun('word')"><i class="fa-solid fa-file-word me-1"></i>Word</button>
+    </div>
+  </div>
+
   <div class="card-g" id="print-zone">
     <div class="d-flex justify-content-between align-items-center mb-3 no-print">
       <h5 class="mb-0 fw-bold" id="tajuk-data">SENARAI DATA</h5>
@@ -638,7 +685,7 @@ body[data-theme="dark"] .modal-box{background:#0f172a;}
 <div id="koko-bar"></div>
 <div id="opr-modal">
   <div class="no-print" style="display:flex;gap:8px;justify-content:flex-end;padding:10px 12px;background:#0a0f1e;border-bottom:1px solid rgba(255,255,255,.1);">
-    <button class="btn btn-sm btn-info fw-bold text-dark" onclick="cetakOprModal()"><i class="fa-solid fa-print me-1"></i>Cetak OPR</button>
+    <button class="btn btn-sm btn-info fw-bold text-dark" onclick="cetakOprModal()"><i class="fa-solid fa-print me-1"></i>Cetak / Simpan PDF</button>
     <button class="btn btn-sm btn-outline-light fw-bold" onclick="tutupOprModal()"><i class="fa-solid fa-xmark me-1"></i>Tutup</button>
   </div>
   <iframe id="opr-frame" title="Laporan OPR"></iframe>
@@ -701,7 +748,7 @@ function tukarMenu(id){
   _viewSemasa=id;
   if(id==='utama'){kiraStats();kiraRank(kiraRank._thn||'1');kiraAlert();kiraAchievements();}
   if(id==='murid'){muStats();muFilterKelas();muFilter();}
-  if(id==='datamurid'){filterData();}
+  if(id==='datamurid'){filterData();pkJenis(_pkJenis);}
   if(id==='arkib'){paparArkib();}
   if(id==='guru'){paparGuru();}
   if(id==='kehadiran'){resetKehadiran();}
@@ -765,7 +812,7 @@ function paparSemula(){
   var v=_viewSemasa;
   if(v==='utama'){kiraStats();kiraRank(kiraRank._thn||'1');kiraAlert();kiraAchievements();}
   else if(v==='murid'){muFilter();}
-  else if(v==='datamurid'){filterData();}
+  else if(v==='datamurid'){filterData();pkUnit(true);}
   else if(v==='arkib'){paparArkib();}
   else if(v==='guru'){paparGuru();}
   else if(v==='koleksiopr'){if(document.getElementById('kopr-f-pen').classList.contains('d-none'))koprLoad();else koprPenLoad();}
@@ -1085,16 +1132,177 @@ function _muatTurun(isi,nama,jenis){
 }
 function muatTurunWord(){if(!_senaraiData.length)return alert('Tiada data untuk dimuat turun.');var t=document.getElementById('tajuk-data').innerText;_muatTurun(_jadualEksport(t,_senaraiSemasa(),skopSemasa!=='penasihat'),t,'word');}
 function muatTurunExcel(){if(!_senaraiData.length)return alert('Tiada data untuk dimuat turun.');var t=document.getElementById('tajuk-data').innerText;_muatTurun(_jadualEksport(t,_senaraiSemasa(),skopSemasa!=='penasihat'),t,'excel');}
-function pakejUnit(jenis){
-  var j=document.getElementById('f-jenis').value;var pt=document.getElementById('f-pthn').value;
-  var nm={uniform:'UNIT UNIFORM',kelab:'KELAB & PERSATUAN',sukan:'SUKAN & PERMAINAN'}[j];
-  var units=dc.rujukan[j]||[];if(!units.length)return alert('Tiada unit dalam RUJUKAN.');
-  var isi='';
-  units.forEach(function(u,k){
-    if(k>0)isi+=jenis==='excel'?'<br><br>':'<br clear="all" style="page-break-before:always">';
-    isi+=_jadualEksport(nm+': '+u.toUpperCase()+(pt?' (TAHUN '+pt+')':''),ahliUnit(j,u,pt),false);
+// ===== MUAT TURUN PUKAL (tick & muat turun) =====
+var _pkJenis='rumah';
+var PK_NAMA={rumah:'RUMAH SUKAN',uniform:'UNIT UNIFORM',kelab:'KELAB & PERSATUAN',sukan:'SUKAN & PERMAINAN'};
+function pkJenis(j){
+  _pkJenis=j;
+  document.querySelectorAll('#pk-jenis button').forEach(function(b){b.classList.toggle('aktif',b.getAttribute('data-j')===j);});
+  var thn=j==='rumah'?[1,2,3,4,5,6]:[4,5,6];
+  document.getElementById('pk-tahun').innerHTML=thn.map(function(t){return '<label class="pk-chip"><input type="checkbox" class="pk-t" value="'+t+'" checked onchange="pkUnit(true)"> Tahun '+t+'</label>';}).join('');
+  pkUnit(false);
+}
+function pkTahunDipilih(){return Array.prototype.map.call(document.querySelectorAll('.pk-t:checked'),function(c){return c.value;});}
+function pkAhli(unit,thnList){
+  return dc.murid.filter(function(m){return sama(m[_pkJenis],unit)&&thnList.indexOf(String(m.tahun))>=0;})
+    .sort(function(a,b){return (a.tahun-b.tahun)||a.kelas.localeCompare(b.kelas)||a.nama.localeCompare(b.nama);});
+}
+// kekal=true: kekalkan tick unit semasa (bila tukar tahun)
+function pkUnit(kekal){
+  var zone=document.getElementById('pk-unit');
+  var lama={};if(kekal)zone.querySelectorAll('.pk-u').forEach(function(c){lama[c.value]=c.checked;});
+  var thn=pkTahunDipilih();
+  var units=dc.rujukan[_pkJenis]||[];
+  if(!units.length){zone.innerHTML='<div class="text-muted small">Tiada unit dalam sheet RUJUKAN.</div>';pkRingkas();return;}
+  zone.innerHTML=units.map(function(u,i){
+    var n=pkAhli(u,thn).length;
+    var tick=kekal&&lama.hasOwnProperty(u)?lama[u]:n>0;
+    return '<label class="pk-chip'+(n?'':' kosong')+'"><input type="checkbox" class="pk-u" value="'+esc(u)+'"'+(tick?' checked':'')+' onchange="pkRingkas()"> '+esc(u)+'<span class="pk-n">'+n+'</span></label>';
+  }).join('');
+  pkRingkas();
+}
+function pkSemua(v){document.querySelectorAll('.pk-u').forEach(function(c){c.checked=v;});pkRingkas();}
+function pkUnitDipilih(){return Array.prototype.map.call(document.querySelectorAll('.pk-u:checked'),function(c){return c.value;});}
+// Bina senarai bahagian: satu bahagian = satu halaman PDF/Word = satu helaian Excel
+function pkBahagian(){
+  var thn=pkTahunDipilih(),units=pkUnitDipilih(),asing=document.getElementById('pk-asing').checked;
+  var out=[];
+  units.forEach(function(u){
+    if(asing){thn.forEach(function(t){var l=pkAhli(u,[t]);if(l.length)out.push({unit:u,tahun:[t],list:l});});}
+    else{var l=pkAhli(u,thn);if(l.length)out.push({unit:u,tahun:thn,list:l});}
   });
-  _muatTurun(isi,'SENARAI_'+nm+(pt?'_TAHUN_'+pt:'_SEMUA_TAHUN'),jenis);
+  return out;
+}
+function pkRingkas(){
+  var el=document.getElementById('pk-ringkas');if(!el)return;
+  var thn=pkTahunDipilih(),units=pkUnitDipilih();
+  if(!thn.length){el.innerText='⚠️ Pilih sekurang-kurangnya satu tahun.';return;}
+  if(!units.length){el.innerText='⚠️ Tick sekurang-kurangnya satu unit.';return;}
+  var bh=pkBahagian(),jum=0;bh.forEach(function(b){jum+=b.list.length;});
+  el.innerText='✅ '+units.length+' unit dipilih · '+jum+' murid · '+bh.length+' halaman · Tahun '+thn.join(', ');
+}
+function pkTajuk(b){return PK_NAMA[_pkJenis]+': '+b.unit.toUpperCase();}
+function pkSubTajuk(b){
+  var pec={};b.list.forEach(function(m){pec[m.tahun]=(pec[m.tahun]||0)+1;});
+  var p=Object.keys(pec).sort().map(function(t){return 'Tahun '+t+': '+pec[t];}).join('  |  ');
+  return (b.tahun.length===1?'TAHUN '+b.tahun[0]:'TAHUN '+b.tahun.join(', '))+'  —  Jumlah: '+b.list.length+' murid'+(b.tahun.length>1?'  ('+p+')':'');
+}
+function pkLajur(){
+  var c=[{k:'bil',h:'BIL',w:32},{k:'nama',h:'NAMA MURID',w:250},{k:'tahun',h:'TAHUN',w:45},{k:'kelas',h:'KELAS',w:90}];
+  if(document.getElementById('pk-kelas').checked){
+    ['rumah','uniform','kelab','sukan'].forEach(function(k){if(k!==_pkJenis)c.push({k:k,h:k.toUpperCase(),w:95});});
+  }
+  if(document.getElementById('pk-catatan').checked)c.push({k:'catatan',h:'CATATAN',w:110});
+  return c;
+}
+function pkNilai(m,k,i){return k==='bil'?(i+1):k==='catatan'?'':(m[k]||'');}
+function pkHtmlBahagian(b,lajur,denganLogo){
+  var td='border:1px solid #000;padding:4px 6px;font-size:10.5pt;';
+  var ttd=document.getElementById('pk-ttd').checked;
+  var jumW=0;lajur.forEach(function(c){jumW+=c.w;});
+  var h=(denganLogo?'<div style="text-align:center;"><img src="'+LOGO_SEKOLAH+'" style="height:52px;"></div>':'')
+    +'<p style="text-align:center;font-weight:bold;font-size:13pt;margin:4px 0 0;">'+esc((dc.namaSekolah||_sekolah()).toUpperCase())+'</p>'
+    +'<p style="text-align:center;font-weight:bold;font-size:12pt;margin:4px 0 2px;">SENARAI AHLI '+esc(pkTajuk(b))+'</p>'
+    +'<p style="text-align:center;font-size:10pt;margin:0 0 10px;">'+esc(pkSubTajuk(b))+'  ·  Tahun Akademik '+new Date().getFullYear()+'</p>'
+    +'<table style="border-collapse:collapse;width:100%;table-layout:fixed;word-wrap:break-word;"><thead><tr style="background:#d9e2f3;font-weight:bold;">'
+    +lajur.map(function(c){return '<th style="'+td+'width:'+Math.round(c.w/jumW*100)+'%;text-align:'+(c.k==='nama'?'left':'center')+';">'+c.h+'</th>';}).join('')+'</tr></thead><tbody>';
+  var thnLepas=null;
+  b.list.forEach(function(m,i){
+    // Garis pemisah tebal antara tahun bila beberapa tahun dalam satu halaman
+    var pisah=thnLepas!==null&&thnLepas!==m.tahun?'border-top:2.5px solid #000;':'';thnLepas=m.tahun;
+    h+='<tr>'+lajur.map(function(c){return '<td style="'+td+pisah+(c.k==='nama'?'':'text-align:center;')+'">'+esc(pkNilai(m,c.k,i))+'</td>';}).join('')+'</tr>';
+  });
+  h+='</tbody></table>';
+  if(ttd)h+='<table style="width:100%;margin-top:28px;font-size:10pt;"><tr><td style="width:50%;">Disediakan oleh:<br><br><br>.................................................<br>(Guru Penasihat / Guru Rumah)</td><td style="width:50%;">Tarikh: ........................................</td></tr></table>';
+  return h;
+}
+function pkNamaFail(){
+  var thn=pkTahunDipilih();
+  return 'SENARAI_'+PK_NAMA[_pkJenis].replace(/&/g,'DAN')+'_TAHUN_'+thn.join('-');
+}
+function pkMuatTurun(jenis){
+  if(!pkTahunDipilih().length)return alert('Pilih sekurang-kurangnya satu tahun.');
+  if(!pkUnitDipilih().length)return alert('Tick sekurang-kurangnya satu unit.');
+  var bh=pkBahagian();
+  if(!bh.length)return alert('Tiada murid dalam unit/tahun yang dipilih.');
+  var lajur=pkLajur();
+  if(jenis==='excel')return pkExcel(bh,lajur);
+  if(jenis==='word'){
+    var isi=bh.map(function(b,i){return (i?'<br clear="all" style="page-break-before:always">':'')+pkHtmlBahagian(b,lajur,false);}).join('');
+    _muatTurun(isi,pkNamaFail(),'word');toast('✅ Fail Word dimuat turun ('+bh.length+' halaman).','ok');return;
+  }
+  // PDF: papar dalam halaman, kemudian Cetak → "Save as PDF"
+  var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+esc(pkNamaFail())+'</title><style>'
+    +'body{font-family:Arial,sans-serif;color:#000;background:#fff;margin:0;}'
+    +'.hal{padding:14mm 12mm;max-width:210mm;margin:0 auto;page-break-after:always;break-after:page;}'
+    +'.hal:last-child{page-break-after:auto;break-after:auto;}'
+    +'thead{display:table-header-group;}tr{page-break-inside:avoid;}'
+    +'@page{size:A4;margin:8mm;}@media screen{body{background:#e5e7eb;}.hal{background:#fff;margin:12px auto;box-shadow:0 2px 10px rgba(0,0,0,.2);min-width:640px;}}'
+    +'@media print{.hal{padding:4mm 2mm;}}'
+    +'</style></head><body>'+bh.map(function(b){return '<div class="hal">'+pkHtmlBahagian(b,lajur,true)+'</div>';}).join('')+'</body></html>';
+  document.getElementById('opr-frame').srcdoc=html;
+  document.getElementById('opr-modal').classList.add('show');
+  toast('Tekan "Cetak / Simpan PDF" → pilih "Save as PDF".','info');
+}
+// Excel sebenar: setiap unit dalam helaian (sheet) tersendiri + helaian RINGKASAN
+function pkExcel(bh,lajur){
+  function x(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+  function sel(v,st,extra){var n=typeof v==='number';return '<Cell ss:StyleID="'+st+'"'+(extra||'')+'><Data ss:Type="'+(n?'Number':'String')+'">'+x(v)+'</Data></Cell>';}
+  var dipakai={};
+  function namaHelaian(t){
+    var n=String(t).replace(/[\[\]\*\?\/\\:]/g,' ').replace(/\s+/g,' ').trim().slice(0,28)||'Helaian';var a=n,k=2;
+    while(dipakai[a.toLowerCase()]){a=n.slice(0,25)+' ('+(k++)+')';}dipakai[a.toLowerCase()]=1;return a;
+  }
+  var bdr='<Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/></Borders>';
+  var xml='<?xml version="1.0" encoding="UTF-8"?><?mso-application progid="Excel.Sheet"?>'
+    +'<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">'
+    +'<Styles><Style ss:ID="Default"><Font ss:FontName="Arial" ss:Size="10"/><Alignment ss:Vertical="Center"/></Style>'
+    +'<Style ss:ID="t1"><Font ss:FontName="Arial" ss:Size="13" ss:Bold="1"/><Alignment ss:Horizontal="Center"/></Style>'
+    +'<Style ss:ID="t2"><Font ss:FontName="Arial" ss:Size="12" ss:Bold="1"/><Alignment ss:Horizontal="Center"/></Style>'
+    +'<Style ss:ID="t3"><Font ss:FontName="Arial" ss:Size="10"/><Alignment ss:Horizontal="Center"/></Style>'
+    +'<Style ss:ID="h"><Font ss:FontName="Arial" ss:Bold="1"/><Interior ss:Color="#D9E2F3" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center"/>'+bdr+'</Style>'
+    +'<Style ss:ID="c">'+bdr+'<Alignment ss:Horizontal="Center"/></Style>'
+    +'<Style ss:ID="n">'+bdr+'</Style>'
+    +'<Style ss:ID="b"><Font ss:FontName="Arial" ss:Bold="1"/>'+bdr+'</Style></Styles>';
+  function setupHalaman(barisTajuk){
+    return '<WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel"><PageSetup><Layout x:Orientation="Portrait"/><PageMargins x:Bottom="0.5" x:Left="0.4" x:Right="0.4" x:Top="0.5"/></PageSetup>'
+      +'<FitToPage/><Print><FitHeight>0</FitHeight><ValidPrinterInfo/><PaperSizeIndex>9</PaperSizeIndex></Print>'
+      +(barisTajuk?'<FreezePanes/><FrozenNoSplit/><SplitHorizontal>'+barisTajuk+'</SplitHorizontal><TopRowBottomPane>'+barisTajuk+'</TopRowBottomPane><ActivePane>2</ActivePane>':'')
+      +'</WorksheetOptions>';
+  }
+  var sekolah=(dc.namaSekolah||_sekolah()).toUpperCase();
+  // Helaian RINGKASAN
+  var thnSemua=pkTahunDipilih();
+  var rk='<Worksheet ss:Name="'+x(namaHelaian('RINGKASAN'))+'"><Table><Column ss:Width="32"/><Column ss:Width="200"/>'+thnSemua.map(function(){return '<Column ss:Width="55"/>';}).join('')+'<Column ss:Width="60"/>'
+    +'<Row>'+sel(sekolah,'t1',' ss:MergeAcross="'+(thnSemua.length+2)+'"')+'</Row>'
+    +'<Row>'+sel('RINGKASAN '+PK_NAMA[_pkJenis],'t2',' ss:MergeAcross="'+(thnSemua.length+2)+'"')+'</Row><Row/>'
+    +'<Row>'+sel('BIL','h')+sel('UNIT','h')+thnSemua.map(function(t){return sel('TAHUN '+t,'h');}).join('')+sel('JUMLAH','h')+'</Row>';
+  var jumT={},jumAll=0;
+  pkUnitDipilih().forEach(function(u,i){
+    var j=0;
+    rk+='<Row>'+sel(i+1,'c')+sel(u,'n')+thnSemua.map(function(t){var n=pkAhli(u,[t]).length;j+=n;jumT[t]=(jumT[t]||0)+n;return sel(n,'c');}).join('')+sel(j,'c')+'</Row>';
+    jumAll+=j;
+  });
+  rk+='<Row>'+sel('','b')+sel('JUMLAH','b')+thnSemua.map(function(t){return sel(jumT[t]||0,'h');}).join('')+sel(jumAll,'h')+'</Row></Table>'+setupHalaman(0)+'</Worksheet>';
+  xml+=rk;
+  bh.forEach(function(b){
+    var nm=b.unit+(b.tahun.length===1&&document.getElementById('pk-asing').checked?' T'+b.tahun[0]:'');
+    var w='<Worksheet ss:Name="'+x(namaHelaian(nm))+'"><Table>'+lajur.map(function(c){return '<Column ss:Width="'+c.w+'"/>';}).join('');
+    var span=' ss:MergeAcross="'+(lajur.length-1)+'"';
+    w+='<Row>'+sel(sekolah,'t1',span)+'</Row><Row>'+sel('SENARAI AHLI '+pkTajuk(b),'t2',span)+'</Row><Row>'+sel(pkSubTajuk(b),'t3',span)+'</Row><Row/>';
+    w+='<Row>'+lajur.map(function(c){return sel(c.h,'h');}).join('')+'</Row>';
+    b.list.forEach(function(m,i){
+      w+='<Row>'+lajur.map(function(c){var v=pkNilai(m,c.k,i);if(c.k==='tahun')v=parseInt(v,10)||v;return sel(v,c.k==='nama'?'n':'c');}).join('')+'</Row>';
+    });
+    w+='</Table>'+setupHalaman(5)+'</Worksheet>';
+    xml+=w;
+  });
+  xml+='</Workbook>';
+  var blob=new Blob([xml],{type:'application/vnd.ms-excel'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');a.href=url;a.download=pkNamaFail().replace(/[^\w-]+/g,'_')+'.xls';document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(url);},5000);
+  toast('✅ Excel dimuat turun: '+bh.length+' helaian unit + RINGKASAN.\nJika Excel bertanya tentang format fail, tekan "Yes".','ok');
 }
 function showModal(id){var m=document.getElementById(id);if(m&&window.bootstrap)bootstrap.Modal.getOrCreateInstance(m).show();}
 
