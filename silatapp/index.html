@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SilatApp Pusat</title>
+<meta name="theme-color" content="#0F1115">
+<script src="config.js"></script>
+<style>
+:root{--bg:#0F1115;--kad:#181B22;--kad2:#20242D;--garis:#2C313C;--teks:#E8E9EC;--pudar:#9AA0AB;--emas:#E2B55A;--hijau:#4CC38A;--merah:#E5636B;--kuning:#E8C14E;--biru:#6AA7F0}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--teks);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+a{color:var(--emas)}
+header{position:sticky;top:0;z-index:5;background:#0B0D11;border-bottom:1px solid var(--garis);padding:10px 16px;display:flex;align-items:center;gap:10px}
+header .logo{width:34px;height:34px;border-radius:50%;background:var(--emas);color:#0F1115;display:grid;place-items:center;font-weight:800}
+header .t{flex:1;min-width:0}header .t b{display:block;color:var(--emas)}header .t small{color:var(--pudar);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+nav{display:flex;gap:6px;overflow-x:auto;padding:10px 16px;border-bottom:1px solid var(--garis);scrollbar-width:none}
+nav button{flex:none}
+main{max-width:980px;margin:0 auto;padding:16px}
+.kad{background:var(--kad);border:1px solid var(--garis);border-radius:12px;padding:14px;margin-bottom:12px}
+h2{font-size:18px;margin:4px 0 12px;color:var(--emas)}h3{font-size:15px;margin:0 0 8px}
+button,.btn{background:var(--kad2);color:var(--teks);border:1px solid var(--garis);border-radius:9px;padding:9px 14px;font:inherit;cursor:pointer}
+button.utama{background:var(--emas);color:#0F1115;border-color:var(--emas);font-weight:700}
+button.bahaya{color:var(--merah);border-color:#5a2a2e}button.kecil{padding:5px 10px;font-size:13px}
+button.aktif{background:var(--emas);color:#0F1115;border-color:var(--emas);font-weight:700}
+button:disabled{opacity:.5}
+label{display:block;font-size:13px;color:var(--pudar);margin:10px 0 4px}
+input,select,textarea{width:100%;background:#0B0D11;color:var(--teks);border:1px solid var(--garis);border-radius:9px;padding:10px;font:inherit}
+input:focus,select:focus{outline:2px solid var(--emas);border-color:transparent}
+.baris{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.baris>*{flex:1 1 140px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.stat{background:var(--kad);border:1px solid var(--garis);border-radius:12px;padding:12px}.stat b{display:block;font-size:24px;color:var(--emas)}.stat small{color:var(--pudar)}
+.jadual{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:8px 6px;border-bottom:1px solid var(--garis);text-align:left;vertical-align:top}th{color:var(--pudar);font-weight:600;font-size:12px;text-transform:uppercase}
+.tag{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px;font-weight:700;background:#2a2f39}
+.t-AKTIF{background:#173a2a;color:var(--hijau)}.t-MENUNGGU{background:#3a331a;color:var(--kuning)}
+.t-DIGANTUNG,.t-DISEKAT,.t-DIBATALKAN,.t-DITOLAK{background:#3d1d21;color:var(--merah)}.t-TIDAK{background:#2a2f39;color:var(--pudar)}.t-BERPINDAH,.t-BERSAMA{background:#1b2c42;color:var(--biru)}
+.pudar{color:var(--pudar)}.kecilT{font-size:13px}
+.item{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--garis)}.item:last-child{border:0}.item .isi{flex:1;min-width:0}
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#22262f;border:1px solid var(--emas);padding:10px 16px;border-radius:10px;max-width:92%;display:none;z-index:50}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:flex-start;justify-content:center;padding:20px 12px;overflow:auto;z-index:40}
+#modal .kotak{background:var(--kad);border:1px solid var(--garis);border-radius:14px;padding:16px;width:100%;max-width:480px}
+.pdpa{font-size:12px;color:var(--pudar);background:#0B0D11;border:1px solid var(--garis);border-radius:9px;padding:10px;max-height:140px;overflow:auto}
+.cek{display:flex;gap:8px;align-items:flex-start;margin-top:8px;color:var(--teks);font-size:14px}.cek input{width:auto;margin-top:3px}
+.masuk{max-width:400px;margin:30px auto}
+.kadAhli{background:linear-gradient(135deg,#1d1a12,#0F1115 60%);border:2px solid var(--emas);border-radius:16px;padding:18px;position:relative}
+.kadAhli .no{font-size:22px;font-weight:800;color:var(--emas);letter-spacing:1px}
+.kadAhli .st{position:absolute;top:14px;right:14px}
+.muat{color:var(--pudar);padding:20px;text-align:center}
+.bar{height:8px;background:#0B0D11;border-radius:9px;overflow:hidden}.bar i{display:block;height:100%;background:var(--emas)}
+</style>
+</head>
+<body>
+<header id="hdr" style="display:none"><div class="logo">G</div><div class="t"><b>SilatApp Pusat</b><small id="hdrSub"></small></div><button class="kecil" onclick="keluar()">Keluar</button></header>
+<nav id="nav" style="display:none"></nav>
+<main id="app"><div class="muat">Memuatkan…</div></main>
+<div id="modal" onclick="if(event.target===this)tutup()"><div class="kotak" id="mIsi"></div></div>
+<div id="toast"></div>
+<script>
+'use strict';
+const API = (typeof SILAT_API !== 'undefined') ? SILAT_API : '';
+const S = { token: localStorage.getItem('silat_token') || '', profil: null, menu: '', tahun: String(new Date().getFullYear()), cache: {} };
+const NEG = [['JHR','Johor'],['KDH','Kedah'],['KTN','Kelantan'],['MLK','Melaka'],['NSN','Negeri Sembilan'],['PHG','Pahang'],['PRK','Perak'],['PLS','Perlis'],['PNG','Pulau Pinang'],['SBH','Sabah'],['SWK','Sarawak'],['SGR','Selangor'],['TRG','Terengganu'],['KUL','W.P. Kuala Lumpur'],['LBN','W.P. Labuan'],['PJY','W.P. Putrajaya']];
+const BENGKUNG = ['HITAM','PUTIH','HIJAU','MERAH','KUNING','KUNING CULA I','KUNING CULA II','KUNING CULA III','KUNING CULA IV','KUNING CULA V','KUNING CULA VI','LAIN-LAIN'];
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const nNeg = k => (NEG.find(x => x[0] === k) || [k, k])[1];
+const tag = s => `<span class="tag t-${esc(String(s||'').split(' ')[0])}">${esc(s||'-')}</span>`;
+const pilihan = (arr, v) => arr.map(x => { const [k, l] = Array.isArray(x) ? x : [x, x]; return `<option value="${esc(k)}"${k === v ? ' selected' : ''}>${esc(l)}</option>`; }).join('');
+const val = id => ($(id) ? $(id).value.trim() : '');
+function toast(m, ms) { const t = $('toast'); t.textContent = m; t.style.display = 'block'; clearTimeout(t._h); t._h = setTimeout(() => t.style.display = 'none', ms || 3500); }
+function buka(html) { $('mIsi').innerHTML = html; $('modal').style.display = 'flex'; }
+function tutup() { $('modal').style.display = 'none'; }
+
+async function api(action, data) {
+  if (!API || API.indexOf('http') !== 0) return { ok: false, ralat: 'URL API belum ditetapkan dalam config.js' };
+  const body = JSON.stringify(Object.assign({ action, token: S.token }, data || {}));
+  let j;
+  try {
+    const r = await fetch(API, { method: 'POST', body, headers: { 'Content-Type': 'text/plain;charset=utf-8' }, credentials: 'omit', redirect: 'follow' });
+    j = await r.json();
+  } catch (e) {
+    try { const r = await fetch(API + '?p=' + encodeURIComponent(body), { credentials: 'omit', redirect: 'follow' }); j = await r.json(); }
+    catch (e2) { return { ok: false, ralat: 'Tiada sambungan ke pelayan. Semak internet.' }; }
+  }
+  if (j && j.sesi === false && action !== 'login') { buangSesi(); toast(j.ralat); paparLogin(); }
+  return j || { ok: false, ralat: 'Respons kosong' };
+}
+async function hantar(btn, action, data, berjaya) {
+  if (btn) { btn.disabled = true; btn._t = btn.textContent; btn.textContent = 'Sila tunggu…'; }
+  const r = await api(action, data);
+  if (btn) { btn.disabled = false; btn.textContent = btn._t; }
+  if (r.ok) { if (r.mesej) toast(r.mesej); if (berjaya) berjaya(r); }
+  else if (r.amaran) { if (confirm(r.ralat)) hantar(btn, action, Object.assign({}, data, { paksa: true }), berjaya); }
+  else toast('⚠ ' + (r.ralat || 'Ralat'), 5000);
+  return r;
+}
+function buangSesi() { S.token = ''; S.profil = null; localStorage.removeItem('silat_token'); }
+async function keluar() { await api('logout'); buangSesi(); paparLogin(); }
+
+function csv(nama, header, rows) {
+  const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+  const t = '﻿' + [header.map(q).join(',')].concat(rows.map(r => r.map(q).join(','))).join('\r\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([t], { type: 'text/csv;charset=utf-8' })); a.download = nama; a.click();
+}
+
+// ================= LOG MASUK & DAFTAR =================
+function paparLogin() {
+  $('hdr').style.display = 'none'; $('nav').style.display = 'none';
+  $('app').innerHTML = `<div class="masuk"><div class="kad" style="text-align:center"><div class="logo" style="width:64px;height:64px;margin:0 auto 8px;border-radius:50%;background:var(--emas);color:#0F1115;display:grid;place-items:center;font-size:28px;font-weight:800">G</div>
+  <h2 style="margin:0">SilatApp Pusat</h2><div class="pudar kecilT">Seni Silat Gayong — Sistem Pusat Gelanggang</div></div>
+  <div class="kad"><label>ID Pengguna</label><input id="lId" autocomplete="username" autocapitalize="none">
+  <label>Kata Laluan</label><input id="lKata" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')masuk(document.getElementById('bMasuk'))">
+  <div style="margin-top:14px" class="baris"><button class="utama" id="bMasuk" onclick="masuk(this)">Log Masuk</button></div></div>
+  <div class="kad" style="text-align:center"><div class="pudar kecilT">Jurulatih baharu?</div><button style="margin-top:8px" onclick="paparDaftar()">Daftar Akaun Jurulatih</button></div></div>`;
+}
+async function masuk(btn) {
+  const r = await hantar(btn, 'login', { id: val('lId'), kata: $('lKata').value });
+  if (r.ok) { S.token = r.token; S.profil = r.profil; localStorage.setItem('silat_token', r.token); mulaApp(); }
+}
+async function paparDaftar() {
+  $('app').innerHTML = '<div class="muat">Memuatkan senarai gelanggang…</div>';
+  const r = await api('senarai_awam');
+  if (!r.ok) { toast(r.ralat); return paparLogin(); }
+  S.awam = r;
+  $('app').innerHTML = `<div class="masuk"><div class="kad"><h2>Daftar Jurulatih</h2>
+  <label>Nama Penuh</label><input id="dNama"><label>No. Telefon</label><input id="dTel" inputmode="tel">
+  <label>ID Pengguna (huruf kecil/nombor, 4–30 aksara)</label><input id="dId" autocapitalize="none">
+  <label>Kata Laluan (min 6 aksara)</label><input id="dKata" type="password"><label>Ulang Kata Laluan</label><input id="dKata2" type="password">
+  <label>Negeri</label><select id="dNeg" onchange="isiGelDaftar()"><option value="">— Pilih negeri —</option>${pilihan(NEG)}</select>
+  <label>Gelanggang</label><select id="dGel" onchange="$('gBaru').style.display=this.value==='BARU'?'block':'none'"><option value="">— Pilih negeri dahulu —</option></select>
+  <div id="gBaru" style="display:none"><label>Nama Gelanggang Baharu</label><input id="dGNama"><label>Alamat Gelanggang</label><textarea id="dGAlamat" rows="2"></textarea>
+  <div class="pudar kecilT" style="margin-top:6px">Anda akan didaftarkan sebagai KETUA gelanggang ini. Kod gelanggang diberi oleh Admin Negeri semasa kelulusan.</div></div>
+  <label>Notis PDPA</label><div class="pdpa">Selaras dengan Akta Perlindungan Data Peribadi 2010, maklumat yang anda berikan (nama, no. telefon) serta data ahli yang anda rekod (termasuk No. KP) digunakan HANYA untuk urusan keahlian dan pentadbiran Seni Silat Gayong. Data tidak akan didedahkan kepada pihak ketiga. No. KP dipaparkan separa kepada pentadbir di luar gelanggang. Anda bertanggungjawab mendapatkan persetujuan ahli/ibu bapa sebelum merekod data mereka. Anda boleh memohon pembetulan data melalui Admin Negeri.</div>
+  <label class="cek"><input type="checkbox" id="dPdpa"> Saya telah membaca dan bersetuju dengan notis PDPA di atas.</label>
+  <div class="baris" style="margin-top:14px"><button onclick="paparLogin()">Kembali</button><button class="utama" onclick="daftar(this)">Hantar Pendaftaran</button></div></div></div>`;
+}
+function isiGelDaftar() {
+  const n = val('dNeg'), g = S.awam.gelanggang.filter(x => x.negeri === n);
+  $('dGel').innerHTML = n ? `<option value="">— Pilih gelanggang —</option>${g.map(x => `<option value="${esc(x.id)}">${esc(x.nama)} (${esc(x.kod)})</option>`).join('')}<option value="BARU">+ Mohon gelanggang baharu</option>` : '<option value="">— Pilih negeri dahulu —</option>';
+  $('gBaru').style.display = 'none';
+}
+async function daftar(btn) {
+  if ($('dKata').value !== $('dKata2').value) return toast('Kata laluan tidak sama.');
+  const gv = val('dGel'); if (!gv) return toast('Pilih gelanggang.');
+  const d = { nama: val('dNama'), telefon: val('dTel'), id: val('dId'), kata: $('dKata').value, negeri: val('dNeg'), pdpa: $('dPdpa').checked };
+  if (gv === 'BARU') d.gelBaru = { nama: val('dGNama'), alamat: val('dGAlamat') }; else d.idGel = gv;
+  const r = await hantar(btn, 'daftar', d);
+  if (r.ok) { alert(r.mesej); paparLogin(); }
+}
+
+// ================= APP =================
+const MENU = {
+  JURULATIH: [['ahli', 'Ahli'], ['yuran', 'Yuran Tahunan'], ['profil', 'Profil']],
+  ADMIN_NEGERI: [['papan', 'Papan Pemuka'], ['lulus', 'Kelulusan'], ['gel', 'Gelanggang'], ['jur', 'Jurulatih'], ['ahliA', 'Ahli'], ['profil', 'Profil']],
+  SUPER_ADMIN: [['papan', 'Papan Pemuka'], ['lulus', 'Kelulusan'], ['gel', 'Gelanggang'], ['jur', 'Jurulatih'], ['ahliA', 'Ahli'], ['admin', 'Admin Negeri'], ['tetapan', 'Tetapan'], ['profil', 'Profil']]
+};
+const LABEL_PERANAN = { SUPER_ADMIN: 'Super Admin', ADMIN_NEGERI: 'Admin Negeri', JURULATIH: 'Jurulatih' };
+function mulaApp() {
+  const p = S.profil; S.yuranLalai = p.yuranLalai || '';
+  $('hdr').style.display = 'flex'; $('nav').style.display = 'flex';
+  $('hdrSub').textContent = `${p.nama} · ${LABEL_PERANAN[p.peranan]}${p.ketua ? ' (KETUA)' : ''}${p.peranan === 'SUPER_ADMIN' ? '' : ' · ' + (p.gel ? p.gel.nama : p.negeriNama)}`;
+  const m = MENU[p.peranan];
+  $('nav').innerHTML = m.map(x => `<button id="nb_${x[0]}" onclick="tukarMenu('${x[0]}')">${x[1]}</button>`).join('');
+  tukarMenu(m[0][0]);
+}
+function tukarMenu(k) {
+  S.menu = k;
+  document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('aktif', b.id === 'nb_' + k));
+  $('app').innerHTML = '<div class="muat">Memuatkan…</div>';
+  ({ ahli: vAhli, yuran: vYuran, profil: vProfil, papan: vPapan, lulus: vLulus, gel: vGel, jur: vJur, ahliA: vAhliAdmin, admin: vAdmin, tetapan: vTetapan })[k]();
+}
+const pilihTahun = (fn) => { const y = new Date().getFullYear(); const a = []; for (let i = y + 1; i >= y - 5; i--) a.push(String(i)); return `<select id="selTahun" onchange="S.tahun=this.value;${fn}()" style="max-width:120px">${pilihan(a, S.tahun)}</select>`; };
+
+// ---------- JURULATIH: AHLI ----------
+async function vAhli() {
+  const p = S.profil;
+  if (!p.gel || p.gel.status !== 'AKTIF') { $('app').innerHTML = `<div class="kad">Gelanggang anda berstatus ${tag(p.gel ? p.gel.status : '-')}. Anda boleh mula merekod ahli selepas gelanggang AKTIF.</div>`; return; }
+  const r = await api('senarai_ahli', { tahun: S.tahun });
+  if (!r.ok) { $('app').innerHTML = `<div class="kad">${esc(r.ralat)}</div>`; return; }
+  S.ahli = r.senarai;
+  const akt = r.senarai.filter(a => a.status === 'AKTIF').length;
+  $('app').innerHTML = `<div class="grid" style="margin-bottom:12px"><div class="stat"><b>${r.senarai.length}</b><small>Jumlah ahli</small></div><div class="stat"><b>${akt}</b><small>Aktif</small></div><div class="stat"><b>${r.senarai.filter(a => a.bayar).length}</b><small>Bayar yuran ${esc(r.tahun)}</small></div></div>
+  <div class="kad"><div class="baris"><input id="cariA" placeholder="Cari nama / no. ahli / KP" oninput="senaraiAhli()"><button class="utama" style="flex:0 0 auto" onclick="borangAhli()">+ Daftar Ahli</button></div>
+  <div class="baris" style="margin-top:8px"><select id="filA" onchange="senaraiAhli()"><option value="">Semua status</option>${pilihan(['AKTIF','TIDAK AKTIF','DIGANTUNG','DIBATALKAN'])}</select>
+  <button style="flex:0 0 auto" onclick="csv('ahli_${esc(p.gel.kodPenuh)}.csv',['No Ahli','No KP','Nama','Jantina','Tarikh Lahir','Bengkung','Status','Jenis','Tel Waris'],S.ahli.map(a=>[a.noAhli,a.noKp,a.nama,a.jantina,a.tarikhLahir,a.bengkung,a.status,a.jenis,a.telWaris]))">Eksport CSV</button></div>
+  <div id="sAhli"></div></div>`;
+  senaraiAhli();
+}
+function senaraiAhli() {
+  const q = val('cariA').toUpperCase(), f = val('filA');
+  const a = S.ahli.filter(x => (!f || x.status === f) && (!q || (x.nama + x.noAhli + x.noKp.replace(/-/g, '')).toUpperCase().includes(q.replace(/-/g, ''))));
+  $('sAhli').innerHTML = a.length ? a.map(x => `<div class="item"><div class="isi"><b>${esc(x.nama)}</b> ${x.jenis === 'BERSAMA' ? tag('BERSAMA') : ''}<div class="pudar kecilT">${esc(x.noAhli)} · ${esc(x.noKp)} · ${esc(x.bengkung || '-')}</div></div>${tag(x.status)}<button class="kecil" onclick="butirAhli('${esc(x.noKp)}')">Buka</button></div>`).join('') : '<div class="muat">Tiada ahli.</div>';
+}
+function cariAhli(noKp) { return S.ahli.find(a => a.noKp === noKp); }
+function butirAhli(noKp) {
+  const a = cariAhli(noKp);
+  buka(`<div class="kadAhli"><div class="st">${tag(a.status)}</div><div class="pudar kecilT">SENI SILAT GAYONG · KAD AHLI</div><div style="font-size:18px;font-weight:700;margin:10px 0 2px">${esc(a.nama)}</div>
+  <div class="no">${esc(a.noAhli)}</div><div class="kecilT" style="margin-top:8px">Bengkung: <b>${esc(a.bengkung || '-')}</b></div><div class="kecilT pudar">${esc(S.profil.gel.nama)}${a.jenis === 'BERSAMA' ? ' · Ahli Bersama' : ''}</div></div>
+  <div class="kecilT" style="margin:12px 0">No. KP: ${esc(a.noKp)}<br>Jantina: ${a.jantina === 'P' ? 'Perempuan' : 'Lelaki'} · Lahir: ${esc(a.tarikhLahir || '-')}<br>Tel. waris: ${esc(a.telWaris || '-')}<br>Yuran ${esc(S.tahun)}: ${a.bayar ? 'RM' + esc(a.bayar.jumlah) + ' (' + esc(a.bayar.tarikh) + ')' + (a.bayar.diSini ? '' : ' — di gelanggang lain') : '<span style="color:var(--merah)">Belum bayar</span>'}${a.idLama ? '<br>ID lama: ' + esc(a.idLama) : ''}</div>
+  <label>Tukar status${a.jenis === 'BERSAMA' ? ' (di gelanggang anda)' : ''}</label><div class="baris"><select id="mSt">${pilihan(['AKTIF','TIDAK AKTIF','DIGANTUNG','DIBATALKAN'], a.status)}</select><button style="flex:0 0 auto" onclick="hantar(this,'status_ahli',{noKp:'${esc(a.noKp)}',status:val('mSt')},()=>{tutup();vAhli()})">Simpan</button></div>
+  <div class="baris" style="margin-top:12px">${a.jenis === 'UTAMA' ? `<button onclick="borangAhli('${esc(a.noKp)}')">Edit Butiran</button>` : ''}${a.bayar ? '' : `<button onclick="borangYuran('${esc(a.noKp)}')">Rekod Yuran</button>`}<button onclick="tutup()">Tutup</button></div>`);
+}
+function borangAhli(noKp) {
+  const a = noKp ? cariAhli(noKp) : {};
+  buka(`<h2>${noKp ? 'Edit Ahli' : 'Daftar Ahli Baharu'}</h2>
+  <label>No. KP (12 digit)</label><div class="baris"><input id="aKp" inputmode="numeric" value="${esc(a.noKp || '')}" ${noKp ? 'disabled' : ''}>${noKp ? '' : '<button style="flex:0 0 auto" onclick="semakKp(this)">Semak</button>'}</div>
+  <div id="kpInfo"></div>
+  <div id="aBorang" style="${noKp ? '' : 'display:none'}"><label>Nama Penuh</label><input id="aNama" value="${esc(a.nama || '')}">
+  <div class="baris"><div><label>Jantina</label><select id="aJan">${pilihan([['L','Lelaki'],['P','Perempuan']], a.jantina)}</select></div><div><label>Tarikh Lahir</label><input id="aLahir" type="date" value="${esc(a.tarikhLahir || '')}"></div></div>
+  <label>Bengkung Semasa</label><select id="aBeng">${pilihan(BENGKUNG, a.bengkung || 'HITAM')}</select>
+  <label>No. Telefon Waris</label><input id="aTel" inputmode="tel" value="${esc(a.telWaris || '')}">
+  ${noKp ? '' : '<label class="cek"><input type="checkbox" id="aPdpa"> Ahli/ibu bapa telah dimaklumkan & bersetuju dengan notis PDPA.</label>'}
+  <div class="baris" style="margin-top:14px"><button onclick="tutup()">Batal</button><button class="utama" onclick="simpanAhli(this,${noKp ? 'true' : 'false'})">Simpan</button></div></div>
+  ${noKp ? '' : '<div class="baris" style="margin-top:14px" id="aBatal"><button onclick="tutup()">Batal</button></div>'}`);
+  if (!noKp) $('aKp').focus();
+}
+async function semakKp(btn) {
+  const kp = val('aKp').replace(/\D/g, ''); if (kp.length !== 12) return toast('No. KP mesti 12 digit.');
+  const r = await hantar(btn, 'semak_kp', { noKp: kp }); if (!r.ok) return;
+  S.modAhli = 'baru';
+  if (!r.wujud) { $('kpInfo').innerHTML = '<div class="pudar kecilT" style="margin-top:6px">✓ No. KP belum berdaftar. Isi butiran di bawah.</div>'; $('aBorang').style.display = 'block'; $('aBatal').style.display = 'none'; return; }
+  if (r.diSini) { $('kpInfo').innerHTML = `<div class="kad" style="margin-top:8px">${esc(r.nama)} (${esc(r.noAhli)}) sudah berdaftar di gelanggang anda.</div>`; return; }
+  $('kpInfo').innerHTML = `<div class="kad" style="margin-top:8px;border-color:var(--kuning)"><b>No. KP sudah berdaftar</b><div class="kecilT">${esc(r.nama)} · ${esc(r.noAhli)} · ${tag(r.status)}<br>Gelanggang utama: ${esc(r.gelUtama)}</div>
+  <div class="baris" style="margin-top:10px"><button class="utama" onclick="sambungAhli(this,'pindah')">Pindah ke gelanggang saya</button><button onclick="sambungAhli(this,'bersama')">Tambah sebagai Ahli Bersama</button></div>
+  <div class="pudar kecilT" style="margin-top:6px">Pindah: gelanggang lama jadi BERPINDAH. Ahli Bersama: kekal di gelanggang utama, turut berlatih di sini. No. ahli kekal.</div></div>`;
+}
+async function sambungAhli(btn, mod) {
+  if (!confirm(mod === 'pindah' ? 'Pindahkan ahli ini ke gelanggang anda?' : 'Tambah sebagai Ahli Bersama?')) return;
+  await hantar(btn, 'daftar_ahli', { mod, ahli: { noKp: val('aKp') } }, () => { tutup(); vAhli(); });
+}
+async function simpanAhli(btn, edit) {
+  const d = { noKp: val('aKp'), nama: val('aNama'), jantina: val('aJan'), tarikhLahir: val('aLahir'), bengkung: val('aBeng'), telWaris: val('aTel') };
+  if (edit) return hantar(btn, 'edit_ahli', { noKp: d.noKp, ahli: d }, () => { tutup(); vAhli(); });
+  if (!$('aPdpa').checked) return toast('Sila tanda persetujuan PDPA.');
+  hantar(btn, 'daftar_ahli', { mod: 'baru', ahli: d }, r => { tutup(); alert(r.mesej); vAhli(); });
+}
+
+// ---------- JURULATIH: YURAN ----------
+async function vYuran() {
+  const p = S.profil;
+  if (!p.gel || p.gel.status !== 'AKTIF') { $('app').innerHTML = `<div class="kad">Gelanggang belum AKTIF.</div>`; return; }
+  const r = await api('senarai_ahli', { tahun: S.tahun });
+  if (!r.ok) { $('app').innerHTML = `<div class="kad">${esc(r.ralat)}</div>`; return; }
+  S.ahli = r.senarai;
+  const sudah = r.senarai.filter(a => a.bayar), belum = r.senarai.filter(a => !a.bayar && a.status === 'AKTIF');
+  const jum = sudah.filter(a => a.bayar.diSini).reduce((s, a) => s + Number(a.bayar.jumlah || 0), 0);
+  $('app').innerHTML = `<div class="kad"><div class="baris"><h2 style="margin:0">Yuran Tahunan</h2>${pilihTahun('vYuran')}</div></div>
+  <div class="grid" style="margin-bottom:12px"><div class="stat"><b>${sudah.length}</b><small>Sudah bayar</small></div><div class="stat"><b>${belum.length}</b><small>Belum bayar (aktif)</small></div><div class="stat"><b>RM${jum.toFixed(2)}</b><small>Kutipan di gelanggang</small></div></div>
+  <div class="kad"><h3>Belum Bayar</h3>${belum.map(a => `<div class="item"><div class="isi"><b>${esc(a.nama)}</b><div class="pudar kecilT">${esc(a.noAhli)}</div></div><button class="kecil utama" onclick="borangYuran('${esc(a.noKp)}')">Rekod</button></div>`).join('') || '<div class="pudar">Semua ahli aktif sudah bayar. 👍</div>'}</div>
+  <div class="kad"><h3>Sudah Bayar</h3>${sudah.map(a => `<div class="item"><div class="isi"><b>${esc(a.nama)}</b><div class="pudar kecilT">${esc(a.noAhli)} · RM${esc(a.bayar.jumlah)} · ${esc(a.bayar.tarikh)}${a.bayar.diSini ? '' : ' · gelanggang lain'}</div></div>${a.bayar.diSini ? `<button class="kecil bahaya" onclick="if(confirm('Padam rekod yuran ini?'))hantar(this,'padam_yuran',{noKp:'${esc(a.noKp)}',tahun:S.tahun},vYuran)">Padam</button>` : ''}</div>`).join('') || '<div class="pudar">Tiada lagi.</div>'}</div>`;
+}
+function borangYuran(noKp) {
+  const a = cariAhli(noKp), d = new Date().toISOString().slice(0, 10);
+  buka(`<h2>Rekod Yuran Tahunan</h2><div><b>${esc(a.nama)}</b> <span class="pudar">${esc(a.noAhli)}</span></div>
+  <div class="baris"><div><label>Tahun</label><input id="yTh" inputmode="numeric" value="${esc(S.tahun)}"></div><div><label>Jumlah (RM)</label><input id="yJm" inputmode="decimal" value="${esc(S.yuranLalai || '')}"></div></div>
+  <label>Tarikh Bayar</label><input id="yTk" type="date" value="${d}">
+  <div class="baris" style="margin-top:14px"><button onclick="tutup()">Batal</button><button class="utama" onclick="hantar(this,'rekod_yuran',{noKp:'${esc(a.noKp)}',tahun:val('yTh'),jumlah:val('yJm'),tarikh:val('yTk')},()=>{tutup();tukarMenu(S.menu)})">Simpan</button></div>`);
+}
+
+// ---------- PROFIL ----------
+function vProfil() {
+  const p = S.profil;
+  $('app').innerHTML = `<div class="kad"><h2>Profil Saya</h2><div class="kecilT">ID: <b>${esc(p.id)}</b><br>Nama: ${esc(p.nama)}<br>Telefon: ${esc(p.telefon)}<br>Peranan: ${LABEL_PERANAN[p.peranan]}${p.ketua ? ' (KETUA)' : ''}<br>${p.peranan !== 'SUPER_ADMIN' ? 'Negeri: ' + esc(p.negeriNama) + '<br>' : ''}${p.gel ? 'Gelanggang: ' + esc(p.gel.nama) + ' (' + esc(p.gel.kodPenuh || 'belum ada kod') + ') ' + tag(p.gel.status) : ''}</div></div>
+  <div class="kad"><h3>Tukar Kata Laluan</h3><label>Kata laluan lama</label><input id="pL" type="password"><label>Kata laluan baharu</label><input id="pB" type="password"><label>Ulang kata laluan baharu</label><input id="pB2" type="password">
+  <div style="margin-top:12px"><button class="utama" onclick="if(val('pB')!==val('pB2'))return toast('Tidak sama');hantar(this,'tukar_kata',{lama:$('pL').value,baru:$('pB').value},()=>{$('pL').value=$('pB').value=$('pB2').value=''})">Tukar</button></div></div>`;
+}
+
+// ---------- ADMIN: PAPAN PEMUKA ----------
+async function vPapan(segar) {
+  const r = await api('dashboard', { tahun: S.tahun, segar: !!segar });
+  if (!r.ok) { $('app').innerHTML = `<div class="kad">${esc(r.ralat)}</div>`; return; }
+  S.dash = r;
+  const L = r.negeri.reduce((s, n) => s + n.L, 0), P = r.negeri.reduce((s, n) => s + n.P, 0);
+  const g = r.gelanggang.filter(x => x.status !== 'MENUNGGU');
+  const mx = Math.max(1, ...r.negeri.map(n => n.jumlah));
+  $('app').innerHTML = `<div class="kad"><div class="baris"><h2 style="margin:0">${S.profil.peranan === 'SUPER_ADMIN' ? 'Seluruh Negara' : esc(S.profil.negeriNama)}</h2>${pilihTahun('vPapan')}<button style="flex:0 0 auto" onclick="vPapan(true)">↻ Muat semula</button></div><div class="pudar kecilT">Dikemas kini ${esc(r.masa)}</div></div>
+  ${r.menunggu.gelanggang + r.menunggu.jurulatih ? `<div class="kad" style="border-color:var(--kuning);cursor:pointer" onclick="tukarMenu('lulus')">⏳ <b>${r.menunggu.gelanggang}</b> gelanggang & <b>${r.menunggu.jurulatih}</b> jurulatih menunggu kelulusan →</div>` : ''}
+  <div class="grid" style="margin-bottom:12px"><div class="stat"><b>${L + P}</b><small>Ahli aktif</small></div><div class="stat"><b>${L}</b><small>Lelaki</small></div><div class="stat"><b>${P}</b><small>Perempuan</small></div>
+  <div class="stat"><b>${r.gelAktif}</b><small>Gelanggang aktif (60 hari)</small></div><div class="stat"><b>${r.gelTidakAktif}</b><small>Gelanggang tidak aktif</small></div><div class="stat"><b>${g.reduce((s, x) => s + x.bilBayar, 0)}</b><small>Bayar yuran ${esc(r.tahun)}</small></div></div>
+  ${r.negeri.length > 1 || S.profil.peranan === 'SUPER_ADMIN' ? `<div class="kad"><h3>Ahli Aktif Ikut Negeri</h3><div class="jadual"><table><tr><th>Negeri</th><th>L</th><th>P</th><th>Jumlah</th><th style="width:30%"></th></tr>${r.negeri.map(n => `<tr><td>${esc(n.nama)}</td><td>${n.L}</td><td>${n.P}</td><td><b>${n.jumlah}</b></td><td><div class="bar"><i style="width:${n.jumlah / mx * 100}%"></i></div></td></tr>`).join('') || '<tr><td colspan=5 class="pudar">Tiada data</td></tr>'}</table></div></div>` : ''}
+  <div class="kad"><div class="baris"><h3 style="margin:0">Gelanggang</h3><button style="flex:0 0 auto" onclick="eksportGel()">Eksport CSV</button></div><div class="jadual"><table><tr><th>Gelanggang</th><th>Ketua</th><th>Ahli</th><th>Bayar ${esc(r.tahun)}</th><th>Status</th></tr>
+  ${g.map(x => `<tr><td><b>${esc(x.nama)}</b><div class="pudar kecilT">${esc(x.kod)} · ${esc(nNeg(x.negeri))}</div></td><td>${esc(x.ketuaNama)}<div class="pudar kecilT">${x.ketuaTel && x.ketuaTel !== '-' ? `<a href="https://wa.me/6${esc(x.ketuaTel.replace(/\D/g, '').replace(/^6/, ''))}" target="_blank">${esc(x.ketuaTel)}</a>` : '-'}</div></td><td>${x.bilAhli}</td><td>${x.bilBayar}</td><td>${tag(x.status)}${x.status === 'AKTIF' && !x.aktif ? '<div class="pudar kecilT">tiada aktiviti 60 hari</div>' : ''}</td></tr>`).join('') || '<tr><td colspan=5 class="pudar">Tiada gelanggang</td></tr>'}</table></div></div>`;
+}
+function eksportGel() {
+  const r = S.dash;
+  csv(`gelanggang_${r.tahun}.csv`, ['Kod', 'Nama', 'Negeri', 'Status', 'Aktif 60 hari', 'Ketua', 'Telefon Ketua', 'Ahli Aktif', 'Bayar Yuran ' + r.tahun, 'Aktiviti Terakhir'],
+    r.gelanggang.map(x => [x.kod, x.nama, nNeg(x.negeri), x.status, x.aktif ? 'YA' : 'TIDAK', x.ketuaNama, x.ketuaTel, x.bilAhli, x.bilBayar, x.aktiviti]));
+}
+
+// ---------- ADMIN: KELULUSAN ----------
+async function vLulus() {
+  const r = await api('senarai_menunggu');
+  if (!r.ok) { $('app').innerHTML = `<div class="kad">${esc(r.ralat)}</div>`; return; }
+  $('app').innerHTML = `<div class="kad"><h2>Gelanggang Menunggu (${r.gelanggang.length})</h2>${r.gelanggang.map(g => `<div class="item"><div class="isi"><b>${esc(g.nama)}</b> <span class="pudar kecilT">${esc(nNeg(g.negeri))}</span><div class="pudar kecilT">${esc(g.alamat || '-')}<br>Ketua: ${esc(g.ketuaNama)} (${esc(g.ketuaId)}) · ${esc(g.ketuaTel)} · ${esc(g.tarikh)}</div>
+  <div class="baris" style="margin-top:8px"><input id="kod_${esc(g.id)}" maxlength="3" placeholder="Kod 3 huruf, cth SMT" style="text-transform:uppercase;max-width:170px"><button class="kecil utama" style="flex:0 0 auto" onclick="hantar(this,'lulus_gelanggang',{idGel:'${esc(g.id)}',kod:val('kod_${esc(g.id)}')},vLulus)">Lulus</button><button class="kecil bahaya" style="flex:0 0 auto" onclick="if(confirm('Tolak permohonan gelanggang ini?'))hantar(this,'status_gelanggang',{idGel:'${esc(g.id)}',status:'TIDAK AKTIF'},vLulus)">Tolak</button></div></div></div>`).join('') || '<div class="pudar">Tiada.</div>'}</div>
+  <div class="kad"><h2>Jurulatih Menunggu (${r.jurulatih.length})</h2>${r.jurulatih.map(j => `<div class="item"><div class="isi"><b>${esc(j.nama)}</b> <span class="pudar kecilT">(${esc(j.id)})</span><div class="pudar kecilT">${esc(j.gelNama)} · ${esc(nNeg(j.negeri))} · ${esc(j.telefon)} · ${esc(j.tarikh)}</div>
+  <div class="baris" style="margin-top:8px"><button class="kecil utama" style="flex:0 0 auto" onclick="hantar(this,'status_jurulatih',{id:'${esc(j.id)}',status:'AKTIF'},vLulus)">Lulus</button><button class="kecil bahaya" style="flex:0 0 auto" onclick="if(confirm('Tolak?'))hantar(this,'status_jurulatih',{id:'${esc(j.id)}',status:'DITOLAK'},vLulus)">Tolak</button></div></div></div>`).join('') || '<div class="pudar">Tiada.</div>'}</div>
+  <div class="pudar kecilT">Nota: ketua gelanggang baharu diluluskan secara automatik apabila gelanggangnya diluluskan.</div>`;
+}
+
+// ---------- ADMIN: GELANGGANG ----------
+async function vGel() {
+  const r = await api('senarai_gelanggang', { tahun: S.tahun });
+  if (!r.ok) { $('app').innerHTML = `<div class="kad">${esc(r.ralat)}</div>`; return; }
+  const sup = S.profil.peranan === 'SUPER_ADMIN';
+  $('app').innerHTML = `<div class="kad"><h2>Gelanggang (${r.senarai.length})</h2>${r.senarai.map(g => `<div class="item"><div class="isi"><b>${esc(g.nama)}</b> ${tag(g.status)}<div class="pudar kecilT">${esc(g.kod || 'tiada kod')} · ${esc(nNeg(g.negeri))} · ${g.bilAhli} ahli aktif · aktiviti: ${esc(g.aktiviti || '-')}<br>Ketua: ${esc(g.ketuaNama)} · ${esc(g.ketuaTel)}</div>
+  <div class="baris" style="margin-top:6px">${g.status === 'AKTIF' ? `<button class="kecil" style="flex:0 0 auto" onclick="tukarStGel(this,'${esc(g.id)}','TIDAK AKTIF')">Gantung (Tidak Aktif)</button>` : ''}${g.status === 'TIDAK AKTIF' && g.kod ? `<button class="kecil" style="flex:0 0 auto" onclick="tukarStGel(this,'${esc(g.id)}','AKTIF')">Aktifkan</button>` : ''}
+  ${sup && g.status !== 'DISEKAT' && g.status !== 'MENUNGGU' ? `<button class="kecil bahaya" style="flex:0 0 auto" onclick="tukarStGel(this,'${esc(g.id)}','DISEKAT')">Sekat</button>` : ''}${sup && g.status === 'DISEKAT' ? `<button class="kecil" style="flex:0 0 auto" onclick="tukarStGel(this,'${esc(g.id)}','AKTIF')">Buka Sekatan</button>` : ''}
+  <button class="kecil" style="flex:0 0 auto" onclick="S.filGel='${esc(g.id)}';tukarMenu('ahliA')">Lihat Ahli</button></div></div></div>`).join('') || '<div class="pudar">Tiada.</div>'}</div>`;
+}
+function tukarStGel(btn, id, st) { if (confirm('Tukar status gelanggang kepada ' + st + '?')) hantar(btn, 'status_gelanggang', { idGel: id, status: st }, vGel); }
+
+// ---------- ADMIN: JURULATIH ----------
+async function vJur() {
+  const r = await api('senarai_jurulatih');
+  if (!r.ok) { $('app').innerHTML = `<div class="kad">${esc(r.ralat)}</div>`; return; }
+  $('app').innerHTML = `<div class="kad"><h2>Jurulatih (${r.senarai.length})</h2><input id="cariJ" placeholder="Cari nama / gelanggang" oninput="document.querySelectorAll('.iJ').forEach(e=>e.style.display=e.textContent.toUpperCase().includes(this.value.toUpperCase())?'':'none')">
+  ${r.senarai.map(j => `<div class="item iJ"><div class="isi"><b>${esc(j.nama)}</b> ${j.ketua ? '<span class="tag" style="background:#3a331a;color:var(--emas)">KETUA</span>' : ''} ${tag(j.status)}<div class="pudar kecilT">${esc(j.id)} · ${esc(j.gelNama)} · ${esc(nNeg(j.negeri))} · ${esc(j.telefon)}</div>
+  <div class="baris" style="margin-top:6px">${j.status === 'AKTIF' ? `<button class="kecil bahaya" style="flex:0 0 auto" onclick="if(confirm('Gantung jurulatih ini?'))hantar(this,'status_jurulatih',{id:'${esc(j.id)}',status:'DIGANTUNG'},vJur)">Gantung</button>` : `<button class="kecil" style="flex:0 0 auto" onclick="hantar(this,'status_jurulatih',{id:'${esc(j.id)}',status:'AKTIF'},vJur)">Aktifkan</button>`}
+  ${!j.ketua && j.status === 'AKTIF' ? `<button class="kecil" style="flex:0 0 auto" onclick="if(confirm('Jadikan KETUA gelanggang?'))hantar(this,'tetap_ketua',{id:'${esc(j.id)}'},vJur)">Jadikan Ketua</button>` : ''}
+  <button class="kecil" style="flex:0 0 auto" onclick="resetKata('${esc(j.id)}')">Reset Kata Laluan</button></div></div></div>`).join('') || '<div class="pudar">Tiada.</div>'}</div>`;
+}
+function resetKata(id) {
+  const k = prompt('Kata laluan baharu untuk ' + id + ' (min 6 aksara):'); if (!k) return;
+  hantar(null, 'reset_kata', { id, kata: k });
+}
+
+// ---------- ADMIN: AHLI ----------
+async function vAhliAdmin() {
+  const fg = S.filGel || ''; S.filGel = '';
+  const r = await api('senarai_ahli', { tahun: S.tahun, idGel: fg });
+  if (!r.ok) { $('app').innerHTML = `<div class="kad">${esc(r.ralat)}</div>`; return; }
+  S.ahliA = r.senarai;
+  $('app').innerHTML = `<div class="kad"><div class="baris"><h2 style="margin:0">Ahli (${r.senarai.length})</h2>${fg ? '<button style="flex:0 0 auto" onclick="tukarMenu(\'ahliA\')">Semua gelanggang</button>' : ''}<button style="flex:0 0 auto" onclick="csv('ahli.csv',['No Ahli','No KP','Nama','Jantina','Bengkung','Status','Gelanggang','Negeri','Yuran '+S.tahun],S.ahliA.map(a=>[a.noAhli,a.noKp,a.nama,a.jantina,a.bengkung,a.status,a.gel,a.negeri,a.bayar?'YA':'TIDAK']))">Eksport CSV</button></div>
+  <input id="cariAA" style="margin-top:8px" placeholder="Cari nama / no. ahli" oninput="document.querySelectorAll('.iA').forEach(e=>e.style.display=e.textContent.toUpperCase().includes(this.value.toUpperCase())?'':'none')">
+  <div class="jadual"><table><tr><th>Ahli</th><th>Gelanggang</th><th>Status</th></tr>${r.senarai.slice(0, 1000).map(a => `<tr class="iA"><td><b>${esc(a.nama)}</b><div class="pudar kecilT">${esc(a.noAhli)} · ${esc(a.noKp)} · ${a.jantina === 'P' ? 'P' : 'L'} · ${esc(a.bengkung || '-')}</div></td><td class="kecilT">${esc(a.gel)}</td><td>${tag(a.status)}</td></tr>`).join('') || '<tr><td colspan=3 class="pudar">Tiada</td></tr>'}</table></div></div>`;
+}
+
+// ---------- SUPER: ADMIN NEGERI ----------
+async function vAdmin() {
+  const r = await api('senarai_admin');
+  if (!r.ok) { $('app').innerHTML = `<div class="kad">${esc(r.ralat)}</div>`; return; }
+  $('app').innerHTML = `<div class="kad"><h2>Lantik Admin Negeri</h2><div class="baris"><div><label>Nama</label><input id="adNama"></div><div><label>Telefon</label><input id="adTel"></div></div>
+  <div class="baris"><div><label>ID Pengguna</label><input id="adId" autocapitalize="none"></div><div><label>Kata Laluan Awal</label><input id="adKata"></div></div>
+  <label>Negeri</label><select id="adNeg"><option value="">— Pilih —</option>${pilihan(NEG)}</select>
+  <div class="pudar kecilT" style="margin-top:6px">Jika ID sudah wujud (cth. jurulatih), akaun itu akan dinaik taraf menjadi Admin Negeri.</div>
+  <div style="margin-top:12px"><button class="utama" onclick="hantar(this,'lantik_admin',{nama:val('adNama'),telefon:val('adTel'),id:val('adId'),kata:val('adKata'),negeri:val('adNeg')},vAdmin)">Lantik</button></div></div>
+  <div class="kad"><h2>Senarai Admin Negeri (${r.senarai.length})</h2>${r.senarai.map(a => `<div class="item"><div class="isi"><b>${esc(a.nama)}</b> ${tag(a.status)}<div class="pudar kecilT">${esc(a.id)} · ${esc(nNeg(a.negeri))} · ${esc(a.telefon)}</div></div>
+  ${a.status === 'AKTIF' ? `<button class="kecil bahaya" onclick="if(confirm('Buang admin ini?'))hantar(this,'buang_admin',{id:'${esc(a.id)}'},vAdmin)">Buang</button>` : `<button class="kecil" onclick="hantar(this,'buang_admin',{id:'${esc(a.id)}',aktifkan:true},vAdmin)">Aktifkan</button>`}<button class="kecil" onclick="resetKata('${esc(a.id)}')">Reset</button></div>`).join('') || '<div class="pudar">Belum ada.</div>'}</div>`;
+}
+
+// ---------- SUPER: TETAPAN ----------
+async function vTetapan() {
+  const r = await api('tetapan_get');
+  if (!r.ok) { $('app').innerHTML = `<div class="kad">${esc(r.ralat)}</div>`; return; }
+  const t = r.tetapan;
+  $('app').innerHTML = `<div class="kad"><h2>Tetapan Sistem</h2><label>Yuran tahunan lalai (RM) — dicadang semasa rekod</label><div class="baris"><input id="tY" value="${esc(t.YURAN_LALAI || '')}"><button style="flex:0 0 auto" onclick="hantar(this,'tetapan_set',{kunci:'YURAN_LALAI',nilai:val('tY')})">Simpan</button></div></div>
+  <div class="kad"><h2>Kunci Import</h2><div class="pudar kecilT">Digunakan untuk tindakan API import_gelanggang sahaja. Jangan kongsi.</div><div style="margin:8px 0;font-family:monospace;word-break:break-all" id="kImp">${esc(t.IMPORT_KEY || '-')}</div><button onclick="if(confirm('Jana kunci baharu? Kunci lama tidak sah lagi.'))hantar(this,'jana_kunci_import',{},r=>$('kImp').textContent=r.kunci)">Jana Kunci Baharu</button></div>
+  <div class="kad"><h2>Log Audit</h2><button onclick="logAudit(this)">Papar 200 terakhir</button><div id="lAud"></div></div>`;
+}
+async function logAudit(btn) {
+  const r = await hantar(btn, 'log_audit'); if (!r.ok) return;
+  $('lAud').innerHTML = `<div class="jadual"><table><tr><th>Masa</th><th>Siapa</th><th>Tindakan</th><th>Butiran</th></tr>${r.senarai.map(x => `<tr><td class="kecilT">${esc(x.MASA)}</td><td>${esc(x.ID)}</td><td>${esc(x.TINDAKAN)}</td><td class="kecilT">${esc(x.BUTIRAN)}</td></tr>`).join('')}</table></div>`;
+}
+
+// ================= MULA =================
+(async function () {
+  if (!S.token) return paparLogin();
+  const r = await api('saya');
+  if (r.ok) { S.profil = r.profil; mulaApp(); } else paparLogin();
+})();
+</script>
+</body>
+</html>
