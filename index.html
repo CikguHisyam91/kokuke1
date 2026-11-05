@@ -24,7 +24,7 @@
         if(res&&res.__error){if(fail)fail(new Error(res.__error));else alert('Ralat: '+res.__error);return;}
         if(ok)ok(res.result);
       })
-      .catch(function(e){clearTimeout(tm);if(e&&e.name==='AbortError')e=new Error('Sambungan terlalu lambat (lebih 60 saat). Semak internet dan cuba lagi.');if(fail)fail(e);else alert('Ralat sambungan: '+e.message);});
+      .catch(function(e){clearTimeout(tm);if(e&&/failed to fetch|networkerror|load failed/i.test(e.message||''))e=new Error('Tidak dapat menghubungi pelayan Apps Script. Semak internet; jika internet OK, pastikan Code.gs disimpan tanpa ralat dan Deploy → New version telah dibuat.');if(e&&e.name==='AbortError')e=new Error('Sambungan terlalu lambat (lebih 60 saat). Semak internet dan cuba lagi.');if(fail)fail(e);else alert('Ralat sambungan: '+e.message);});
   }
   function runner(ok,fail,uo){
     return new Proxy({},{get:function(t,n){
@@ -431,6 +431,7 @@ input::placeholder,textarea::placeholder{text-transform:none;}
     </div>
     <div style="border:1px solid var(--glow);border-radius:10px;padding:12px;margin-bottom:12px;">
       <h6 class="small fw-bold mb-2">📷 Gambar Dokumentasi (Min 1, Maks 4)</h6>
+      <div class="d-flex gap-2 align-items-center flex-wrap mb-2"><button type="button" class="btn btn-sm btn-outline-info fw-bold" onclick="tampalGambar('H')">📋 Tampal Gambar</button><span style="font-size:11px;color:var(--sub);">Salin gambar dari Telegram / AppSheet / galeri, kemudian tekan butang ini (atau Ctrl+V di komputer).</span></div>
       <div class="row g-2">
         <div class="col-6 col-md-3"><div class="img-upload-box" onclick="document.getElementById('img1').click()"><span style="font-size:10px;">Gambar 1</span><input type="file" id="img1" class="d-none" accept="image/*" onchange="loadThumb(this,1,imgH)"><img id="th1" class="thumb"></div></div>
         <div class="col-6 col-md-3"><div class="img-upload-box" onclick="document.getElementById('img2').click()"><span style="font-size:10px;">Gambar 2</span><input type="file" id="img2" class="d-none" accept="image/*" onchange="loadThumb(this,2,imgH)"><img id="th2" class="thumb"></div></div>
@@ -617,7 +618,8 @@ input::placeholder,textarea::placeholder{text-transform:none;}
       </div>
     </div>
     <div style="border:1px solid var(--glow);border-radius:10px;padding:12px;margin-bottom:12px;">
-      <h6 class="small fw-bold mb-2">📷 Bukti Kejohanan <small style="color:var(--sub);font-weight:400;">(Min 1, Maks 4)</small></h6>
+      <h6 class="small fw-bold mb-2">📷 Bukti Kejohanan <small style="color:var(--sub);font-weight:400;">(Pilihan, Maks 4)</small></h6>
+      <div class="d-flex gap-2 align-items-center flex-wrap mb-2"><button type="button" class="btn btn-sm btn-outline-info fw-bold" onclick="tampalGambar('P')">📋 Tampal Gambar</button><span style="font-size:11px;color:var(--sub);">Salin gambar dari Telegram / AppSheet / galeri, kemudian tekan butang ini (atau Ctrl+V di komputer).</span></div>
       <div class="row g-2">
         <div class="col-6 col-md-3"><div class="img-upload-box" onclick="document.getElementById('pimg1').click()"><span style="font-size:10px;">Gambar 1</span><input type="file" id="pimg1" class="d-none" accept="image/*" onchange="loadThumb(this,1,imgP)"><img id="pth1" class="thumb"></div></div>
         <div class="col-6 col-md-3"><div class="img-upload-box" onclick="document.getElementById('pimg2').click()"><span style="font-size:10px;">Gambar 2</span><input type="file" id="pimg2" class="d-none" accept="image/*" onchange="loadThumb(this,2,imgP)"><img id="pth2" class="thumb"></div></div>
@@ -2685,10 +2687,11 @@ function bukaPerluGambar(){
       +'<div class="fw-bold">'+esc(g.pertandingan)+'</div>'
       +'<div style="font-size:12px;color:var(--sub);">'+esc(g.tarikh)+' · '+esc(g.peringkat)+' · '+esc(g.pencapaian)+' · Guru: '+esc(g.guru||'-')+'</div>'
       +'<div style="font-size:12px;margin:4px 0;">👥 '+g.nama.map(esc).join(', ')+'</div>'
-      +'<label class="btn btn-sm btn-warning fw-bold mt-1" style="font-size:12px;">📷 Pilih Gambar (maks 4)<input type="file" accept="image/*" multiple class="d-none" data-i="'+i+'"></label></div>';
+      +'<button type="button" class="btn btn-sm btn-outline-info fw-bold mt-1 me-1" style="font-size:12px;" data-tampal="'+i+'">📋 Tampal</button><label class="btn btn-sm btn-warning fw-bold mt-1" style="font-size:12px;">📷 Pilih Gambar (maks 4)<input type="file" accept="image/*" multiple class="d-none" data-i="'+i+'"></label></div>';
   }).join(''):'<div class="text-center py-4" style="color:var(--sub);">✅ Semua rekod pencapaian sudah ada gambar.</div>';
   el.innerHTML='<div style="width:100%;max-width:560px;background:var(--card,#0f172a);color:var(--txt,#e2e8f0);border:1px solid rgba(245,158,11,.4);border-radius:16px;padding:16px;max-height:88vh;overflow-y:auto;">'
     +'<div class="d-flex justify-content-between align-items-center mb-2"><h5 class="m-0">📷 Rekod Belum Ada Gambar</h5><button class="btn btn-sm btn-outline-light tutup-gambar">✕</button></div>'+isi+'</div>';
+  el.onclick2=null;el.querySelectorAll('[data-tampal]').forEach(function(b){b.onclick=function(){var g=_perluGambar[+b.getAttribute('data-tampal')];bacaKlipGambar(function(blobs){tambahGambarRekod(g,blobs.slice(0,4));});};});
   el.onchange=function(e){var f=e.target.closest('input[type=file][data-i]');if(!f)return;tambahGambarRekod(_perluGambar[+f.getAttribute('data-i')],Array.prototype.slice.call(f.files,0,4));};
   el.style.display='flex';
 }
@@ -2706,6 +2709,38 @@ function tambahGambarRekod(g,files){
       .tambahGambarPencapaian({tarikh:g.tarikh,pertandingan:g.pertandingan,pencapaian:g.pencapaian},hasil.filter(Boolean));
   });});
 }
+
+// ===== TAMPAL GAMBAR DARI KLIPBOARD (Telegram / AppSheet / galeri) =====
+function bacaKlipGambar(cb){
+  if(!navigator.clipboard||!navigator.clipboard.read){alert('Pelayar ini tidak membenarkan tampal gambar melalui butang.\n\nCara lain: di komputer tekan Ctrl+V, atau simpan gambar dahulu dan guna "Pilih Gambar".');return;}
+  navigator.clipboard.read().then(function(items){
+    var tugas=[];
+    items.forEach(function(it){var t=it.types.filter(function(x){return /^image\//.test(x);})[0];if(t)tugas.push(it.getType(t));});
+    if(!tugas.length){alert('Tiada gambar dalam salinan (clipboard).\n\nDi Telegram/AppSheet: tekan lama pada gambar → Salin (Copy), kemudian tekan 📋 Tampal semula.');return;}
+    Promise.all(tugas).then(cb);
+  }).catch(function(e){alert('Tidak dapat membaca salinan: '+(e&&e.message||e)+'\n\nBenarkan akses "Clipboard" apabila diminta, atau tekan Ctrl+V di komputer.');});
+}
+function masukkanGambar(jenis,blobs){
+  var arr=jenis==='H'?imgH:imgP,prefix=jenis==='H'?'th':'pth',n=0;
+  blobs.forEach(function(b){
+    var idx=arr.indexOf('');if(idx<0)return;arr[idx]='…';n++;
+    var el=document.getElementById(prefix+(idx+1));if(el){el.style.display='block';el.style.opacity='.4';}
+    kecilkanGambar(b,function(data){var s2=jenis==='H'?imgH:imgP;s2[idx]=data||'';if(el){el.src=data;el.style.opacity='1';el.style.display=data?'block':'none';}});
+  });
+  if(!n)toast('Slot gambar sudah penuh (maks 4). Buang satu dahulu.','err');else toast('✅ '+n+' gambar ditampal','ok');
+}
+function tampalGambar(jenis){bacaKlipGambar(function(blobs){masukkanGambar(jenis,blobs);});}
+// Ctrl+V / tampal biasa
+document.addEventListener('paste',function(e){
+  var t=e.target;if(t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA'))return;
+  var fail=Array.prototype.filter.call((e.clipboardData&&e.clipboardData.files)||[],function(f){return /^image\//.test(f.type);});
+  if(!fail.length)return;
+  var g=document.getElementById('koko-gambar');
+  if(g&&g.style.display==='flex')return toast('Tekan butang 📋 Tampal pada rekod yang betul.','info');
+  var v=document.querySelector('.view-section.active');if(!v)return;
+  if(v.id==='view-pencapaian'){e.preventDefault();masukkanGambar('P',fail);}
+  else if(v.id==='view-kehadiran'){e.preventDefault();masukkanGambar('H',fail);}
+});
 
 // ===== EKSPORT CSV (EXCEL) =====
 function eksportCsv(jenis){
