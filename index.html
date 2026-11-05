@@ -226,6 +226,11 @@ input::placeholder,textarea::placeholder{text-transform:none;}
 
 <!-- DASHBOARD -->
 <div id="view-utama" class="view-section">
+  <div id="alert-gambar" class="card-g d-none" style="border-left:4px solid #f59e0b;padding:12px 18px;cursor:pointer;" onclick="bukaPerluGambar()">
+    <div style="display:flex;align-items:center;gap:10px;"><span style="font-size:20px;">📷</span>
+      <div style="flex:1;"><div style="font-weight:700;font-size:13px;color:#f59e0b;">Peringatan: Rekod pencapaian belum ada gambar</div><div id="alert-gambar-sum" style="font-size:12px;color:var(--sub);"></div></div>
+      <span class="btn btn-sm btn-warning fw-bold" style="font-size:11px;">Tambah Gambar</span></div>
+  </div>
   <div id="alert-had" class="card-g d-none" style="border-left:4px solid var(--c4);padding:14px 18px;">
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <span style="font-size:18px;">⚠️</span>
@@ -913,6 +918,7 @@ function kiraStats(){
 }
 
 function kiraAlert(){
+  try{kiraPerluGambar();}catch(e){}
   var AMBANG=80,list=[],idx={};
   (dc.kehadiran||[]).forEach(function(x){
     var k=x.namaMurid.trim().toLowerCase()+'|'+x.kategori.toLowerCase();
@@ -1761,7 +1767,7 @@ function hantarPencapaian(){
   if(!penMurid.length)return alert('Pilih nama murid!');
   var pt=document.getElementById('pen-pertandingan').value.trim();if(!pt)return alert('Masukkan nama pertandingan!');
   var guru=document.getElementById('pen-guru').value.trim();if(!guru)return alert('Isi nama guru pembimbing!');
-  if(imgP.filter(function(i){return i!='';}).length<1)return alert('Perlu sekurang-kurangnya 1 gambar bukti!');
+  if(imgP.filter(function(i){return i!='';}).length<1&&!confirm('📷 Tiada gambar bukti dimuat naik.\n\nSimpan dahulu tanpa gambar? Sistem akan mengingatkan anda di halaman Utama untuk tambah gambar kemudian.'))return;
   showLoad();
   var pkt=document.getElementById('pen-pkt').value;
   var kat=document.getElementById('pen-kat').value;
@@ -2651,6 +2657,55 @@ function dashTab(t){
   try{localStorage.setItem('kokoDashTab',t);}catch(e){}
 }
 window.addEventListener('load',function(){dashTab();});
+
+// ===== PERINGATAN GAMBAR PENCAPAIAN =====
+var _perluGambar=[];
+function kiraPerluGambar(){
+  var grp={};_perluGambar=[];
+  (dc.pencapaian||[]).forEach(function(p){
+    if(String(p.linkGambar||'').trim())return;
+    if(/sync sheet pencapaian/i.test(p.namaGuru||''))return; // rekod dari Sheet guru — gambar ada di Sheet itu
+    var k=p.tarikh+'|'+p.pertandingan+'|'+p.pencapaian;
+    if(!grp[k]){grp[k]={tarikh:p.tarikh,pertandingan:p.pertandingan,pencapaian:p.pencapaian,peringkat:p.peringkat,guru:p.namaGuru,nama:[]};_perluGambar.push(grp[k]);}
+    grp[k].nama.push(p.nama);
+  });
+  var c=document.getElementById('alert-gambar');if(!c)return;
+  if(!_perluGambar.length){c.classList.add('d-none');return;}
+  c.classList.remove('d-none');
+  document.getElementById('alert-gambar-sum').textContent=_perluGambar.length+' pertandingan ('+_perluGambar.reduce(function(a,g){return a+g.nama.length;},0)+' murid) belum ada gambar bukti. Klik untuk tambah.';
+}
+function bukaPerluGambar(){
+  var el=document.getElementById('koko-gambar');
+  if(!el){el=document.createElement('div');el.id='koko-gambar';
+    el.style.cssText='position:fixed;inset:0;z-index:9150;background:rgba(2,6,23,.85);display:flex;justify-content:center;align-items:flex-start;padding:40px 16px 16px;';
+    el.addEventListener('click',function(e){if(e.target===el||e.target.closest('.tutup-gambar'))el.style.display='none';});
+    document.body.appendChild(el);}
+  var isi=_perluGambar.length?_perluGambar.map(function(g,i){
+    return '<div style="border:1px solid var(--glow);border-radius:10px;padding:10px;margin-bottom:8px;">'
+      +'<div class="fw-bold">'+esc(g.pertandingan)+'</div>'
+      +'<div style="font-size:12px;color:var(--sub);">'+esc(g.tarikh)+' · '+esc(g.peringkat)+' · '+esc(g.pencapaian)+' · Guru: '+esc(g.guru||'-')+'</div>'
+      +'<div style="font-size:12px;margin:4px 0;">👥 '+g.nama.map(esc).join(', ')+'</div>'
+      +'<label class="btn btn-sm btn-warning fw-bold mt-1" style="font-size:12px;">📷 Pilih Gambar (maks 4)<input type="file" accept="image/*" multiple class="d-none" data-i="'+i+'"></label></div>';
+  }).join(''):'<div class="text-center py-4" style="color:var(--sub);">✅ Semua rekod pencapaian sudah ada gambar.</div>';
+  el.innerHTML='<div style="width:100%;max-width:560px;background:var(--card,#0f172a);color:var(--txt,#e2e8f0);border:1px solid rgba(245,158,11,.4);border-radius:16px;padding:16px;max-height:88vh;overflow-y:auto;">'
+    +'<div class="d-flex justify-content-between align-items-center mb-2"><h5 class="m-0">📷 Rekod Belum Ada Gambar</h5><button class="btn btn-sm btn-outline-light tutup-gambar">✕</button></div>'+isi+'</div>';
+  el.onchange=function(e){var f=e.target.closest('input[type=file][data-i]');if(!f)return;tambahGambarRekod(_perluGambar[+f.getAttribute('data-i')],Array.prototype.slice.call(f.files,0,4));};
+  el.style.display='flex';
+}
+function tambahGambarRekod(g,files){
+  if(!g||!files.length)return;
+  showLoad();var hasil=[],baki=files.length;
+  files.forEach(function(file,i){kecilkanGambar(file,function(d){hasil[i]=d||'';if(--baki)return;
+    google.script.run.withSuccessHandler(function(res){
+      hideLoad();
+      if(res&&res.success){
+        (dc.pencapaian||[]).forEach(function(p){if(p.tarikh===g.tarikh&&p.pertandingan===g.pertandingan&&p.pencapaian===g.pencapaian&&!p.linkGambar)p.linkGambar=(res.urls||[]).join(' | ')||'ada';});
+        kiraPerluGambar();bukaPerluGambar();toast('✅ Gambar disimpan untuk '+g.pertandingan,'ok');muatSemua(true);
+      }else alert('Gagal: '+(res&&res.error||''));
+    }).withFailureHandler(function(e){hideLoad();alert('Ralat: '+e.message+'\n\nPastikan Code.gs terkini sudah di-Deploy.');})
+      .tambahGambarPencapaian({tarikh:g.tarikh,pertandingan:g.pertandingan,pencapaian:g.pencapaian},hasil.filter(Boolean));
+  });});
+}
 
 // ===== EKSPORT CSV (EXCEL) =====
 function eksportCsv(jenis){
