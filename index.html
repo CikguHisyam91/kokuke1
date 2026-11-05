@@ -255,6 +255,14 @@ body[data-theme="dark"] .modal-box{background:#0f172a;}
     <div class="d-flex gap-2 mb-3 flex-wrap" id="rank-tabs"></div>
     <div class="table-responsive"><table class="table table-hover align-middle" style="font-size:13px;"><thead><tr style="background:rgba(244,63,94,.15);"><th>Kedudukan</th><th>Nama</th><th>Kelas</th><th class="text-end">Mata</th></tr></thead><tbody id="tbody-rank"></tbody></table></div>
   </div>
+  <div class="card-g mt-3"><h5 class="mb-3"><i class="fa-solid fa-ranking-star me-2" style="color:var(--c1);"></i>Pencapaian Mengikut Peringkat</h5>
+    <div class="d-flex gap-2 mb-2 flex-wrap" id="pkt-tabs"></div>
+    <div class="d-flex gap-2 mb-3 flex-wrap">
+      <select id="pkt-thn" class="form-select form-select-sm" style="max-width:150px;" onchange="paparPeringkat()"><option value="">Semua Tahun</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select>
+      <input id="pkt-cari" class="form-control form-control-sm" style="max-width:240px;" placeholder="Cari nama / pertandingan..." oninput="paparPeringkat()">
+    </div>
+    <div id="pkt-senarai" style="font-size:13px;"></div>
+  </div>
 </div>
 
 <!-- PENGURUSAN MURID -->
@@ -822,7 +830,7 @@ function terapData(res){
 // Lukis semula paparan semasa sahaja (tanpa kosongkan borang yang sedang diisi)
 function paparSemula(){
   var v=_viewSemasa;
-  if(v==='utama'){kiraStats();kiraRank(kiraRank._thn||'1');kiraAlert();kiraAchievements();}
+  if(v==='utama'){kiraStats();kiraRank(kiraRank._thn||'1');paparPeringkat();kiraAlert();kiraAchievements();}
   else if(v==='murid'){muFilter();}
   else if(v==='datamurid'){filterData();pkUnit(true);}
   else if(v==='arkib'){paparArkib();}
@@ -2442,6 +2450,41 @@ document.addEventListener('visibilitychange',function(){
   if(document.hidden||!window._dataSedia)return;
   var n=Date.now();if(n-(window._akhirSegar||0)>60*1000){window._akhirSegar=n;muatSemua(true);}
 });
+
+// ===== PENCAPAIAN MENGIKUT PERINGKAT =====
+var _pktPilih='Antarabangsa';
+function paparPeringkat(pilih){
+  if(pilih)_pktPilih=pilih;
+  var box=document.getElementById('pkt-senarai'),tabs=document.getElementById('pkt-tabs');if(!box||!tabs)return;
+  var warna={Sekolah:'#64748b',Zon:'#0ea5e9',Daerah:'#22c55e',Negeri:'#f59e0b',Kebangsaan:'#ef4444',Antarabangsa:'#a855f7'};
+  var ikon={Antarabangsa:'🌏',Kebangsaan:'🇲🇾',Negeri:'🏞️',Daerah:'🏙️',Zon:'📍',Sekolah:'🏫'};
+  var thn=document.getElementById('pkt-thn').value,cari=(document.getElementById('pkt-cari').value||'').trim().toLowerCase();
+  var info={};(dc.murid||[]).forEach(function(m){info[m.nama.trim().toLowerCase()]=m;});
+  // Kumpul ikut peringkat -> murid
+  var kump={};PERINGKAT_SUSUN.forEach(function(k){kump[k]={};});
+  (dc.pencapaian||[]).forEach(function(p){
+    var n=p.nama.trim().toLowerCase();if(!n)return;var m=info[n];
+    if(thn&&(!m||m.tahun!==thn))return;
+    if(cari&&n.indexOf(cari)<0&&String(p.pertandingan).toLowerCase().indexOf(cari)<0)return;
+    var k=_pktNorm(p.peringkat);(kump[k][n]=kump[k][n]||{nama:m?m.nama:p.nama,m:m,rek:[]}).rek.push(p);
+  });
+  var turutan=PERINGKAT_SUSUN.slice().reverse();
+  tabs.innerHTML=turutan.map(function(k){var c=Object.keys(kump[k]).length,on=k===_pktPilih;
+    return '<button class="btn btn-sm fw-bold" style="border:1px solid '+warna[k]+';'+(on?'background:'+warna[k]+';color:#fff;':'color:'+warna[k]+';background:transparent;')+'" onclick="paparPeringkat(\''+k+'\')">'+ikon[k]+' '+(k==='Kebangsaan'?'Kebangsaan':k)+' <span class="badge bg-dark ms-1">'+c+'</span></button>';}).join('');
+  var list=Object.keys(kump[_pktPilih]).map(function(n){return kump[_pktPilih][n];});
+  var rankC={Johan:1,'Naib Johan':2,Ketiga:3,'Tempat Keempat':4,'Tempat Kelima':5};
+  list.forEach(function(o){o.rek.sort(function(a,b){return (rankC[a.pencapaian]||9)-(rankC[b.pencapaian]||9);});o.mata=o.rek.reduce(function(a,p){return a+(p.mata||0);},0);});
+  list.sort(function(a,b){return b.rek.length-a.rek.length||b.mata-a.mata||a.nama.localeCompare(b.nama);});
+  if(!list.length){box.innerHTML='<div class="text-center py-4" style="color:var(--sub);">'+ikon[_pktPilih]+' Tiada murid mencapai peringkat '+(_pktPilih==='Kebangsaan'?'Kebangsaan (Malaysia)':_pktPilih)+(thn?' bagi Tahun '+thn:'')+'.</div>';return;}
+  box.innerHTML='<div class="mb-2 fw-bold" style="color:'+warna[_pktPilih]+';">'+list.length+' murid · '+list.reduce(function(a,o){return a+o.rek.length;},0)+' rekod peringkat '+(_pktPilih==='Kebangsaan'?'Kebangsaan (Malaysia)':_pktPilih)+'</div>'
+    +'<div class="table-responsive"><table class="table table-sm align-middle" style="color:inherit;font-size:13px;"><thead><tr><th>#</th><th>Nama</th><th>Kelas</th><th class="text-center">Kali</th><th>Pencapaian</th></tr></thead><tbody>'
+    +list.map(function(o,i){
+      return '<tr><td>'+(i+1)+'</td><td><a href="#" class="nama-profil fw-bold text-uppercase" data-nama="'+esc(o.nama)+'" style="color:inherit;text-decoration:underline dotted;">'+esc(o.nama)+'</a></td>'
+        +'<td class="font-monospace" style="white-space:nowrap;">'+(o.m?esc(o.m.tahun)+' '+esc(o.m.kelas):'-')+'</td><td class="text-center fw-bold">'+o.rek.length+'</td>'
+        +'<td>'+o.rek.map(function(p){return '<div><strong>'+esc(p.pencapaian)+'</strong> — '+esc(p.pertandingan)+' <span style="color:var(--sub);font-size:11px;">('+esc(p.tarikh)+')</span></div>';}).join('')+'</td></tr>';
+    }).join('')+'</tbody></table></div>';
+  box.onclick=function(e){var a=e.target.closest('.nama-profil');if(!a)return;e.preventDefault();profilMurid(a.getAttribute('data-nama'));};
+}
 
 // ===== EKSPORT CSV (EXCEL) =====
 function eksportCsv(jenis){
