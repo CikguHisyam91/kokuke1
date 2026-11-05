@@ -318,6 +318,7 @@ body[data-theme="light"]::before{opacity:.55;}
   </div>
   <div class="card-g" data-dtab="pajsk" data-dlabel="🎓 PAJSK"><h5 class="mb-3"><i class="fa-solid fa-medal me-2" style="color:#22c55e;"></i>Ranking Markah PAJSK</h5>
     <div class="d-flex gap-2 mb-2 flex-wrap" id="pajr-tabs"></div>
+    <div class="d-flex gap-2 mb-2 flex-wrap" id="pajr-ikut"></div>
     <div class="d-flex gap-2 mb-3 flex-wrap">
       <select id="pajr-kls" class="form-select form-select-sm" style="max-width:180px;" onchange="paparRankPajsk()"><option value="">Semua Kelas</option></select>
       <input id="pajr-cari" class="form-control form-control-sm" style="max-width:220px;" placeholder="Cari nama..." oninput="paparRankPajsk()">
@@ -2648,7 +2649,9 @@ document.addEventListener('input',function(e){
 },true);
 
 // ===== RANKING MARKAH PAJSK RASMI (tab "PAJSK" dalam Google Sheet) =====
-var _pajR=null,_pajThn='6',_pajMuat=false;
+var _pajR=null,_pajThn='6',_pajMuat=false,_pajIkut='markah';
+var PAJ_IKUT=[['markah','🏆 Keseluruhan'],['uniform','🛡️ Uniform'],['kelab','🧠 Kelab & Persatuan'],['sukan','⚽ Sukan & Permainan']];
+function pajIkut(k){_pajIkut=k;paparRankPajsk();}
 try{_pajR=JSON.parse(localStorage.getItem('kokoPajsk')||'null');}catch(e){}
 function muatPajskRank(){
   paparRankPajsk();
@@ -2673,21 +2676,24 @@ function paparRankPajsk(){
   var kel=semua.map(function(p){return p.kelas;}).filter(function(v,i,a){return v&&a.indexOf(v)===i;}).sort();
   ks.innerHTML='<option value="">Semua Kelas</option>'+kel.map(function(k){return '<option'+(k===lama?' selected':'')+'>'+esc(k)+'</option>';}).join('');
   var kls=ks.value,cari=(document.getElementById('pajr-cari').value||'').trim().toLowerCase();
-  semua.sort(function(a,b){return b.markah-a.markah||b.gpa-a.gpa||a.nama.localeCompare(b.nama);});
-  var kd=0,lepas=null;semua.forEach(function(p,i){if(!lepas||p.markah!==lepas.markah||p.gpa!==lepas.gpa)kd=i+1;p._kd=kd;lepas=p;});
+  var K=_pajIkut;
+  document.getElementById('pajr-ikut').innerHTML=PAJ_IKUT.map(function(x){return '<button class="btn btn-sm fw-bold '+(x[0]===K?'btn-warning':'btn-outline-warning')+'" onclick="pajIkut(\''+x[0]+'\')">'+x[1]+'</button>';}).join('');
+  semua.sort(function(a,b){return b[K]-a[K]||b.markah-a.markah||b.gpa-a.gpa||a.nama.localeCompare(b.nama);});
+  var kd=0,lepas=null;semua.forEach(function(p,i){if(!lepas||p[K]!==lepas[K]||(K==='markah'&&p.gpa!==lepas.gpa))kd=i+1;p._kd=kd;lepas=p;});
   var list=semua.filter(function(p){return (!kls||p.kelas===kls)&&(!cari||p.nama.toLowerCase().indexOf(cari)>=0);});
   if(!list.length){box.innerHTML='<div class="text-center py-4" style="color:var(--sub);">📭 Tiada markah PAJSK untuk Tahun '+_pajThn+(kls?' '+esc(kls):'')+' lagi.</div>';return;}
   var gW={A:'#22c55e',B:'#0ea5e9',C:'#f59e0b',D:'#f97316',E:'#ef4444'};
-  var pur=list.reduce(function(a,p){return a+p.markah;},0)/list.length;
+  var pur=list.reduce(function(a,p){return a+p[K];},0)/list.length;
+  var hl=function(k){return k===K?'background:rgba(245,158,11,.14);font-weight:800;':'';};
   var gc={};list.forEach(function(p){gc[p.gred]=(gc[p.gred]||0)+1;});
-  box.innerHTML='<div class="d-flex flex-wrap gap-2 mb-2" style="font-size:12px;"><span class="badge bg-secondary p-2">'+list.length+' murid</span><span class="badge bg-secondary p-2">Purata: '+pur.toFixed(2)+'</span>'
+  box.innerHTML='<div class="d-flex flex-wrap gap-2 mb-2" style="font-size:12px;"><span class="badge bg-secondary p-2">'+list.length+' murid</span><span class="badge bg-secondary p-2">Purata '+(K==='markah'?'markah':K)+': '+pur.toFixed(2)+(K==='markah'?'':'%')+'</span>'
     +Object.keys(gc).sort().map(function(g){return '<span class="badge p-2" style="background:'+(gW[g]||'#64748b')+';">Gred '+esc(g)+': '+gc[g]+'</span>';}).join('')+'</div>'
-    +'<div class="table-responsive"><table class="table table-sm table-hover align-middle" style="color:inherit;font-size:12px;"><thead><tr><th>#</th><th>Nama</th><th>Kelas</th><th class="text-center">Sukan</th><th class="text-center">Kelab</th><th class="text-center">Uniform</th><th class="text-center">GPA</th><th class="text-end">Markah</th><th class="text-center">Gred</th></tr></thead><tbody>'
+    +'<div class="table-responsive"><table class="table table-sm table-hover align-middle" style="color:inherit;font-size:12px;"><thead><tr><th>#</th><th>Nama</th><th>Kelas</th><th class="text-center" style="'+hl('sukan')+'">Sukan</th><th class="text-center" style="'+hl('kelab')+'">Kelab</th><th class="text-center" style="'+hl('uniform')+'">Uniform</th><th class="text-center">GPA</th><th class="text-end" style="'+hl('markah')+'">Markah</th><th class="text-center">Gred</th></tr></thead><tbody>'
     +list.map(function(p){var md=p._kd===1?'🥇':p._kd===2?'🥈':p._kd===3?'🥉':'';
       return '<tr><td class="fw-bold" style="white-space:nowrap;">'+md+' '+p._kd+'</td><td><a href="#" class="nama-profil fw-bold" data-nama="'+esc(p.nama)+'" style="color:inherit;text-decoration:underline dotted;">'+esc(p.nama)+'</a></td>'
-        +'<td class="font-monospace">'+esc(p.kelas)+'</td><td class="text-center">'+p.sukan.toFixed(1)+'%</td><td class="text-center">'+p.kelab.toFixed(1)+'%</td><td class="text-center">'+p.uniform.toFixed(1)+'%</td>'
-        +'<td class="text-center">'+p.gpa.toFixed(2)+'</td><td class="text-end fw-bold" style="color:var(--c3);">'+p.markah.toFixed(2)+'</td><td class="text-center"><span class="badge" style="background:'+(gW[p.gred]||'#64748b')+';">'+esc(p.gred)+'</span></td></tr>';
-    }).join('')+'</tbody></table></div><div style="font-size:11px;color:var(--sub);">Markah = markah PAJSK (10%) daripada laporan rasmi KPM. Kedudukan ikut markah, kemudian GPA.</div>';
+        +'<td class="font-monospace">'+esc(p.kelas)+'</td><td class="text-center" style="'+hl('sukan')+'">'+p.sukan.toFixed(1)+'%</td><td class="text-center" style="'+hl('kelab')+'">'+p.kelab.toFixed(1)+'%</td><td class="text-center" style="'+hl('uniform')+'">'+p.uniform.toFixed(1)+'%</td>'
+        +'<td class="text-center">'+p.gpa.toFixed(2)+'</td><td class="text-end fw-bold" style="color:var(--c3);'+hl('markah')+'">'+p.markah.toFixed(2)+'</td><td class="text-center"><span class="badge" style="background:'+(gW[p.gred]||'#64748b')+';">'+esc(p.gred)+'</span></td></tr>';
+    }).join('')+'</tbody></table></div><div style="font-size:11px;color:var(--sub);">Markah = markah PAJSK (10%) daripada laporan rasmi KPM. Kedudukan ikut '+(PAJ_IKUT.filter(function(x){return x[0]===K;})[0][1].replace(/^\\S+\\s/,''))+' (lajur berwarna).</div>';
   box.onclick=function(e){var a=e.target.closest('.nama-profil');if(!a)return;e.preventDefault();profilMurid(a.getAttribute('data-nama'));};
 }
 
