@@ -1617,24 +1617,58 @@ function penTambahKelas(){
   paparPenTags();
   alert('✅ '+added+' murid dari Thn '+thn+' '+kls+' ditambah. Jumlah: '+penMurid.length+' orang.');
 }
+// Carian nama mudah: taip mana-mana bahagian nama (cth "aisy razid"), tak kisah tanda ' atau susunan perkataan
+function _kunciNama(t){return String(t||'').toUpperCase().replace(/[^A-Z0-9 ]/g,'').replace(/\s+/g,' ').trim();}
+var _penHasil=[],_penAktif=0;
 function penSuggest(val){
   var box=document.getElementById('sg-pen');if(!box)return;
-  if(!val){box.classList.add('d-none');return;}
-  var list=dc.murid.filter(function(m){return m.nama.toLowerCase().includes(val.toLowerCase());}).slice(0,6);
-  box.innerHTML='';
-  if(!list.length){box.classList.add('d-none');return;}
-  box.classList.remove('d-none');
-  list.forEach(function(m){
-    var d=document.createElement('div');d.className='suggest-item';d.textContent='🎯 '+m.nama+' (Thn '+m.tahun+' '+m.kelas+')';
-    d.onclick=(function(murid){return function(){
-      document.getElementById('sg-pen').classList.add('d-none');
-      document.getElementById('pen-cari').value='';
-      if(penMurid.includes(murid.nama)){alert('Nama ini sudah dipilih.');return;}
-      penMurid.push(murid.nama);paparPenTags();
-    };})(m);
-    box.appendChild(d);
-  });
+  var q=_kunciNama(val);
+  if(!q){box.classList.add('d-none');_penHasil=[];return;}
+  var kata=q.split(' ').filter(function(w){return w&&w!=='BIN'&&w!=='BINTI'&&w!=='AL'&&w!=='AP';});
+  if(!kata.length)kata=[q];
+  var thn=(document.getElementById('pen-f-thn')||{}).value||'';
+  _penHasil=dc.murid.filter(function(m){
+    if(thn&&m.tahun!==thn)return false;
+    var n=_kunciNama(m.nama);return kata.every(function(w){return n.indexOf(w)>=0;});
+  }).map(function(m){var n=_kunciNama(m.nama);return {m:m,skor:(n.indexOf(q)===0?0:n.indexOf(q)>0?1:2)};})
+    .sort(function(a,b){return a.skor-b.skor||a.m.nama.localeCompare(b.m.nama);}).slice(0,25).map(function(o){return o.m;});
+  _penAktif=0;
+  if(!_penHasil.length){box.innerHTML='<div class="suggest-item" style="color:var(--sub);cursor:default;">😕 Tiada murid sepadan'+(thn?' dalam Tahun '+thn:'')+'</div>';box.classList.remove('d-none');return;}
+  penLukisCadangan();
 }
+function penLukisCadangan(){
+  var box=document.getElementById('sg-pen');
+  box.innerHTML=_penHasil.map(function(m,i){
+    var ada=penMurid.indexOf(m.nama)>=0;
+    return '<div class="suggest-item" data-i="'+i+'" style="display:flex;justify-content:space-between;gap:8px;align-items:center;'+(i===_penAktif?'background:var(--shover);':'')+(ada?'opacity:.6;':'')+'">'
+      +'<span>'+(ada?'✅ ':'➕ ')+esc(m.nama)+'</span><span class="badge bg-secondary" style="white-space:nowrap;">'+esc(m.tahun)+' '+esc(m.kelas)+'</span></div>';
+  }).join('')+'<div class="suggest-item" style="font-size:10px;color:var(--sub);cursor:default;">Klik untuk pilih / buang · Enter = pilih yang bertanda · boleh pilih ramai</div>';
+  box.classList.remove('d-none');
+  box.onmousedown=function(e){e.preventDefault();};
+  box.onclick=function(e){var d=e.target.closest('[data-i]');if(!d)return;penTogol(_penHasil[+d.getAttribute('data-i')]);};
+}
+function penTogol(m){
+  if(!m)return;var i=penMurid.indexOf(m.nama);
+  if(i>=0){penMurid.splice(i,1);toast('➖ '+m.nama+' dibuang','info');}else{penMurid.push(m.nama);toast('✅ '+m.nama+' dipilih ('+penMurid.length+')','ok');}
+  paparPenTags();penLukisCadangan();
+  var c=document.getElementById('pen-cari');if(c)c.focus();
+}
+window.addEventListener('load',function(){
+  var c=document.getElementById('pen-cari');if(!c)return;
+  c.placeholder='Taip sebahagian nama, cth: AISY RAZID';
+  // Penapis tahun pantas
+  var f=document.createElement('select');f.id='pen-f-thn';f.className='form-select form-select-sm mb-2';f.style.maxWidth='160px';
+  f.innerHTML='<option value="">Semua Tahun</option>'+[1,2,3,4,5,6].map(function(t){return '<option value="'+t+'">Tahun '+t+'</option>';}).join('');
+  f.onchange=function(){penSuggest(c.value);c.focus();};
+  c.parentNode.insertBefore(f,c);
+  c.addEventListener('focus',function(){if(c.value)penSuggest(c.value);});
+  c.addEventListener('keydown',function(e){
+    if(!_penHasil.length)return;
+    if(e.key==='ArrowDown'){e.preventDefault();_penAktif=Math.min(_penAktif+1,_penHasil.length-1);penLukisCadangan();}
+    else if(e.key==='ArrowUp'){e.preventDefault();_penAktif=Math.max(_penAktif-1,0);penLukisCadangan();}
+    else if(e.key==='Enter'){e.preventDefault();penTogol(_penHasil[_penAktif]);}
+  });
+});
 function paparPenTags(){
   var zone=document.getElementById('pen-tags');
   zone.innerHTML=penMurid.map(function(nama,i){
