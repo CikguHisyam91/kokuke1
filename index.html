@@ -180,6 +180,47 @@ body[data-theme="dark"] .modal-box{background:#0f172a;}
 .table td,.table th,#pkt-tabs,#pkt-senarai,#cari-hasil,#koko-profil,#koko-mata,.suggest-box,.ktoast,.form-select,select option,
 input[type=text],input:not([type]),input[type=search],textarea{text-transform:uppercase;}
 input::placeholder,textarea::placeholder{text-transform:none;}
+
+/* ================= GLASS LOOK ================= */
+body[data-theme="dark"]{--card:rgba(255,255,255,0.06);--glow:rgba(255,255,255,0.12);--inp:rgba(15,23,42,0.55);--suggest:rgba(15,23,42,0.92);--glass-hi:rgba(255,255,255,0.18);--glass-sh:0 8px 32px rgba(0,0,0,.35);}
+body[data-theme="light"]{--card:rgba(255,255,255,0.55);--glow:rgba(255,255,255,0.7);--inp:rgba(255,255,255,0.7);--glass-hi:rgba(255,255,255,0.9);--glass-sh:0 8px 32px rgba(31,38,135,.12);}
+body{background:var(--bg);position:relative;overflow-x:hidden;}
+body::before{content:"";position:fixed;inset:-20%;z-index:-1;pointer-events:none;
+  background:radial-gradient(40% 35% at 15% 20%,rgba(6,182,212,.35),transparent 70%),
+             radial-gradient(35% 35% at 85% 15%,rgba(168,85,247,.32),transparent 70%),
+             radial-gradient(45% 40% at 70% 85%,rgba(34,197,94,.22),transparent 70%),
+             radial-gradient(35% 30% at 10% 90%,rgba(244,63,94,.22),transparent 70%);
+  filter:blur(20px);animation:latar 24s ease-in-out infinite alternate;}
+body[data-theme="light"]::before{opacity:.55;}
+@keyframes latar{0%{transform:translate(0,0) scale(1);}50%{transform:translate(-3%,2%) scale(1.06);}100%{transform:translate(2%,-3%) scale(1.02);}}
+@media (prefers-reduced-motion:reduce){body::before{animation:none;}}
+.card-g,.menu-btn,.modal-box,.koko-nav,#dash-tabs,#koko-cari>div,#koko-profil>div,#koko-mata>div,#koko-gambar>div,#koko-sr>div{
+  background:linear-gradient(135deg,var(--glass-hi) -40%,var(--card) 45%)!important;
+  -webkit-backdrop-filter:blur(16px) saturate(160%);backdrop-filter:blur(16px) saturate(160%);
+  border:1px solid var(--glow)!important;box-shadow:var(--glass-sh),inset 0 1px 0 var(--glass-hi);}
+.card-g{border-radius:22px;transition:transform .2s,box-shadow .2s;}
+.card-g h4,.card-g h5{letter-spacing:.2px;}
+.koko-nav{position:sticky;top:0;z-index:60;border-radius:0 0 20px 20px;border-top:none!important;}
+#dash-tabs{border-radius:16px;padding:8px!important;top:calc(var(--navH,64px) + 6px)!important;}
+#dash-tabs .btn{border-radius:999px;}
+.menu-btn{border-radius:22px;transition:transform .15s,box-shadow .2s,border-color .2s;}
+.menu-btn:hover{transform:translateY(-3px);box-shadow:0 14px 34px rgba(6,182,212,.25),inset 0 1px 0 var(--glass-hi);border-color:rgba(6,182,212,.6)!important;}
+.menu-btn i{width:58px;height:58px;display:flex;align-items:center;justify-content:center;border-radius:18px;background:rgba(255,255,255,.08);box-shadow:inset 0 1px 0 var(--glass-hi);font-size:26px!important;}
+.btn{border-radius:12px;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
+.btn-success,.btn-info,.btn-warning,.btn-danger{box-shadow:0 6px 18px rgba(0,0,0,.18);}
+.form-control,.form-select{-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-radius:12px!important;}
+.form-control:focus,.form-select:focus{border-color:var(--c1)!important;box-shadow:0 0 0 3px rgba(6,182,212,.2)!important;}
+.suggest-box{-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-radius:12px;}
+.table{border-radius:14px;overflow:hidden;}
+.table thead th{background:rgba(255,255,255,.06)!important;font-size:11px;text-transform:uppercase;letter-spacing:.6px;}
+.badge{border-radius:999px;}
+.ktoast{-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.25);border-radius:16px;}
+.ktoast.ok{background:rgba(21,128,61,.85);}.ktoast.err{background:rgba(190,18,60,.85);}.ktoast.info{background:rgba(180,83,9,.85);}
+#koko-cari,#koko-profil,#koko-mata,#koko-gambar,#koko-sr{background:rgba(2,6,23,.55)!important;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
+.img-upload-box{background:rgba(255,255,255,.04);border-radius:16px;transition:border-color .2s,background .2s;}
+.img-upload-box:hover{border-color:var(--c1);background:rgba(6,182,212,.08);}
+::-webkit-scrollbar{width:8px;height:8px;}::-webkit-scrollbar-thumb{background:rgba(148,163,184,.35);border-radius:8px;}
+@media print{body::before{display:none;}.card-g{backdrop-filter:none!important;}}
 </style>
 </head>
 <body data-theme="dark">
@@ -191,16 +232,16 @@ input::placeholder,textarea::placeholder{text-transform:none;}
 </div>
 
 <!-- NAVBAR -->
-<div class="no-print" style="background:rgba(9,13,38,.9);border-bottom:1px solid var(--glow);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+<div class="no-print koko-nav" style="padding:10px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
   <div style="display:flex;align-items:center;gap:10px;">
     <img src="logo.png" alt="Logo" style="height:40px;width:auto;">
-    <div><div style="font-weight:700;color:#fff;font-family:Space Grotesk,sans-serif;">KOKOSMART PRO</div><div style="font-size:10px;color:var(--c1);font-family:monospace;"><span id='lbl-sekolah'>SK KING EDWARD VII (1)</span></div></div>
+    <div><div style="font-weight:700;color:var(--txt);font-family:Space Grotesk,sans-serif;">KOKOSMART PRO</div><div style="font-size:10px;color:var(--c1);font-family:monospace;"><span id='lbl-sekolah'>SK KING EDWARD VII (1)</span></div></div>
   </div>
   <div style="display:flex;gap:8px;">
     <button class="btn btn-sm btn-outline-warning fw-bold px-3" onclick="togTheme()"><i class="fa-solid fa-gamepad me-1"></i><span id="lbl-theme">NIGHT HUD</span></button>
     <button class="btn btn-sm btn-outline-info" onclick="bukaCari()" title="Cari murid" aria-label="Cari murid"><i class="fa-solid fa-magnifying-glass"></i></button>
     <button class="btn btn-sm btn-outline-danger" onclick="if(confirm('Log keluar dari sistem?'))kokoLogKeluar()" title="Log keluar" aria-label="Log keluar"><i class="fa-solid fa-right-from-bracket"></i></button>
-    <button id="btn-back" class="btn btn-sm btn-outline-light d-none" onclick="tukarMenu('home')"><i class="fa-solid fa-house me-1"></i>Utama</button>
+    <button id="btn-back" class="btn btn-sm btn-outline-info d-none" onclick="tukarMenu('home')"><i class="fa-solid fa-house me-1"></i>Utama</button>
   </div>
 </div>
 
@@ -208,13 +249,13 @@ input::placeholder,textarea::placeholder{text-transform:none;}
 
 <!-- HOME -->
 <div id="view-home" class="view-section active">
-  <div class="card-g" style="background:linear-gradient(135deg,rgba(6,182,212,.1),rgba(15,23,42,.6));"><h4 class="mb-1">Selamat Datang Cikgu! 👋</h4><p class="text-muted small mb-0">Pilih menu untuk urus kokurikulum sekolah.</p></div>
+  <div class="card-g" style="background:linear-gradient(135deg,rgba(6,182,212,.1),rgba(15,23,42,.6));"><h4 class="mb-1">Selamat Datang Cikgu! 👋</h4><p class="small mb-0" style="color:var(--sub);">Pilih menu untuk urus kokurikulum sekolah.</p></div>
   <div class="menu-grid mb-4">
     <div class="menu-btn" onclick="tukarMenu('utama')"><i class="fa-solid fa-chart-pie" style="color:var(--c1);"></i><span>Ringkasan Aktiviti</span></div>
     <div class="menu-btn" onclick="tukarMenu('murid')"><i class="fa-solid fa-users" style="color:var(--c3);"></i><span>Pengurusan Murid</span></div>
     <div class="menu-btn" onclick="tukarMenu('datamurid')"><i class="fa-solid fa-users-viewfinder" style="color:#3b82f6;"></i><span>Data &amp; Cetakan</span></div>
     <div class="menu-btn" onclick="tukarMenu('kehadiran')"><i class="fa-solid fa-calendar-check" style="color:var(--c2);"></i><span>Rekod Kehadiran</span></div>
-    <div class="menu-btn" onclick="tukarMenu('koleksiopr')"><i class="fa-solid fa-cabinet-filing" style="color:var(--c1);"></i><span>Koleksi OPR</span></div>
+    <div class="menu-btn" onclick="tukarMenu('koleksiopr')"><i class="fa-solid fa-folder-open" style="color:var(--c1);"></i><span>Koleksi OPR</span></div>
     <div class="menu-btn" onclick="tukarMenu('jawatankuasa')"><i class="fa-solid fa-sitemap" style="color:var(--c1);"></i><span>Jawatankuasa &amp; PAJSK</span></div>
     <div class="menu-btn" onclick="tukarMenu('pencapaian')"><i class="fa-solid fa-trophy" style="color:var(--c5);"></i><span>Rekod Pencapaian</span></div>
     <div class="menu-btn" onclick="tukarMenu('guru')"><i class="fa-solid fa-chalkboard-user" style="color:var(--c5);"></i><span>Senarai Guru</span></div>
@@ -2864,6 +2905,10 @@ function srPadam(){
     else alert('Gagal: '+(res&&res.error||''));
   }).withFailureHandler(function(e){hideLoad();alert('Ralat: '+e.message+'\n\nPastikan Code.gs terkini sudah di-Deploy.');}).padamRekodPencapaian(_srKunci());
 }
+
+// Ketinggian bar atas (untuk tab melekat di bawahnya)
+(function(){function u(){var n=document.querySelector('.koko-nav');if(n)document.documentElement.style.setProperty('--navH',n.offsetHeight+'px');}
+window.addEventListener('load',u);window.addEventListener('resize',u);})();
 
 // ===== EKSPORT CSV (EXCEL) =====
 function eksportCsv(jenis){
