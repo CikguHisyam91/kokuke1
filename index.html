@@ -176,6 +176,10 @@ body[data-theme="dark"] .modal-box{background:#0f172a;}
 #opr-modal{display:none;position:fixed;inset:0;z-index:99990;background:rgba(0,0,0,.8);flex-direction:column;}
 #opr-modal.show{display:flex;}
 #opr-modal iframe{flex:1;border:none;width:100%;background:#040612;}
+/* SERAGAM: semua data & input dalam HURUF BESAR */
+.table td,.table th,#pkt-tabs,#pkt-senarai,#cari-hasil,#koko-profil,#koko-mata,.suggest-box,.ktoast,.form-select,select option,
+input[type=text],input:not([type]),input[type=search],textarea{text-transform:uppercase;}
+input::placeholder,textarea::placeholder{text-transform:none;}
 </style>
 </head>
 <body data-theme="dark">
@@ -2485,6 +2489,14 @@ function paparPeringkat(pilih){
     }).join('')+'</tbody></table></div>';
   box.onclick=function(e){var a=e.target.closest('.nama-profil');if(!a)return;e.preventDefault();profilMurid(a.getAttribute('data-nama'));};
 }
+
+// ===== SERAGAM HURUF BESAR: teks yang ditaip disimpan dalam huruf besar =====
+document.addEventListener('input',function(e){
+  var el=e.target;if(!el||!(el.tagName==='TEXTAREA'||(el.tagName==='INPUT'&&(!el.type||el.type==='text'||el.type==='search'))))return;
+  if(el.id==='koko-pw')return;
+  var v=el.value,u=v.toUpperCase();if(v===u)return;
+  var a=el.selectionStart,b=el.selectionEnd;el.value=u;try{el.setSelectionRange(a,b);}catch(x){}
+},true);
 
 // ===== EKSPORT CSV (EXCEL) =====
 function eksportCsv(jenis){
