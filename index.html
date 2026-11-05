@@ -2668,7 +2668,7 @@ function kiraPerluGambar(){
   var grp={};_perluGambar=[];
   (dc.pencapaian||[]).forEach(function(p){
     if(String(p.linkGambar||'').trim())return;
-    if(/sync sheet pencapaian/i.test(p.namaGuru||''))return; // rekod dari Sheet guru — gambar ada di Sheet itu
+    if(/^sync/i.test(p.namaGuru||''))return; // rekod dari Sheet guru — gambar ada di Sheet itu
     var k=p.tarikh+'|'+p.pertandingan+'|'+p.pencapaian;
     if(!grp[k]){grp[k]={tarikh:p.tarikh,pertandingan:p.pertandingan,pencapaian:p.pencapaian,peringkat:p.peringkat,guru:p.namaGuru,nama:[]};_perluGambar.push(grp[k]);}
     grp[k].nama.push(p.nama);
