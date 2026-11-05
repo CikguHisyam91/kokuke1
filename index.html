@@ -294,6 +294,11 @@ body[data-theme="light"]::before{opacity:.55;}
       <div class="col-md-3"><div class="small mb-1" style="color:var(--sub);">🛡️ Uniform <span id="pct-uniform" class="fw-bold" style="color:var(--c1);float:right;">0%</span></div><div class="pbar"><div id="bar-uniform" class="rounded" style="background:linear-gradient(90deg,#38bdf8,#0284c7);height:10px;width:0%;"></div></div><div class="small mt-2 mb-1" style="color:var(--sub);">🧠 Kelab <span id="pct-kelab" class="fw-bold" style="color:var(--c2);float:right;">0%</span></div><div class="pbar"><div id="bar-kelab" class="rounded" style="background:linear-gradient(90deg,#c084fc,#9333ea);height:10px;width:0%;"></div></div><div class="small mt-2 mb-1" style="color:var(--sub);">⚽ Sukan <span id="pct-sukan" class="fw-bold" style="color:var(--c3);float:right;">0%</span></div><div class="pbar"><div id="bar-sukan" class="rounded" style="background:linear-gradient(90deg,#4ade80,#16a34a);height:10px;width:0%;"></div></div></div>
     </div>
   </div>
+  <div class="card-g" data-dtab="unithadir" data-dlabel="📋 Kehadiran Ikut Unit"><h5 class="mb-3"><i class="fa-solid fa-people-group me-2" style="color:var(--c3);"></i>Kehadiran Ikut Unit &amp; Perjumpaan</h5>
+    <div class="d-flex gap-2 mb-2 flex-wrap" id="uh-kat"></div>
+    <div class="d-flex gap-2 mb-3 flex-wrap"><select id="uh-thn" class="form-select form-select-sm" style="max-width:150px;" onchange="paparUnitHadir()"><option value="">Semua Tahun</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></div>
+    <div id="uh-senarai" style="font-size:13px;"></div>
+  </div>
   <div class="card-g" id="card-achiev" data-dtab="ringkas" data-dlabel="🏅 Ringkasan Pencapaian">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
       <h5 class="mb-0"><i class="fa-solid fa-medal me-2" style="color:var(--c5);"></i>Pencapaian Murid — Ikut Peringkat</h5>
@@ -840,7 +845,7 @@ function tukarMenu(id){
   document.getElementById('btn-back').classList[id==='home'?'add':'remove']('d-none');
   window.scrollTo(0,0);
   _viewSemasa=id;
-  if(id==='utama'){kiraStats();kiraRank(kiraRank._thn||'1');paparPeringkat();muatPajskRank();kiraAlert();kiraAchievements();}
+  if(id==='utama'){kiraStats();kiraRank(kiraRank._thn||'1');paparPeringkat();muatPajskRank();paparUnitHadir();kiraAlert();kiraAchievements();}
   if(id==='murid'){muStats();muFilterKelas();muFilter();}
   if(id==='datamurid'){filterData();pkJenis(_pkJenis);}
   if(id==='arkib'){paparArkib();}
@@ -904,7 +909,7 @@ function terapData(res){
 // Lukis semula paparan semasa sahaja (tanpa kosongkan borang yang sedang diisi)
 function paparSemula(){
   var v=_viewSemasa;
-  if(v==='utama'){kiraStats();kiraRank(kiraRank._thn||'1');paparPeringkat();muatPajskRank();kiraAlert();kiraAchievements();}
+  if(v==='utama'){kiraStats();kiraRank(kiraRank._thn||'1');paparPeringkat();muatPajskRank();paparUnitHadir();kiraAlert();kiraAchievements();}
   else if(v==='murid'){muFilter();}
   else if(v==='datamurid'){filterData();pkUnit(true);}
   else if(v==='arkib'){paparArkib();}
@@ -2915,6 +2920,43 @@ function srPadam(){
 // Ketinggian bar atas (untuk tab melekat di bawahnya)
 (function(){function u(){var n=document.querySelector('.koko-nav');if(n)document.documentElement.style.setProperty('--navH',n.offsetHeight+'px');}
 window.addEventListener('load',u);window.addEventListener('resize',u);})();
+
+// ===== KEHADIRAN IKUT UNIT & BILANGAN PERJUMPAAN =====
+var _uhKat='uniform',_uhBuka={};
+function uhKat(k){_uhKat=k;paparUnitHadir();}
+function paparUnitHadir(){
+  var box=document.getElementById('uh-senarai'),kb=document.getElementById('uh-kat');if(!box||!kb)return;
+  var KAT=[['uniform','🛡️ Unit Uniform'],['kelab','🧠 Kelab & Persatuan'],['sukan','⚽ Sukan & Permainan']];
+  var thn=document.getElementById('uh-thn').value;
+  var g={},cK={};
+  (dc.kehadiran||[]).forEach(function(l){
+    var kat=String(l.kategori).toLowerCase();(cK[kat]=cK[kat]||{})[l.namaUnit+'|'+l.tahunAliran]=1;
+    if(kat!==_uhKat)return;
+    if(thn&&String(l.tahunAliran)!==thn)return;
+    var k=l.namaUnit+'|'+l.tahunAliran;
+    var u=g[k]||(g[k]={unit:l.namaUnit,thn:l.tahunAliran,sesi:{},ahli:{}});
+    var sk=l.tarikh+'|'+l.perjumpaanKe;
+    var s=u.sesi[sk]||(u.sesi[sk]={tarikh:l.tarikh,siri:l.perjumpaanKe,h:[],t:[]});
+    (/^hadir$/i.test(l.status)?s.h:s.t).push(l.namaMurid);u.ahli[l.namaMurid]=1;
+  });
+  kb.innerHTML=KAT.map(function(x){return '<button class="btn btn-sm fw-bold '+(x[0]===_uhKat?'btn-success':'btn-outline-success')+'" onclick="uhKat(\''+x[0]+'\')">'+x[1]+' <span class="badge bg-dark ms-1">'+Object.keys(cK[x[0]]||{}).length+'</span></button>';}).join('');
+  var tk=function(d){var m=String(d).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);return m?+(m[3]+('0'+m[2]).slice(-2)+('0'+m[1]).slice(-2)):0;};
+  var list=Object.keys(g).map(function(k){var u=g[k];u.k=k;u.ss=Object.keys(u.sesi).map(function(x){return u.sesi[x];}).sort(function(a,b){return tk(a.tarikh)-tk(b.tarikh)||(+a.siri)-(+b.siri);});
+    var h=0,t=0;u.ss.forEach(function(s){h+=s.h.length;t+=s.h.length+s.t.length;});u.pct=t?Math.round(h/t*100):0;return u;})
+    .sort(function(a,b){return a.unit.localeCompare(b.unit)||String(a.thn).localeCompare(String(b.thn));});
+  if(!list.length){box.innerHTML='<div class="text-center py-4" style="color:var(--sub);">Tiada rekod kehadiran untuk kategori ini.</div>';return;}
+  var warna=function(p){return p>=80?'#22c55e':p>=60?'#f59e0b':'#ef4444';};
+  box.innerHTML='<div class="table-responsive"><table class="table table-sm align-middle" style="color:inherit;font-size:13px;"><thead><tr><th>Unit</th><th class="text-center">Tahun</th><th class="text-center">Bil. Perjumpaan</th><th class="text-center">Ahli</th><th>Purata Kehadiran</th><th></th></tr></thead><tbody>'
+    +list.map(function(u){var buka=_uhBuka[u.k];
+      var baris='<tr data-k="'+esc(u.k)+'" style="cursor:pointer;"><td class="fw-bold">'+esc(u.unit)+'</td><td class="text-center">'+esc(u.thn)+'</td><td class="text-center"><span class="badge bg-info text-dark" style="font-size:13px;">'+u.ss.length+'</span></td><td class="text-center">'+Object.keys(u.ahli).length+'</td>'
+        +'<td style="min-width:130px;"><div style="background:rgba(148,163,184,.2);border-radius:20px;height:8px;"><div style="width:'+u.pct+'%;height:8px;border-radius:20px;background:'+warna(u.pct)+';"></div></div><small class="fw-bold" style="color:'+warna(u.pct)+';">'+u.pct+'%</small></td><td>'+(buka?'▲':'▼')+'</td></tr>';
+      if(buka)baris+='<tr><td colspan="6" style="background:rgba(255,255,255,.03);"><table class="table table-sm mb-0" style="color:inherit;font-size:12px;"><thead><tr><th>Perjumpaan</th><th>Tarikh</th><th class="text-center">Hadir</th><th class="text-center">%</th><th>Tidak Hadir</th></tr></thead><tbody>'
+        +u.ss.map(function(s){var n=s.h.length+s.t.length,p=n?Math.round(s.h.length/n*100):0;
+          return '<tr><td class="fw-bold">Ke-'+esc(s.siri)+'</td><td style="white-space:nowrap;">'+esc(s.tarikh)+'</td><td class="text-center">'+s.h.length+'/'+n+'</td><td class="text-center fw-bold" style="color:'+warna(p)+';">'+p+'%</td><td style="font-size:11px;">'+(s.t.length?s.t.map(esc).join(', '):'<span style="color:#22c55e;">Semua hadir ✅</span>')+'</td></tr>';}).join('')
+        +'</tbody></table></td></tr>';
+      return baris;}).join('')+'</tbody></table></div><div style="font-size:11px;color:var(--sub);">Klik pada unit untuk lihat senarai setiap perjumpaan.</div>';
+  box.onclick=function(e){var tr=e.target.closest('tr[data-k]');if(!tr)return;var k=tr.getAttribute('data-k');_uhBuka[k]=!_uhBuka[k];paparUnitHadir();};
+}
 
 // ===== EKSPORT CSV (EXCEL) =====
 function eksportCsv(jenis){
