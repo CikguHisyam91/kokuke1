@@ -194,6 +194,8 @@ body[data-theme="dark"] .modal-box{background:#0f172a;}
   </div>
   <div style="display:flex;gap:8px;">
     <button class="btn btn-sm btn-outline-warning fw-bold px-3" onclick="togTheme()"><i class="fa-solid fa-gamepad me-1"></i><span id="lbl-theme">NIGHT HUD</span></button>
+    <button class="btn btn-sm btn-outline-info" onclick="bukaCari()" title="Cari murid" aria-label="Cari murid"><i class="fa-solid fa-magnifying-glass"></i></button>
+    <button class="btn btn-sm btn-outline-danger" onclick="if(confirm('Log keluar dari sistem?'))kokoLogKeluar()" title="Log keluar" aria-label="Log keluar"><i class="fa-solid fa-right-from-bracket"></i></button>
     <button id="btn-back" class="btn btn-sm btn-outline-light d-none" onclick="tukarMenu('home')"><i class="fa-solid fa-house me-1"></i>Utama</button>
   </div>
 </div>
@@ -664,6 +666,14 @@ body[data-theme="dark"] .modal-box{background:#0f172a;}
     <div class="mb-3"><label class="small fw-bold mb-1">Tahun Akademik (untuk laporan)</label><input type="number" id="tet-tahun" class="form-control" min="2020" max="2100" placeholder="Kosongkan = tahun semasa"></div>
     <button class="btn btn-success fw-bold px-4 mb-2" onclick="simpanNamaSekolah()"><i class="fa-solid fa-floppy-disk me-1"></i>Simpan Tetapan Sekolah</button>
     <div id="tet-notif" class="mt-2"></div>
+    <hr><h5 class="mb-2"><i class="fa-solid fa-file-excel me-2" style="color:#22c55e;"></i>Muat Turun Data (Excel)</h5>
+    <p class="small" style="color:var(--sub);">Fail CSV boleh dibuka terus dengan Excel atau Google Sheets.</p>
+    <div class="d-flex flex-wrap gap-2 mb-2">
+      <button class="btn btn-sm btn-outline-success fw-bold" onclick="eksportCsv('murid')">👥 Senarai Murid</button>
+      <button class="btn btn-sm btn-outline-success fw-bold" onclick="eksportCsv('kehadiran')">📋 Kehadiran</button>
+      <button class="btn btn-sm btn-outline-success fw-bold" onclick="eksportCsv('pencapaian')">🏆 Pencapaian</button>
+      <button class="btn btn-sm btn-outline-success fw-bold" onclick="eksportCsv('arkib')">📁 Arkib</button>
+    </div>
   </div>
   <div class="card-g mt-3" style="max-width:520px;">
     <h4 class="mb-3"><i class="fa-solid fa-shield-halved me-2" style="color:var(--c1);"></i>Tetapan Kata Laluan <button onclick="kokoLogKeluar()" class="btn btn-sm btn-outline-danger fw-bold ms-2" style="font-size:11px;">Log Keluar</button></h4>
@@ -1408,6 +1418,7 @@ function loadThumb(input,idx,arr){
   });
 }
 function resetKehadiran(){
+  try{localStorage.removeItem('kokoDrafHadir');}catch(e){}
   document.getElementById('h-ket').value='';
   document.getElementById('h-guru').value='';
   var ht=document.getElementById('h-tarikh');if(ht&&!ht.value)ht.value=tarikhHariIni();
@@ -2052,7 +2063,7 @@ function arkibMurid(nama){
       // Kemas kini serta-merta tanpa tunggu muat semula penuh
       var m=dc.murid.find(function(x){return x.nama===nama;});
       if(m){dc.murid=dc.murid.filter(function(x){return x!==m;});dc.arkib.push(m);}
-      paparSemula();toast('✅ '+nama+' dipindah ke arkib.','ok');muatSemua(true);
+      paparSemula();toastBatal('✅ '+nama+' dipindah ke arkib.',function(){pulihkanMurid(nama,true);});muatSemua(true);
     }else{alert('Gagal: '+(res?res.error:''));}
   }).withFailureHandler(function(e){hideLoad();alert('Ralat: '+e.message);}).pindahMuridKeArkib(nama);
 }
@@ -2074,8 +2085,8 @@ function paparArkib(){
   }).join('');
   tbody.onclick=function(e){var b=e.target.closest('button[data-i]');if(!b)return;var m=list[parseInt(b.getAttribute('data-i'),10)];if(m)pulihkanMurid(m.nama);};
 }
-function pulihkanMurid(nama){
-  if(!confirm('Pulihkan '+nama+'?'))return;showLoad();
+function pulihkanMurid(nama,terus){
+  if(!terus&&!confirm('Pulihkan '+nama+'?'))return;showLoad();
   google.script.run.withSuccessHandler(function(res){
     hideLoad();
     if(res&&res.success){
@@ -2308,4 +2319,108 @@ function cetakOprModal(){
   catch(e){var pw=window.open('','_blank');if(pw){pw.document.write(fr.srcdoc);pw.document.close();setTimeout(function(){pw.print();},400);}}
 }
 
+
+// ===== CARI MURID PANTAS =====
+function bukaCari(){
+  var el=document.getElementById('koko-cari');
+  if(!el){
+    el=document.createElement('div');el.id='koko-cari';
+    el.style.cssText='position:fixed;inset:0;z-index:9000;background:rgba(2,6,23,.85);display:flex;justify-content:center;align-items:flex-start;padding:60px 16px 16px;';
+    el.innerHTML='<div style="width:100%;max-width:520px;background:var(--card,#0f172a);border:1px solid rgba(6,182,212,.35);border-radius:16px;padding:16px;max-height:80vh;display:flex;flex-direction:column;">'
+      +'<div class="d-flex gap-2 mb-2"><input id="cari-input" class="form-control" placeholder="Taip nama murid..." autocomplete="off"><button class="btn btn-outline-light" onclick="tutupCari()" aria-label="Tutup">✕</button></div>'
+      +'<div id="cari-hasil" style="overflow-y:auto;color:var(--txt,#e2e8f0);font-size:13px;"></div></div>';
+    el.addEventListener('click',function(e){if(e.target===el)tutupCari();});
+    document.body.appendChild(el);
+    document.getElementById('cari-input').addEventListener('input',function(){cariMurid(this.value);});
+  }
+  el.style.display='flex';var i=document.getElementById('cari-input');i.value='';cariMurid('');setTimeout(function(){i.focus();},50);
+}
+function tutupCari(){var el=document.getElementById('koko-cari');if(el)el.style.display='none';}
+document.addEventListener('keydown',function(e){if(e.key==='Escape')tutupCari();});
+function cariMurid(q){
+  var box=document.getElementById('cari-hasil');q=(q||'').trim().toLowerCase();
+  if(q.length<2){box.innerHTML='<div class="text-center py-4" style="color:var(--sub);">🔎 Taip sekurang-kurangnya 2 huruf nama murid.</div>';return;}
+  var semua=(dc.murid||[]).map(function(m){return {m:m,ark:false};}).concat((dc.arkib||[]).map(function(m){return {m:m,ark:true};}));
+  var hasil=semua.filter(function(o){return o.m.nama.toLowerCase().indexOf(q)>=0;}).slice(0,30);
+  if(!hasil.length){box.innerHTML='<div class="text-center py-4" style="color:var(--sub);">😕 Tiada murid dijumpai.</div>';return;}
+  box.innerHTML=hasil.map(function(o){
+    var m=o.m,n=m.nama.toLowerCase();
+    var log=(dc.kehadiran||[]).filter(function(l){return l.namaMurid.toLowerCase()===n;});
+    var hadir=log.filter(function(l){return /^hadir$/i.test(l.status);}).length;
+    var pc=(dc.pencapaian||[]).filter(function(p){return p.nama.toLowerCase()===n;});
+    var mata=pc.reduce(function(a,p){return a+(p.mata||0);},0);
+    return '<div style="border-bottom:1px solid rgba(148,163,184,.2);padding:10px 4px;">'
+      +'<div class="fw-bold" style="color:var(--c1,#06b6d4);">'+(o.ark?'📁 ':'👤 ')+esc(m.nama)+(o.ark?' <span class="badge bg-secondary">Arkib</span>':'')+'</div>'
+      +'<div>Tahun '+esc(m.tahun)+' '+esc(m.kelas)+' · 🏠 '+esc(m.rumah||'-')+'</div>'
+      +'<div style="color:var(--sub);">🛡️ '+esc(m.uniform||'-')+' · 🧠 '+esc(m.kelab||'-')+' · ⚽ '+esc(m.sukan||'-')+'</div>'
+      +'<div>📋 Hadir '+hadir+'/'+log.length+' · 🏆 '+pc.length+' pencapaian ('+mata+' mata)</div></div>';
+  }).join('');
+}
+
+// ===== EKSPORT CSV (EXCEL) =====
+function eksportCsv(jenis){
+  if(!window.dc)return alert('Data belum dimuatkan.');
+  var t={
+    murid:[['Nama','Tahun','Kelas','Rumah','Uniform','Kelab','Sukan'],(dc.murid||[]).map(function(m){return [m.nama,m.tahun,m.kelas,m.rumah,m.uniform,m.kelab,m.sukan];})],
+    arkib:[['Nama','Tahun','Kelas','Rumah','Uniform','Kelab','Sukan'],(dc.arkib||[]).map(function(m){return [m.nama,m.tahun,m.kelas,m.rumah,m.uniform,m.kelab,m.sukan];})],
+    kehadiran:[['Tarikh','Nama Murid','Kategori','Unit','Perjumpaan Ke','Tahun','Status','Guru'],(dc.kehadiran||[]).map(function(l){return [l.tarikh,l.namaMurid,l.kategori,l.namaUnit,l.perjumpaanKe,l.tahunAliran,l.status,l.namaGuru||''];})],
+    pencapaian:[['Tarikh','Nama','Kategori','Peringkat','Pertandingan','Pencapaian','Mata'],(dc.pencapaian||[]).map(function(p){return [p.tarikh,p.nama,p.kategori,p.peringkat,p.pertandingan,p.pencapaian,p.mata];})]
+  }[jenis];
+  if(!t[1].length)return toast('Tiada data '+jenis+' untuk dimuat turun.','info');
+  var q=function(v){v=v==null?'':String(v);if(/^[=+\-@]/.test(v))v="'"+v;return '"'+v.replace(/"/g,'""')+'"';};
+  var csv='﻿'+[t[0]].concat(t[1]).map(function(r){return r.map(q).join(',');}).join('\r\n');
+  var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download='KokoSmart_'+jenis+'_'+tarikhHariIni()+'.csv';document.body.appendChild(a);a.click();
+  setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},1000);
+  toast('✅ '+t[1].length+' rekod dimuat turun.','ok');
+}
+
+// ===== TOAST DENGAN BUTANG BATAL =====
+function toastBatal(msg,fnBatal){
+  var box=document.getElementById('koko-toast');if(!box){toast(msg,'ok');return;}
+  var d=document.createElement('div');d.className='ktoast ok';d.style.display='flex';d.style.alignItems='center';d.style.gap='10px';
+  var s=document.createElement('span');s.textContent=msg;d.appendChild(s);
+  var b=document.createElement('button');b.className='btn btn-sm btn-warning fw-bold';b.textContent='↩ Batal';
+  b.onclick=function(e){e.stopPropagation();d.remove();fnBatal();};d.appendChild(b);
+  box.appendChild(d);setTimeout(function(){d.remove();},8000);
+}
+
+// ===== PENUNJUK LUAR TALIAN =====
+(function(){
+  function kemas(){
+    var b=document.getElementById('koko-offline');
+    if(navigator.onLine){if(b)b.remove();return;}
+    if(!b){b=document.createElement('div');b.id='koko-offline';
+      b.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:9500;background:#b91c1c;color:#fff;text-align:center;font-size:13px;font-weight:700;padding:8px;';
+      b.textContent='📡 Tiada internet — paparan guna data terakhir. Data tidak boleh disimpan sehingga internet pulih.';document.body.appendChild(b);}
+  }
+  window.addEventListener('online',function(){kemas();toast('✅ Internet pulih.','ok');if(window.muatSemua&&window._dataSedia)muatSemua(true);});
+  window.addEventListener('offline',kemas);
+  window.addEventListener('load',kemas);
+})();
+
+// ===== DRAF BORANG KEHADIRAN (tidak hilang jika telefon tertutup) =====
+(function(){
+  var ids=['h-ket','h-guru'];
+  function simpan(){var d={};ids.forEach(function(i){var e=document.getElementById(i);if(e)d[i]=e.value;});try{localStorage.setItem('kokoDrafHadir',JSON.stringify(d));}catch(e){}}
+  window.addEventListener('load',function(){
+    var d=null;try{d=JSON.parse(localStorage.getItem('kokoDrafHadir')||'null');}catch(e){}
+    ids.forEach(function(i){var e=document.getElementById(i);if(!e)return;if(d&&d[i]&&!e.value)e.value=d[i];e.addEventListener('input',simpan);});
+  });
+})();
+
+// ===== LOG KELUAR AUTOMATIK (60 minit tidak digunakan) =====
+(function(){
+  var HAD=60*60*1000,KEY='kokoAktifAkhir';
+  function tanda(){try{localStorage.setItem(KEY,String(Date.now()));}catch(e){}}
+  function semak(){
+    if(!(window.kokoAdaToken&&kokoAdaToken()))return;
+    var t=0;try{t=+localStorage.getItem(KEY)||0;}catch(e){}
+    if(t&&Date.now()-t>HAD){try{localStorage.removeItem(KEY);}catch(e){}alert('Anda telah dilog keluar kerana tidak aktif lebih 60 minit. Sila log masuk semula.');kokoLogKeluar();}
+  }
+  semak();tanda();
+  var lepas=0;['click','keydown','touchstart'].forEach(function(ev){document.addEventListener(ev,function(){var n=Date.now();if(n-lepas>30000){lepas=n;tanda();}},true);});
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)semak();});
+  setInterval(semak,60000);
+})();
 </script></body></html>
