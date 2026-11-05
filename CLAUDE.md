@@ -14,6 +14,7 @@ dan beri arahan langkah demi langkah (gaya "padam semua & tampal semula").
 
 ## Kebenaran pemilik
 - **Claude dibenarkan merge pull request ke `main` sendiri** selepas perubahan diuji (pemilik memberi kebenaran ini).
+- **Automatik:** selepas setiap perubahan siap & diuji, terus push, buka PR dan merge ke `main` — jangan tanya pemilik dahulu.
 - Jangan sekali-kali commit kata laluan sistem atau `Code.gs` (mengandungi kata laluan asal) ke repo.
 
 ## Sebelum merge
