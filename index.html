@@ -548,7 +548,8 @@ input::placeholder,textarea::placeholder{text-transform:none;}
 <!-- REKOD PENCAPAIAN -->
 <div id="view-pencapaian" class="view-section">
   <div class="card-g no-print">
-    <h4 class="mb-3"><i class="fa-solid fa-trophy me-2" style="color:var(--c5);"></i>Rekod Pencapaian</h4>
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3"><h4 class="m-0"><i class="fa-solid fa-trophy me-2" style="color:var(--c5);"></i>Rekod Pencapaian</h4>
+    <button type="button" class="btn btn-sm btn-info fw-bold" onclick="bukaSemakRekod()">📋 Semak &amp; Edit Rekod</button></div>
     <div class="row g-2 mb-3" style="background:rgba(245,158,11,.03);border:1px solid rgba(245,158,11,.1);border-radius:12px;padding:12px;margin:0;">
       <div class="col-12 mb-2">
         <label class="small fw-bold mb-1">Tambah Murid Peserta</label>
@@ -2743,6 +2744,126 @@ document.addEventListener('paste',function(e){
   if(v.id==='view-pencapaian'){e.preventDefault();masukkanGambar('P',fail);}
   else if(v.id==='view-kehadiran'){e.preventDefault();masukkanGambar('H',fail);}
 });
+
+// ===== SEMAK & EDIT REKOD PENCAPAIAN =====
+var _srGrp=[],_srEdit=null;
+function _srKumpul(){
+  var g={},out=[];
+  (dc.pencapaian||[]).forEach(function(p){
+    var k=p.tarikh+'|'+p.pertandingan+'|'+p.pencapaian;
+    if(!g[k]){g[k]={tarikh:p.tarikh,pertandingan:p.pertandingan,pencapaian:p.pencapaian,peringkat:p.peringkat,kategori:p.kategori,guru:p.namaGuru,jenis:p.jenisAktiviti||'',link:p.linkGambar||'',mata:p.mata,nama:[]};out.push(g[k]);}
+    if(g[k].nama.indexOf(p.nama)<0)g[k].nama.push(p.nama);
+    if(!g[k].link&&p.linkGambar)g[k].link=p.linkGambar;
+  });
+  var t=function(d){var m=String(d).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);return m?+(m[3]+('0'+m[2]).slice(-2)+('0'+m[1]).slice(-2)):0;};
+  return out.sort(function(a,b){return t(b.tarikh)-t(a.tarikh)||a.pertandingan.localeCompare(b.pertandingan);});
+}
+function _srPanel(){
+  var el=document.getElementById('koko-sr');
+  if(!el){el=document.createElement('div');el.id='koko-sr';
+    el.style.cssText='position:fixed;inset:0;z-index:9300;background:rgba(2,6,23,.9);display:flex;justify-content:center;align-items:flex-start;padding:24px 10px 10px;';
+    document.body.appendChild(el);}
+  el.style.display='flex';return el;
+}
+function tutupSemakRekod(){var el=document.getElementById('koko-sr');if(el)el.style.display='none';}
+function bukaSemakRekod(){
+  _srGrp=_srKumpul();var el=_srPanel();
+  el.innerHTML='<div style="width:100%;max-width:760px;background:var(--card,#0f172a);color:var(--txt,#e2e8f0);border:1px solid rgba(6,182,212,.35);border-radius:16px;padding:14px;max-height:94vh;display:flex;flex-direction:column;">'
+    +'<div class="d-flex justify-content-between align-items-center mb-2"><h5 class="m-0">📋 Semak &amp; Edit Rekod Pencapaian</h5><button class="btn btn-sm btn-outline-light" onclick="tutupSemakRekod()">✕</button></div>'
+    +'<div class="d-flex gap-2 mb-2 flex-wrap"><input id="sr-cari" class="form-control form-control-sm" style="max-width:260px;" placeholder="Cari pertandingan / nama murid..." oninput="srSenarai()">'
+    +'<select id="sr-pkt" class="form-select form-select-sm" style="max-width:150px;" onchange="srSenarai()"><option value="">Semua Peringkat</option>'+PERINGKAT_SUSUN.map(function(k){return '<option>'+k+'</option>';}).join('')+'</select>'
+    +'<select id="sr-sumber" class="form-select form-select-sm" style="max-width:170px;" onchange="srSenarai()"><option value="">Semua Sumber</option><option value="app">Direkod dalam KokoSmart</option><option value="sync">Dari Sheet Guru (Sync)</option></select></div>'
+    +'<div id="sr-senarai" style="overflow-y:auto;flex:1;"></div></div>';
+  srSenarai();
+}
+function srSenarai(){
+  var q=_kunciNama(document.getElementById('sr-cari').value),pk=document.getElementById('sr-pkt').value,sb=document.getElementById('sr-sumber').value;
+  var list=_srGrp.map(function(g,i){g._i=i;return g;}).filter(function(g){
+    var sync=/^sync/i.test(g.guru||'');
+    if(sb==='app'&&sync||sb==='sync'&&!sync)return false;
+    if(pk&&_pktNorm(g.peringkat)!==pk)return false;
+    if(q&&_kunciNama(g.pertandingan+' '+g.nama.join(' ')).indexOf(q)<0)return false;return true;});
+  var box=document.getElementById('sr-senarai');
+  if(!list.length){box.innerHTML='<div class="text-center py-4" style="color:var(--sub);">Tiada rekod sepadan.</div>';return;}
+  box.innerHTML='<div style="font-size:12px;color:var(--sub);margin-bottom:6px;">'+list.length+' rekod · klik untuk lihat / edit</div>'+list.map(function(g){
+    var sync=/^sync/i.test(g.guru||'');
+    return '<div data-i="'+g._i+'" style="border:1px solid var(--glow);border-radius:10px;padding:10px;margin-bottom:6px;cursor:pointer;">'
+      +'<div class="d-flex justify-content-between gap-2"><strong>'+esc(g.pertandingan)+'</strong><span class="badge bg-secondary" style="white-space:nowrap;">'+esc(g.tarikh)+'</span></div>'
+      +'<div style="font-size:12px;color:var(--sub);">'+esc(_pktNorm(g.peringkat))+' · '+esc(g.pencapaian)+' · '+esc(g.kategori||'-')+' · 👥 '+g.nama.length+' murid'+(g.link?' · 📷':' · <span style="color:#f59e0b;">tiada gambar</span>')+(sync?' · <span class="badge bg-dark">Sheet Guru</span>':'')+'</div></div>';
+  }).join('');
+  box.onclick=function(e){var d=e.target.closest('[data-i]');if(d)srBuka(_srGrp[+d.getAttribute('data-i')]);};
+}
+function _srTarikhInput(t){var m=String(t).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);return m?m[3]+'-'+('0'+m[2]).slice(-2)+'-'+('0'+m[1]).slice(-2):'';}
+function _srOpsyen(srcId,nilai){
+  var src=document.getElementById(srcId),h=src?src.innerHTML:'';
+  var ada=src&&Array.prototype.some.call(src.options,function(o){return (o.value||o.text)===nilai;});
+  return (ada||!nilai?'':'<option value="'+esc(nilai)+'">'+esc(nilai)+'</option>')+h;
+}
+function srBuka(g){
+  _srEdit={asal:g,nama:g.nama.slice()};
+  var sync=/^sync/i.test(g.guru||'');var el=_srPanel();
+  el.innerHTML='<div style="width:100%;max-width:760px;background:var(--card,#0f172a);color:var(--txt,#e2e8f0);border:1px solid rgba(6,182,212,.35);border-radius:16px;padding:14px;max-height:94vh;overflow-y:auto;">'
+    +'<div class="d-flex justify-content-between align-items-center mb-2"><button class="btn btn-sm btn-outline-info" onclick="bukaSemakRekod()">← Senarai</button><h6 class="m-0">✏️ Edit Rekod</h6><button class="btn btn-sm btn-outline-light" onclick="tutupSemakRekod()">✕</button></div>'
+    +(sync?'<div class="alert alert-warning small py-2">Rekod ini datang dari <strong>Sheet pencapaian guru (AppSheet)</strong>. Sila buat perubahan di AppSheet — jika diubah di sini, Sync akan memasukkannya semula dan rekod akan berganda.</div>':'')
+    +'<div class="row g-2 mb-2">'
+    +'<div class="col-12"><label class="small mb-1">Nama Pertandingan / Program</label><input id="sr-pt" class="form-control" value="'+esc(g.pertandingan)+'"></div>'
+    +'<div class="col-6 col-md-4"><label class="small mb-1">Tarikh</label><input type="date" id="sr-tarikh" class="form-control" value="'+_srTarikhInput(g.tarikh)+'"></div>'
+    +'<div class="col-6 col-md-4"><label class="small mb-1">Peringkat</label><select id="sr-pkt2" class="form-select">'+_srOpsyen('pen-pkt',g.peringkat)+'</select></div>'
+    +'<div class="col-6 col-md-4"><label class="small mb-1">Kategori</label><select id="sr-kat" class="form-select">'+_srOpsyen('pen-kat',g.kategori)+'</select></div>'
+    +'<div class="col-6 col-md-4"><label class="small mb-1">Pencapaian</label><select id="sr-tier" class="form-select">'+_srOpsyen('pen-tier',g.pencapaian)+'</select></div>'
+    +'<div class="col-12 col-md-4"><label class="small mb-1">Guru Pembimbing</label><input id="sr-guru" class="form-control" value="'+esc(g.guru&&g.guru!=='-'?g.guru:'')+'"></div>'
+    +'<div class="col-12 col-md-4"><label class="small mb-1">Jenis Aktiviti</label><input id="sr-jenis" class="form-control" value="'+esc(g.jenis)+'"></div>'
+    +'<div class="col-12" id="sr-mata" style="font-size:12px;"></div></div>'
+    +'<div class="fw-bold mb-1" style="font-size:13px;">👥 Murid (<span id="sr-bil"></span>)</div>'
+    +'<div class="position-relative mb-2"><input id="sr-tambah" class="form-control form-control-sm" placeholder="➕ Taip nama murid untuk tambah..." autocomplete="off"><div id="sr-cad" class="suggest-box d-none"></div></div>'
+    +'<div id="sr-murid" class="d-flex flex-wrap gap-2 mb-3"></div>'
+    +(g.link?'<div class="mb-2" style="font-size:12px;">📷 Gambar sedia ada akan dikekalkan.</div>':'<div class="mb-2" style="font-size:12px;color:#f59e0b;">📷 Tiada gambar — tambah melalui kad peringatan di halaman Utama.</div>')
+    +'<div class="d-flex gap-2 flex-wrap"><button class="btn btn-success fw-bold flex-fill" onclick="srSimpan()">💾 Simpan Perubahan</button><button class="btn btn-outline-danger fw-bold" onclick="srPadam()">🗑️ Padam Rekod</button></div></div>';
+  ['sr-pkt2','sr-tier'].forEach(function(id){var x=document.getElementById(id);x.value=id==='sr-pkt2'?g.peringkat:g.pencapaian;x.onchange=srMata;});
+  document.getElementById('sr-kat').value=g.kategori;
+  document.getElementById('sr-tier').addEventListener('change',function(){var t={'Keris Emas':'Daerah','Rambu Biru':'Negeri'}[this.value];if(t){document.getElementById('sr-pkt2').value=t;srMata();}});
+  var inp=document.getElementById('sr-tambah'),cad=document.getElementById('sr-cad');
+  inp.oninput=function(){var q=_kunciNama(inp.value);if(q.length<2){cad.classList.add('d-none');return;}
+    var w=q.split(' ').filter(function(x){return x&&x!=='BIN'&&x!=='BINTI';});
+    var h=dc.murid.filter(function(m){var n=_kunciNama(m.nama);return w.every(function(x){return n.indexOf(x)>=0;});}).slice(0,15);
+    cad.innerHTML=h.length?h.map(function(m){return '<div class="suggest-item" data-n="'+esc(m.nama)+'">'+(_srEdit.nama.indexOf(m.nama)>=0?'✅ ':'➕ ')+esc(m.nama)+' <span class="badge bg-secondary">'+esc(m.tahun)+' '+esc(m.kelas)+'</span></div>';}).join(''):'<div class="suggest-item">Tiada padanan</div>';
+    cad.classList.remove('d-none');};
+  cad.onmousedown=function(e){e.preventDefault();};
+  cad.onclick=function(e){var d=e.target.closest('[data-n]');if(!d)return;var n=d.getAttribute('data-n');if(_srEdit.nama.indexOf(n)<0)_srEdit.nama.push(n);inp.value='';cad.classList.add('d-none');srMurid();inp.focus();};
+  srMurid();srMata();
+}
+function srMurid(){
+  document.getElementById('sr-bil').textContent=_srEdit.nama.length;
+  var z=document.getElementById('sr-murid');
+  z.innerHTML=_srEdit.nama.map(function(n,i){return '<span class="badge bg-info text-dark p-2 d-flex align-items-center gap-2" style="font-size:12px;">'+esc(n)+' <span data-x="'+i+'" style="cursor:pointer;color:#b91c1c;font-size:14px;">✕</span></span>';}).join('')||'<span style="font-size:12px;color:var(--sub);">Tiada murid.</span>';
+  z.onclick=function(e){var x=e.target.closest('[data-x]');if(!x)return;_srEdit.nama.splice(+x.getAttribute('data-x'),1);srMurid();};
+}
+function srMata(){var p=document.getElementById('sr-pkt2').value,t=document.getElementById('sr-tier').value;document.getElementById('sr-mata').innerHTML='🏅 Mata setiap murid: <strong>'+hitungMata(p,t)+'</strong>';}
+function _srKunci(){var a=_srEdit.asal;return {tarikh:a.tarikh,pertandingan:a.pertandingan,pencapaian:a.pencapaian};}
+function srSimpan(){
+  var pt=document.getElementById('sr-pt').value.trim(),td=document.getElementById('sr-tarikh').value;
+  if(!pt)return alert('Nama pertandingan kosong!');if(!td)return alert('Pilih tarikh!');
+  if(!_srEdit.nama.length)return alert('Tiada murid. Guna "Padam Rekod" jika mahu membuang rekod ini.');
+  var tp=td.split('-'),pkt=document.getElementById('sr-pkt2').value,tier=document.getElementById('sr-tier').value;
+  var dAm={tarikh:tp[2]+'/'+tp[1]+'/'+tp[0],kategori:document.getElementById('sr-kat').value,peringkat:pkt,pertandingan:pt,pencapaian:tier,mata:hitungMata(pkt,tier),namaGuru:document.getElementById('sr-guru').value.trim()||'-',jenisAktiviti:document.getElementById('sr-jenis').value.trim()};
+  showLoad();
+  google.script.run.withSuccessHandler(function(res){hideLoad();
+    if(res&&res.success){toast('✅ Rekod dikemas kini ('+_srEdit.nama.length+' murid)','ok');
+      var k=_srKunci();dc.pencapaian=(dc.pencapaian||[]).filter(function(p){return !(p.tarikh===k.tarikh&&p.pertandingan===k.pertandingan&&p.pencapaian===k.pencapaian);})
+        .concat(_srEdit.nama.map(function(n){return {tarikh:dAm.tarikh,nama:n,kategori:dAm.kategori,peringkat:dAm.peringkat,pertandingan:dAm.pertandingan,pencapaian:dAm.pencapaian,mata:dAm.mata,linkGambar:_srEdit.asal.link,namaGuru:dAm.namaGuru,jenisAktiviti:dAm.jenisAktiviti};}));
+      paparSemula();bukaSemakRekod();muatSemua(true);}
+    else alert('Gagal: '+(res&&res.error||''));
+  }).withFailureHandler(function(e){hideLoad();alert('Ralat: '+e.message+'\n\nPastikan Code.gs terkini sudah di-Deploy.');}).kemaskiniRekodPencapaian(_srKunci(),dAm,_srEdit.nama);
+}
+function srPadam(){
+  var a=_srEdit.asal;if(!confirm('Padam rekod "'+a.pertandingan+'" ('+a.pencapaian+', '+a.tarikh+') untuk '+a.nama.length+' murid?\n\nTindakan ini kekal.'))return;
+  showLoad();
+  google.script.run.withSuccessHandler(function(res){hideLoad();
+    if(res&&res.success){toast('🗑️ Rekod dipadam ('+(res.dipadam||0)+' baris)','ok');var k=_srKunci();
+      dc.pencapaian=(dc.pencapaian||[]).filter(function(p){return !(p.tarikh===k.tarikh&&p.pertandingan===k.pertandingan&&p.pencapaian===k.pencapaian);});paparSemula();bukaSemakRekod();muatSemua(true);}
+    else alert('Gagal: '+(res&&res.error||''));
+  }).withFailureHandler(function(e){hideLoad();alert('Ralat: '+e.message+'\n\nPastikan Code.gs terkini sudah di-Deploy.');}).padamRekodPencapaian(_srKunci());
+}
 
 // ===== EKSPORT CSV (EXCEL) =====
 function eksportCsv(jenis){
