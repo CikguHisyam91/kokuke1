@@ -549,7 +549,7 @@ input::placeholder,textarea::placeholder{text-transform:none;}
         <div class="d-flex gap-2 mb-2">
           <button id="pen-m1" onclick="penMode('cari')" style="flex:1;padding:7px;font-size:11px;font-weight:700;border-radius:8px;border:2px solid var(--c1);background:var(--c1);color:#000;cursor:pointer;">🔍 Cari Satu-satu</button>
           <button id="pen-m2" onclick="penMode('pukal')" style="flex:1;padding:7px;font-size:11px;font-weight:700;border-radius:8px;border:2px solid var(--glow);background:transparent;color:var(--txt);cursor:pointer;">📋 Tampal Pukal</button>
-          <button id="pen-m3" onclick="penMode('kelas')" style="flex:1;padding:7px;font-size:11px;font-weight:700;border-radius:8px;border:2px solid var(--glow);background:transparent;color:var(--txt);cursor:pointer;">👥 Pilih Kelas</button>
+          <button id="pen-m3" onclick="penMode('kelas')" style="order:-1;flex:1;padding:7px;font-size:11px;font-weight:700;border-radius:8px;border:2px solid var(--glow);background:transparent;color:var(--txt);cursor:pointer;">✅ Tick Ikut Kelas</button>
         </div>
         <div id="pen-mode-cari" class="position-relative">
           <input type="text" id="pen-cari" class="form-control" placeholder="Taip nama murid → pilih dari senarai..." oninput="penSuggest(this.value)" autocomplete="off">
@@ -561,10 +561,18 @@ input::placeholder,textarea::placeholder{text-transform:none;}
           <div id="pen-review" class="d-none mt-2" style="background:rgba(0,0,0,.2);border:1px solid var(--glow);border-radius:10px;padding:12px;max-height:260px;overflow-y:auto;"></div>
           <button id="btn-sahkan-pukal" class="d-none mt-2" onclick="penSahkanPukal()" style="width:100%;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.4);color:var(--c3);border-radius:8px;padding:8px;font-weight:700;font-size:12px;cursor:pointer;"><i class="fa-solid fa-check me-1"></i>Sahkan &amp; Tambah Yang Dipilih</button>
         </div>
-        <div id="pen-mode-kelas" class="d-none row g-2">
-          <div class="col-4"><select id="pen-kls-thn" class="form-select form-select-sm" onchange="penMuatKelasOpts()"><option value="1">Thn 1</option><option value="2">Thn 2</option><option value="3">Thn 3</option><option value="4">Thn 4</option><option value="5">Thn 5</option><option value="6">Thn 6</option></select></div>
-          <div class="col-5"><select id="pen-kls-kls" class="form-select form-select-sm"></select></div>
-          <div class="col-3"><button onclick="penTambahKelas()" style="width:100%;background:var(--c3);color:#000;border:none;border-radius:8px;padding:7px;font-weight:700;font-size:11px;cursor:pointer;">Tambah</button></div>
+        <div id="pen-mode-kelas" class="d-none">
+          <div class="d-flex gap-2 mb-2 flex-wrap">
+            <select id="pen-kls-thn" class="form-select form-select-sm" style="max-width:110px;" onchange="penMuatKelasOpts()"><option value="1">Tahun 1</option><option value="2">Tahun 2</option><option value="3">Tahun 3</option><option value="4">Tahun 4</option><option value="5">Tahun 5</option><option value="6">Tahun 6</option></select>
+            <select id="pen-kls-kls" class="form-select form-select-sm" style="max-width:170px;" onchange="penLukisSenarai()"></select>
+            <input id="pen-kls-tapis" class="form-control form-control-sm" style="max-width:180px;" placeholder="Tapis nama..." oninput="penLukisSenarai()">
+          </div>
+          <div class="d-flex gap-2 mb-2 align-items-center flex-wrap" style="font-size:12px;">
+            <button type="button" class="btn btn-sm btn-outline-success fw-bold" onclick="penTickSemua(true)">☑️ Tick Semua</button>
+            <button type="button" class="btn btn-sm btn-outline-danger fw-bold" onclick="penTickSemua(false)">⬜ Buang Semua</button>
+            <span id="pen-kls-kira" style="color:var(--sub);"></span>
+          </div>
+          <div id="pen-kls-senarai" style="max-height:340px;overflow-y:auto;border:1px solid var(--glow);border-radius:10px;padding:4px;"></div>
         </div>
         <div id="pen-tags" class="d-flex flex-wrap gap-2 mt-2"></div>
       </div>
@@ -778,6 +786,7 @@ function isDark(){return document.body.getAttribute('data-theme')!=='light';}
 function tukarMenu(id){
   document.querySelectorAll('.view-section').forEach(function(s){s.classList.remove('active');});
   document.getElementById('view-'+id).classList.add('active');
+  if(id==='pencapaian'){if(!window._penModDibuka){window._penModDibuka=true;penMode('kelas');}else penLukisSenarai();}
   document.getElementById('btn-back').classList[id==='home'?'add':'remove']('d-none');
   window.scrollTo(0,0);
   _viewSemasa=id;
@@ -1548,10 +1557,34 @@ function penMode(m){
   if(m==='kelas')penMuatKelasOpts();
 }
 function penMuatKelasOpts(){
-  var thn=document.getElementById('pen-kls-thn');
-  var kls=document.getElementById('pen-kls-kls');
-  if(!kls)return;
-  isiSelect('pen-kls-kls',dc.kelas);
+  var thn=document.getElementById('pen-kls-thn').value,ks=document.getElementById('pen-kls-kls');if(!ks)return;
+  var lama=ks.value;
+  var ada=dc.murid.filter(function(m){return m.tahun===thn;}).map(function(m){return m.kelas;}).filter(function(v,i,a){return v&&a.indexOf(v)===i;}).sort();
+  if(!ada.length)ada=dc.kelas.slice();
+  ks.innerHTML=ada.map(function(k){var n=dc.murid.filter(function(m){return m.tahun===thn&&m.kelas===k;}).length;return '<option value="'+esc(k)+'"'+(k===lama?' selected':'')+'>'+esc(k)+' ('+n+')</option>';}).join('');
+  penLukisSenarai();
+}
+function _penSenaraiKelas(){
+  var thn=document.getElementById('pen-kls-thn').value,kls=document.getElementById('pen-kls-kls').value;
+  var q=_kunciNama(document.getElementById('pen-kls-tapis').value);
+  return dc.murid.filter(function(m){return m.tahun===thn&&m.kelas===kls&&(!q||_kunciNama(m.nama).indexOf(q)>=0);}).sort(function(a,b){return a.nama.localeCompare(b.nama);});
+}
+function penLukisSenarai(){
+  var box=document.getElementById('pen-kls-senarai');if(!box||document.getElementById('pen-mode-kelas').classList.contains('d-none'))return;
+  var list=_penSenaraiKelas();
+  if(!list.length){box.innerHTML='<div class="text-center py-3" style="color:var(--sub);font-size:12px;">Tiada murid dalam kelas ini.</div>';document.getElementById('pen-kls-kira').textContent='';return;}
+  var dipilih=list.filter(function(m){return penMurid.indexOf(m.nama)>=0;}).length;
+  document.getElementById('pen-kls-kira').textContent=dipilih+' / '+list.length+' dipilih · jumlah keseluruhan: '+penMurid.length;
+  box.innerHTML=list.map(function(m,i){var on=penMurid.indexOf(m.nama)>=0;
+    return '<label style="display:flex;align-items:center;gap:10px;padding:9px 8px;border-radius:8px;cursor:pointer;font-size:13px;'+(on?'background:rgba(34,197,94,.15);':'')+'">'
+      +'<input type="checkbox" data-i="'+i+'" '+(on?'checked':'')+' style="width:20px;height:20px;flex-shrink:0;">'
+      +'<span style="color:var(--sub);width:22px;">'+(i+1)+'.</span><span class="fw-bold">'+esc(m.nama)+'</span></label>';}).join('');
+  box.onchange=function(e){var c=e.target.closest('input[data-i]');if(!c)return;var m=list[+c.getAttribute('data-i')];
+    var k=penMurid.indexOf(m.nama);if(c.checked&&k<0)penMurid.push(m.nama);if(!c.checked&&k>=0)penMurid.splice(k,1);paparPenTags();};
+}
+function penTickSemua(ya){
+  _penSenaraiKelas().forEach(function(m){var k=penMurid.indexOf(m.nama);if(ya&&k<0)penMurid.push(m.nama);if(!ya&&k>=0)penMurid.splice(k,1);});
+  paparPenTags();
 }
 var _penReviewData=[];
 function penPraSemai(){
@@ -1679,6 +1712,7 @@ window.addEventListener('load',function(){
   });
 });
 function paparPenTags(){
+  if(window.penLukisSenarai)penLukisSenarai();
   var zone=document.getElementById('pen-tags');
   zone.innerHTML=penMurid.map(function(nama,i){
     return '<span class="badge bg-info text-dark p-2 d-flex align-items-center gap-2" style="font-size:12px;">👤 '+esc(nama)+' <i class="fa-solid fa-circle-xmark text-danger" style="cursor:pointer;font-size:15px;" onclick="penBuang('+i+')"></i></span>';
