@@ -251,7 +251,7 @@ body[data-theme="dark"] .modal-box{background:#0f172a;}
     <div id="achiev-zone" class="d-flex flex-wrap gap-2 mb-3"></div>
     <div id="achiev-list"></div>
   </div>
-  <div class="card-g"><h5 class="mb-3"><i class="fa-solid fa-trophy me-2" style="color:var(--c5);"></i>Top 10 Mengikut Tahun</h5>
+  <div class="card-g"><h5 class="mb-3"><i class="fa-solid fa-trophy me-2" style="color:var(--c5);"></i>Top 10 Mengikut Tahun <button class="btn btn-sm btn-outline-info ms-2" style="font-size:11px;" onclick="bukaSistemMata()">ℹ️ Sistem Mata</button></h5>
     <div class="d-flex gap-2 mb-3 flex-wrap" id="rank-tabs"></div>
     <div class="table-responsive"><table class="table table-hover align-middle" style="font-size:13px;"><thead><tr style="background:rgba(244,63,94,.15);"><th>Kedudukan</th><th>Nama</th><th>Kelas</th><th class="text-end">Mata</th></tr></thead><tbody id="tbody-rank"></tbody></table></div>
   </div>
@@ -1628,12 +1628,34 @@ function paparPenTags(){
   }).join('')+(penMurid.length>1?'<span class="badge p-2" style="font-size:12px;background:rgba(244,63,94,.15);color:var(--c4);cursor:pointer;" onclick="penMurid=[];paparPenTags();">Kosongkan semua ('+penMurid.length+')</span>':'');
 }
 function penBuang(idx){penMurid.splice(idx,1);paparPenTags();}
+// SISTEM MATA MERIT — satu tempat sahaja (borang, Top 10 & paparan "Sistem Mata" guna jadual ini)
+var MATA_PERINGKAT={Sekolah:10,Zon:20,Daerah:30,Negeri:40,Kebangsaan:50,Antarabangsa:60};
+var MATA_PENCAPAIAN={Johan:10,'Naib Johan':8,Ketiga:6,'Tempat Keempat':5,'Tempat Kelima':4,Peserta:2};
+var MATA_PANGKAT={'Lans Koperal':5,Koperal:8,Sarjan:11,'Sarjan Tambahan':14,'Keris Gangsa':6,'Keris Perak':9,'Keris Emas':12,'Rambu Biru':15};
 function hitungMata(pkt,tier){
-  var sP={Sekolah:10,Zon:20,Daerah:30,Negeri:40,Kebangsaan:50,Antarabangsa:60};
-  var sM={Johan:10,'Naib Johan':8,Ketiga:6,'Tempat Keempat':5,'Tempat Kelima':4,Peserta:2,
-    'Lans Koperal':5,Koperal:8,Sarjan:11,'Sarjan Tambahan':14,
-    'Keris Gangsa':6,'Keris Perak':9,'Keris Emas':12,'Rambu Biru':15};
-  return (sP[pkt]||0)+(sM[tier]||0);
+  return (MATA_PERINGKAT[pkt]||0)+(MATA_PENCAPAIAN[tier]||MATA_PANGKAT[tier]||0);
+}
+function pratontonMata(){
+  var el=document.getElementById('pen-mata-pratonton');if(!el)return;
+  var p=document.getElementById('pen-pkt').value,t=document.getElementById('pen-tier').value;
+  el.innerHTML='🏅 Mata rekod ini: <strong>'+(MATA_PERINGKAT[p]||0)+'</strong> ('+esc(p)+') + <strong>'+(MATA_PENCAPAIAN[t]||MATA_PANGKAT[t]||0)+'</strong> ('+esc(t)+') = <strong style="color:var(--c3);">'+hitungMata(p,t)+' mata</strong> <a href="#" onclick="bukaSistemMata();return false;">ℹ️</a>';
+}
+function bukaSistemMata(){
+  var jad=function(tajuk,o){return '<table class="table table-sm mb-3" style="color:inherit;font-size:13px;"><thead><tr><th>'+tajuk+'</th><th class="text-end">Mata</th></tr></thead><tbody>'
+    +Object.keys(o).map(function(k){return '<tr><td>'+esc(k==='Kebangsaan'?'Kebangsaan (Malaysia)':k)+'</td><td class="text-end fw-bold">'+o[k]+'</td></tr>';}).join('')+'</tbody></table>';};
+  var el=document.getElementById('koko-mata');
+  if(!el){el=document.createElement('div');el.id='koko-mata';
+    el.style.cssText='position:fixed;inset:0;z-index:9200;background:rgba(2,6,23,.85);display:flex;justify-content:center;align-items:flex-start;padding:40px 16px 16px;';
+    el.addEventListener('click',function(e){if(e.target===el||e.target.closest('.tutup-mata'))el.style.display='none';});
+    document.addEventListener('keydown',function(e){if(e.key==='Escape')el.style.display='none';});
+    document.body.appendChild(el);}
+  el.innerHTML='<div style="width:100%;max-width:560px;background:var(--card,#0f172a);color:var(--txt,#e2e8f0);border:1px solid rgba(6,182,212,.35);border-radius:16px;padding:16px;max-height:88vh;overflow-y:auto;">'
+    +'<div class="d-flex justify-content-between align-items-center mb-2"><h5 class="m-0">🏆 Sistem Mata Merit</h5><button class="btn btn-sm btn-outline-light tutup-mata" aria-label="Tutup">✕</button></div>'
+    +'<div class="alert alert-info py-2 small fw-bold">Mata = Mata Peringkat + Mata Pencapaian</div>'
+    +'<div class="row g-2"><div class="col-12 col-md-6">'+jad('Peringkat',MATA_PERINGKAT)+jad('Pencapaian',MATA_PENCAPAIAN)+'</div><div class="col-12 col-md-6">'+jad('Pangkat Uniform',MATA_PANGKAT)+'</div></div>'
+    +'<div class="small"><strong>Contoh:</strong><br>• Johan Daerah = 30 + 10 = <strong>40</strong><br>• Peserta Negeri = 40 + 2 = <strong>42</strong><br>• Naib Johan Kebangsaan = 50 + 8 = <strong>58</strong>'
+    +'<p class="mt-2 mb-0" style="color:var(--sub);">Setiap rekod pencapaian dikira sekali dan dijumlahkan. Top 10 disusun ikut jumlah mata. Rekod dari Sheet pencapaian guru guna formula yang sama (PENYERTAAN = Peserta).</p></div></div>';
+  el.style.display='flex';
 }
 function resetPencapaian(){
   penMurid=[];paparPenTags();
@@ -2403,6 +2425,23 @@ function profilMurid(nama){
     +'<div class="fw-bold mb-1" style="font-size:13px;">📜 Senarai pencapaian</div><div style="font-size:13px;">'+senarai+'</div></div>';
   el.style.display='flex';
 }
+
+// Pratonton mata dalam borang Pencapaian
+window.addEventListener('load',function(){
+  var t=document.getElementById('pen-tier'),p=document.getElementById('pen-pkt');if(!t||!p)return;
+  var d=document.createElement('div');d.id='pen-mata-pratonton';d.className='col-12 small mb-2';
+  var kol=t.closest('[class*="col-"]');if(kol&&kol.parentNode)kol.parentNode.insertBefore(d,kol.nextSibling);
+  t.addEventListener('change',pratontonMata);p.addEventListener('change',pratontonMata);pratontonMata();
+});
+// Muat semula data secara senyap setiap 5 minit (jika aplikasi sedang dibuka)
+setInterval(function(){
+  if(document.hidden||!navigator.onLine||!window._dataSedia||!(window.kokoAdaToken&&kokoAdaToken()))return;
+  muatSemua(true);
+},5*60*1000);
+document.addEventListener('visibilitychange',function(){
+  if(document.hidden||!window._dataSedia)return;
+  var n=Date.now();if(n-(window._akhirSegar||0)>5*60*1000){window._akhirSegar=n;muatSemua(true);}
+});
 
 // ===== EKSPORT CSV (EXCEL) =====
 function eksportCsv(jenis){
