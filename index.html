@@ -922,8 +922,9 @@ function kiraRank(thn){
     var tcR=isDark()?'#e2e8f0':'#1e293b';
     tbody.innerHTML=list.map(function(m,i){
       var crown=i===0?'🥇':i===1?'🥈':i===2?'🥉':'•';
-      return '<tr style="color:'+tcR+';"><td class="fw-bold">'+crown+' '+(i+1)+'</td><td class="fw-bold text-uppercase">'+esc(m.nama)+'</td><td class="font-monospace">'+esc(m.kelas)+'</td><td class="text-end fw-bold" style="color:var(--c3);">'+m.skor+' Mata</td></tr>';
+      return '<tr style="color:'+tcR+';"><td class="fw-bold">'+crown+' '+(i+1)+'</td><td class="fw-bold text-uppercase"><a href="#" class="nama-profil" data-i="'+i+'" style="color:inherit;text-decoration:underline dotted;" title="Lihat rekod mewakili sekolah">'+esc(m.nama)+'</a></td><td class="font-monospace">'+esc(m.kelas)+'</td><td class="text-end fw-bold" style="color:var(--c3);">'+m.skor+' Mata</td></tr>';
     }).join('');
+    tbody.onclick=function(e){var a=e.target.closest('.nama-profil');if(!a)return;e.preventDefault();var m=list[+a.getAttribute('data-i')];if(m)profilMurid(m.nama);};
   }
   // Init tab buttons active state
   for(var t=1;t<=6;t++){var b=document.getElementById('rt-'+t);if(b){b.className='btn btn-sm '+(t==thn?'btn-danger':'btn-outline-secondary')+' rank-tab';}}
@@ -2332,6 +2333,7 @@ function bukaCari(){
     el.addEventListener('click',function(e){if(e.target===el)tutupCari();});
     document.body.appendChild(el);
     document.getElementById('cari-input').addEventListener('input',function(){cariMurid(this.value);});
+    document.getElementById('cari-hasil').addEventListener('click',function(e){var a=e.target.closest('.nama-profil');if(a){tutupCari();profilMurid(a.getAttribute('data-nama'));}});
   }
   el.style.display='flex';var i=document.getElementById('cari-input');i.value='';cariMurid('');setTimeout(function(){i.focus();},50);
 }
@@ -2350,11 +2352,56 @@ function cariMurid(q){
     var pc=(dc.pencapaian||[]).filter(function(p){return p.nama.toLowerCase()===n;});
     var mata=pc.reduce(function(a,p){return a+(p.mata||0);},0);
     return '<div style="border-bottom:1px solid rgba(148,163,184,.2);padding:10px 4px;">'
-      +'<div class="fw-bold" style="color:var(--c1,#06b6d4);">'+(o.ark?'📁 ':'👤 ')+esc(m.nama)+(o.ark?' <span class="badge bg-secondary">Arkib</span>':'')+'</div>'
+      +'<div class="fw-bold nama-profil" data-nama="'+esc(m.nama)+'" style="color:var(--c1,#06b6d4);cursor:pointer;text-decoration:underline dotted;">'+(o.ark?'📁 ':'👤 ')+esc(m.nama)+(o.ark?' <span class="badge bg-secondary">Arkib</span>':'')+'</div>'
       +'<div>Tahun '+esc(m.tahun)+' '+esc(m.kelas)+' · 🏠 '+esc(m.rumah||'-')+'</div>'
       +'<div style="color:var(--sub);">🛡️ '+esc(m.uniform||'-')+' · 🧠 '+esc(m.kelab||'-')+' · ⚽ '+esc(m.sukan||'-')+'</div>'
       +'<div>📋 Hadir '+hadir+'/'+log.length+' · 🏆 '+pc.length+' pencapaian ('+mata+' mata)</div></div>';
   }).join('');
+}
+
+// ===== PROFIL MURID: BERAPA KALI MEWAKILI SEKOLAH IKUT PERINGKAT =====
+var PERINGKAT_SUSUN=['Sekolah','Zon','Daerah','Negeri','Kebangsaan','Antarabangsa'];
+function _pktNorm(p){
+  p=String(p||'').toLowerCase();
+  if(/antarabangsa|international/.test(p))return 'Antarabangsa';
+  if(/kebangsaan|malaysia|national/.test(p))return 'Kebangsaan';
+  if(/negeri|state/.test(p))return 'Negeri';
+  if(/daerah|ppd/.test(p))return 'Daerah';
+  if(/zon/.test(p))return 'Zon';
+  return 'Sekolah';
+}
+function profilMurid(nama){
+  var n=String(nama||'').trim().toLowerCase();
+  var m=(dc.murid||[]).concat(dc.arkib||[]).find(function(x){return x.nama.trim().toLowerCase()===n;})||{nama:nama};
+  var rek=(dc.pencapaian||[]).filter(function(p){return p.nama.trim().toLowerCase()===n;});
+  var kira={};PERINGKAT_SUSUN.forEach(function(k){kira[k]=0;});
+  rek.forEach(function(p){kira[_pktNorm(p.peringkat)]++;});
+  var jumMata=rek.reduce(function(a,p){return a+(p.mata||0);},0);
+  var warna={Sekolah:'#64748b',Zon:'#0ea5e9',Daerah:'#22c55e',Negeri:'#f59e0b',Kebangsaan:'#ef4444',Antarabangsa:'#a855f7'};
+  var label={Kebangsaan:'Kebangsaan (Malaysia)'};
+  var kotak=PERINGKAT_SUSUN.map(function(k){
+    return '<div style="flex:1 1 30%;min-width:96px;background:'+warna[k]+'22;border:1px solid '+warna[k]+'66;border-radius:12px;padding:10px 6px;text-align:center;">'
+      +'<div style="font-size:24px;font-weight:800;color:'+warna[k]+';">'+kira[k]+'</div><div style="font-size:11px;">'+(label[k]||k)+'</div></div>';
+  }).join('');
+  var susun=rek.slice().sort(function(a,b){return PERINGKAT_SUSUN.indexOf(_pktNorm(b.peringkat))-PERINGKAT_SUSUN.indexOf(_pktNorm(a.peringkat));});
+  var senarai=susun.length?susun.map(function(p){var k=_pktNorm(p.peringkat);
+    return '<div style="border-bottom:1px solid rgba(148,163,184,.2);padding:8px 2px;">'
+      +'<span class="badge" style="background:'+warna[k]+';">'+esc(label[k]||k)+'</span> <strong>'+esc(p.pencapaian)+'</strong> · '+(p.mata||0)+' mata'
+      +'<div>'+esc(p.pertandingan)+'</div><div style="font-size:11px;color:var(--sub);">'+esc(p.tarikh)+(p.kategori?' · '+esc(p.kategori):'')+'</div></div>';
+  }).join(''):'<div class="text-center py-3" style="color:var(--sub);">Belum ada rekod pencapaian.</div>';
+  var el=document.getElementById('koko-profil');
+  if(!el){el=document.createElement('div');el.id='koko-profil';
+    el.style.cssText='position:fixed;inset:0;z-index:9100;background:rgba(2,6,23,.85);display:flex;justify-content:center;align-items:flex-start;padding:40px 16px 16px;';
+    el.addEventListener('click',function(e){if(e.target===el||e.target.closest('.tutup-profil'))el.style.display='none';});
+    document.addEventListener('keydown',function(e){if(e.key==='Escape')el.style.display='none';});
+    document.body.appendChild(el);}
+  el.innerHTML='<div style="width:100%;max-width:560px;background:var(--card,#0f172a);color:var(--txt,#e2e8f0);border:1px solid rgba(6,182,212,.35);border-radius:16px;padding:16px;max-height:88vh;overflow-y:auto;">'
+    +'<div class="d-flex justify-content-between align-items-start gap-2 mb-2"><div><div class="fw-bold text-uppercase" style="color:var(--c1,#06b6d4);">'+esc(m.nama)+'</div>'
+    +'<div style="font-size:12px;color:var(--sub);">'+(m.tahun?'Tahun '+esc(m.tahun)+' '+esc(m.kelas):'')+'</div></div><button class="btn btn-sm btn-outline-light tutup-profil" aria-label="Tutup">✕</button></div>'
+    +'<div class="fw-bold mb-2" style="font-size:13px;">🏫 Mewakili sekolah: '+rek.length+' kali · '+jumMata+' mata</div>'
+    +'<div class="d-flex flex-wrap gap-2 mb-3">'+kotak+'</div>'
+    +'<div class="fw-bold mb-1" style="font-size:13px;">📜 Senarai pencapaian</div><div style="font-size:13px;">'+senarai+'</div></div>';
+  el.style.display='flex';
 }
 
 // ===== EKSPORT CSV (EXCEL) =====

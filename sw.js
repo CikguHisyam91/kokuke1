@@ -1,6 +1,6 @@
 // Service worker ringkas: simpan fail paparan, data sentiasa dari pelayan
 // Tukar nombor versi setiap kali index.html dikemas kini supaya cache lama dibuang.
-var CACHE = 'kokosmart-v5';
+var CACHE = 'kokosmart-v6';
 var LUAR = /^https:\/\/(cdn\.jsdelivr\.net|cdnjs\.cloudflare\.com|fonts\.googleapis\.com|fonts\.gstatic\.com)\//;
 var CDN = ['https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'];
 var FAIL = ['./', './index.html', './config.js', './manifest.json', './icon-192.png', './icon-512.png', './logo.png'];
