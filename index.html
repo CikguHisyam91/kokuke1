@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" href="logo.png">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <script src="config.js"></script>
 <script>
 /* ===== JAMBATAN GITHUB → APPS SCRIPT =====
@@ -15,22 +15,23 @@
   function simpanToken(t){try{localStorage.setItem(KEY,t);}catch(e){}}
   function hantar(fn,args,ok,fail){
     if(!token()){antrian.push([fn,args,ok,fail]);tunjukLogin();return;}
-    fetch(KOKO_API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn:fn,args:args,token:token()})})
-      .then(function(r){return r.text();})
+    var ctl=window.AbortController?new AbortController():null,tm=setTimeout(function(){if(ctl)ctl.abort();},60000);
+    fetch(KOKO_API,{signal:ctl?ctl.signal:undefined,method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn:fn,args:args,token:token()})})
+      .then(function(r){clearTimeout(tm);if(!r.ok)throw new Error('Pelayan memberi ralat ('+r.status+'). Cuba lagi sebentar.');return r.text();})
       .then(function(t){try{return JSON.parse(t);}catch(e){throw new Error('Pelayan tidak memberi jawapan sah. Semak URL dalam config.js / deployment Apps Script.');}})
       .then(function(res){
         if(res&&res.__auth===false){simpanToken('');try{localStorage.removeItem('kokoData');}catch(e){}antrian.push([fn,args,ok,fail]);tunjukLogin('Kata laluan tidak sah atau telah ditukar.');return;}
         if(res&&res.__error){if(fail)fail(new Error(res.__error));else alert('Ralat: '+res.__error);return;}
         if(ok)ok(res.result);
       })
-      .catch(function(e){if(fail)fail(e);else alert('Ralat sambungan: '+e.message);});
+      .catch(function(e){clearTimeout(tm);if(e&&e.name==='AbortError')e=new Error('Sambungan terlalu lambat (lebih 60 saat). Semak internet dan cuba lagi.');if(fail)fail(e);else alert('Ralat sambungan: '+e.message);});
   }
-  function runner(ok,fail){
+  function runner(ok,fail,uo){
     return new Proxy({},{get:function(t,n){
-      if(n==='withSuccessHandler')return function(f){return runner(f,fail);};
-      if(n==='withFailureHandler')return function(f){return runner(ok,f);};
-      if(n==='withUserObject')return function(){return runner(ok,fail);};
-      return function(){hantar(n,Array.prototype.slice.call(arguments),ok,fail);};
+      if(n==='withSuccessHandler')return function(f){return runner(f,fail,uo);};
+      if(n==='withFailureHandler')return function(f){return runner(ok,f,uo);};
+      if(n==='withUserObject')return function(o){return runner(ok,fail,o);};
+      return function(){hantar(n,Array.prototype.slice.call(arguments),ok&&function(x){ok(x,uo);},fail&&function(x){fail(x,uo);});};
     }});
   }
   window.google={script:{run:runner(null,null)}};
@@ -660,7 +661,8 @@ body[data-theme="dark"] .modal-box{background:#0f172a;}
   <div class="card-g" style="max-width:520px;">
     <h4 class="mb-3"><i class="fa-solid fa-school me-2" style="color:var(--c3);"></i>Nama Sekolah</h4>
     <div class="mb-3"><label class="small fw-bold mb-1">Nama Penuh Sekolah</label><input type="text" id="tet-nama" class="form-control" placeholder="SK King Edward VII (1)" style="font-weight:700;"></div>
-    <button class="btn btn-success fw-bold px-4 mb-2" onclick="simpanNamaSekolah()"><i class="fa-solid fa-floppy-disk me-1"></i>Simpan Nama Sekolah</button>
+    <div class="mb-3"><label class="small fw-bold mb-1">Tahun Akademik (untuk laporan)</label><input type="number" id="tet-tahun" class="form-control" min="2020" max="2100" placeholder="Kosongkan = tahun semasa"></div>
+    <button class="btn btn-success fw-bold px-4 mb-2" onclick="simpanNamaSekolah()"><i class="fa-solid fa-floppy-disk me-1"></i>Simpan Tetapan Sekolah</button>
     <div id="tet-notif" class="mt-2"></div>
   </div>
   <div class="card-g mt-3" style="max-width:520px;">
@@ -1113,6 +1115,7 @@ function ahliUnit(j,u,pt){
   return dc.murid.filter(function(m){return String(m[j]||'').toLowerCase().trim()===uu&&(!pt||String(m.tahun)===pt);})
     .sort(function(a,b){return (a.tahun-b.tahun)||a.kelas.localeCompare(b.kelas)||a.nama.localeCompare(b.nama);});
 }
+function tahunAkademik(){var t='';try{t=localStorage.getItem('kokoTahunAkademik')||'';}catch(e){}return t||String(new Date().getFullYear());}
 function _sekolah(){try{return localStorage.getItem('kokoNamaSekolah')||'SK KING EDWARD VII (1) TAIPING';}catch(e){return 'SK KING EDWARD VII (1) TAIPING';}}
 function _jadualEksport(tajuk,list,penuh){
   var td='border:1px solid #000;padding:4px 6px;font-size:11pt;';
@@ -1206,7 +1209,7 @@ function pkHtmlBahagian(b,lajur,denganLogo){
   var h=(denganLogo?'<div style="text-align:center;"><img src="'+LOGO_SEKOLAH+'" style="height:75px;"></div>':'')
     +'<p style="text-align:center;font-weight:bold;font-size:13pt;margin:4px 0 0;">'+esc((dc.namaSekolah||_sekolah()).toUpperCase())+'</p>'
     +'<p style="text-align:center;font-weight:bold;font-size:12pt;margin:4px 0 2px;">SENARAI AHLI '+esc(pkTajuk(b))+'</p>'
-    +'<p style="text-align:center;font-size:10pt;margin:0 0 10px;">'+esc(pkSubTajuk(b))+'  ·  Tahun Akademik '+new Date().getFullYear()+'</p>'
+    +'<p style="text-align:center;font-size:10pt;margin:0 0 10px;">'+esc(pkSubTajuk(b))+'  ·  Tahun Akademik '+tahunAkademik()+'</p>'
     +'<table style="border-collapse:collapse;width:100%;table-layout:fixed;word-wrap:break-word;"><thead><tr style="background:#d9e2f3;font-weight:bold;">'
     +lajur.map(function(c){return '<th style="'+td+'white-space:nowrap;font-size:10pt;width:'+Math.round(c.w/jumW*100)+'%;text-align:'+(c.k==='nama'?'left':'center')+';">'+c.h+'</th>';}).join('')+'</tr></thead><tbody>';
   var thnLepas=null;
@@ -1866,7 +1869,7 @@ function janaLaporanPajskRasmi(sOrang){
   var w=window.open('','_blank');
   if(!w)return alert('Sila benarkan popup untuk mencetak laporan.');
   var dataCache=dc;
-  var tahunAkademik=new Date().getFullYear();
+  var tahunAkademik=window.tahunAkademik();
 
   var html='<!DOCTYPE html><html><head><meta charset="UTF-8">'+
     '<title>Laporan PAJSK - Darjah '+thn+' '+kls+'</title>'+
@@ -2131,6 +2134,7 @@ function simpanNamaSekolah(){
   if(!nama)return alert('Masukkan nama sekolah!');
   dc.namaSekolah=nama;
   try{localStorage.setItem('kokoNamaSekolah',nama);}catch(e){}
+  var th=(document.getElementById('tet-tahun')||{}).value||'';try{if(/^\d{4}$/.test(th))localStorage.setItem('kokoTahunAkademik',th);else localStorage.removeItem('kokoTahunAkademik');}catch(e){}
   // Update navbar
   var lbl=document.getElementById('lbl-sekolah');
   if(lbl)lbl.innerText=nama.toUpperCase();
@@ -2140,6 +2144,7 @@ function simpanNamaSekolah(){
 function initNamaSekolah(){
   var n='';try{n=localStorage.getItem('kokoNamaSekolah')||'';}catch(e){}
   if(n){dc.namaSekolah=n;var lbl=document.getElementById('lbl-sekolah');if(lbl)lbl.innerText=n.toUpperCase();}
+var ft=document.getElementById('tet-tahun');if(ft){try{ft.value=localStorage.getItem('kokoTahunAkademik')||'';}catch(e){}}
   var f=document.getElementById('tet-nama');if(f)f.value=dc.namaSekolah||'SK KING EDWARD VII (1)';
 }
 function tukarPassword(){
