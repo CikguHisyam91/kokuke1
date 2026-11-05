@@ -2531,7 +2531,9 @@ window.addEventListener('load',function(){
   var t=document.getElementById('pen-tier'),p=document.getElementById('pen-pkt');if(!t||!p)return;
   var d=document.createElement('div');d.id='pen-mata-pratonton';d.className='col-12 small mb-2';
   var kol=t.closest('[class*="col-"]');if(kol&&kol.parentNode)kol.parentNode.insertBefore(d,kol.nextSibling);
-  t.addEventListener('change',pratontonMata);p.addEventListener('change',pratontonMata);pratontonMata();
+  // Anugerah uniform: peringkat tetap (Keris Emas = Daerah, Rambu Biru = Negeri)
+  t.addEventListener('change',function(){var tetap={'Keris Emas':'Daerah','Rambu Biru':'Negeri'}[t.value];if(tetap){p.value=tetap;toast('ℹ️ '+t.value+' ditetapkan peringkat '+tetap,'info');}pratontonMata();});
+  p.addEventListener('change',pratontonMata);pratontonMata();
 });
 // Muat semula data secara senyap setiap 1 minit (jika aplikasi sedang dibuka & dilihat)
 setInterval(function(){
