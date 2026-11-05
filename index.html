@@ -240,14 +240,15 @@ input::placeholder,textarea::placeholder{text-transform:none;}
       <div id="stat-years" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
     </div>
   </div>
-  <div class="card-g">
+  <div id="dash-tabs" class="d-flex gap-2 flex-wrap mb-3" style="position:sticky;top:0;z-index:50;padding:8px 0;background:var(--bg,#040612);"></div>
+  <div class="card-g" data-dtab="hadir" data-dlabel="📊 Kehadiran">
     <h5 class="mb-3"><i class="fa-solid fa-chart-line me-2" style="color:var(--c3);"></i>Peratusan Kehadiran</h5>
     <div class="row g-3">
       <div class="col-md-3 text-center"><h2 class="fw-bold" style="color:var(--c4);" id="pct-grand">0%</h2><div class="pbar mt-1"><div id="bar-grand" class="rounded" style="background:linear-gradient(90deg,var(--c4),#be123c);height:10px;width:0%;"></div></div><div class="small mt-1" style="color:var(--sub);">Keseluruhan</div></div>
       <div class="col-md-3"><div class="small mb-1" style="color:var(--sub);">🛡️ Uniform <span id="pct-uniform" class="fw-bold" style="color:var(--c1);float:right;">0%</span></div><div class="pbar"><div id="bar-uniform" class="rounded" style="background:linear-gradient(90deg,#38bdf8,#0284c7);height:10px;width:0%;"></div></div><div class="small mt-2 mb-1" style="color:var(--sub);">🧠 Kelab <span id="pct-kelab" class="fw-bold" style="color:var(--c2);float:right;">0%</span></div><div class="pbar"><div id="bar-kelab" class="rounded" style="background:linear-gradient(90deg,#c084fc,#9333ea);height:10px;width:0%;"></div></div><div class="small mt-2 mb-1" style="color:var(--sub);">⚽ Sukan <span id="pct-sukan" class="fw-bold" style="color:var(--c3);float:right;">0%</span></div><div class="pbar"><div id="bar-sukan" class="rounded" style="background:linear-gradient(90deg,#4ade80,#16a34a);height:10px;width:0%;"></div></div></div>
     </div>
   </div>
-  <div class="card-g" id="card-achiev">
+  <div class="card-g" id="card-achiev" data-dtab="ringkas" data-dlabel="🏅 Ringkasan Pencapaian">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
       <h5 class="mb-0"><i class="fa-solid fa-medal me-2" style="color:var(--c5);"></i>Pencapaian Murid — Ikut Peringkat</h5>
       <span id="achiev-total" style="background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.25);border-radius:8px;padding:3px 10px;font-size:11px;font-weight:700;color:var(--c5);">0 rekod</span>
@@ -255,11 +256,11 @@ input::placeholder,textarea::placeholder{text-transform:none;}
     <div id="achiev-zone" class="d-flex flex-wrap gap-2 mb-3"></div>
     <div id="achiev-list"></div>
   </div>
-  <div class="card-g"><h5 class="mb-3"><i class="fa-solid fa-trophy me-2" style="color:var(--c5);"></i>Top 10 Mengikut Tahun <button class="btn btn-sm btn-outline-info ms-2" style="font-size:11px;" onclick="bukaSistemMata()">ℹ️ Sistem Mata</button></h5>
+  <div class="card-g" data-dtab="top10" data-dlabel="🏆 Top 10"><h5 class="mb-3"><i class="fa-solid fa-trophy me-2" style="color:var(--c5);"></i>Top 10 Mengikut Tahun <button class="btn btn-sm btn-outline-info ms-2" style="font-size:11px;" onclick="bukaSistemMata()">ℹ️ Sistem Mata</button></h5>
     <div class="d-flex gap-2 mb-3 flex-wrap" id="rank-tabs"></div>
     <div class="table-responsive"><table class="table table-hover align-middle" style="font-size:13px;"><thead><tr style="background:rgba(244,63,94,.15);"><th>Kedudukan</th><th>Nama</th><th>Kelas</th><th class="text-end">Mata</th></tr></thead><tbody id="tbody-rank"></tbody></table></div>
   </div>
-  <div class="card-g mt-3"><h5 class="mb-3"><i class="fa-solid fa-ranking-star me-2" style="color:var(--c1);"></i>Pencapaian Mengikut Peringkat</h5>
+  <div class="card-g" data-dtab="peringkat" data-dlabel="🎯 Ikut Peringkat"><h5 class="mb-3"><i class="fa-solid fa-ranking-star me-2" style="color:var(--c1);"></i>Pencapaian Mengikut Peringkat</h5>
     <div class="d-flex gap-2 mb-2 flex-wrap" id="pkt-kat"></div>
     <div class="d-flex gap-2 mb-2 flex-wrap" id="pkt-tabs"></div>
     <div class="d-flex gap-2 mb-3 flex-wrap">
@@ -269,7 +270,7 @@ input::placeholder,textarea::placeholder{text-transform:none;}
     </div>
     <div id="pkt-senarai" style="font-size:13px;"></div>
   </div>
-  <div class="card-g mt-3"><h5 class="mb-3"><i class="fa-solid fa-medal me-2" style="color:#22c55e;"></i>Ranking Markah PAJSK</h5>
+  <div class="card-g" data-dtab="pajsk" data-dlabel="🎓 PAJSK"><h5 class="mb-3"><i class="fa-solid fa-medal me-2" style="color:#22c55e;"></i>Ranking Markah PAJSK</h5>
     <div class="d-flex gap-2 mb-2 flex-wrap" id="pajr-tabs"></div>
     <div class="d-flex gap-2 mb-3 flex-wrap">
       <select id="pajr-kls" class="form-select form-select-sm" style="max-width:180px;" onchange="paparRankPajsk()"><option value="">Semua Kelas</option></select>
@@ -2603,6 +2604,19 @@ function paparRankPajsk(){
     }).join('')+'</tbody></table></div><div style="font-size:11px;color:var(--sub);">Markah = markah PAJSK (10%) daripada laporan rasmi KPM. Kedudukan ikut markah, kemudian GPA.</div>';
   box.onclick=function(e){var a=e.target.closest('.nama-profil');if(!a)return;e.preventDefault();profilMurid(a.getAttribute('data-nama'));};
 }
+
+// ===== TAB PAPAN UTAMA (tak perlu skrol) =====
+function dashTab(t){
+  var kad=document.querySelectorAll('[data-dtab]');if(!kad.length)return;
+  if(!t){try{t=localStorage.getItem('kokoDashTab');}catch(e){}}
+  if(!document.querySelector('[data-dtab="'+t+'"]'))t=kad[0].getAttribute('data-dtab');
+  kad.forEach(function(k){k.style.display=k.getAttribute('data-dtab')===t?'':'none';});
+  var bar=document.getElementById('dash-tabs');
+  bar.innerHTML=Array.prototype.map.call(kad,function(k){var id=k.getAttribute('data-dtab');
+    return '<button class="btn btn-sm fw-bold '+(id===t?'btn-info':'btn-outline-info')+'" onclick="dashTab(\''+id+'\')">'+k.getAttribute('data-dlabel')+'</button>';}).join('');
+  try{localStorage.setItem('kokoDashTab',t);}catch(e){}
+}
+window.addEventListener('load',function(){dashTab();});
 
 // ===== EKSPORT CSV (EXCEL) =====
 function eksportCsv(jenis){
