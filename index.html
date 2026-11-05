@@ -2433,14 +2433,14 @@ window.addEventListener('load',function(){
   var kol=t.closest('[class*="col-"]');if(kol&&kol.parentNode)kol.parentNode.insertBefore(d,kol.nextSibling);
   t.addEventListener('change',pratontonMata);p.addEventListener('change',pratontonMata);pratontonMata();
 });
-// Muat semula data secara senyap setiap 5 minit (jika aplikasi sedang dibuka)
+// Muat semula data secara senyap setiap 1 minit (jika aplikasi sedang dibuka & dilihat)
 setInterval(function(){
   if(document.hidden||!navigator.onLine||!window._dataSedia||!(window.kokoAdaToken&&kokoAdaToken()))return;
   muatSemua(true);
-},5*60*1000);
+},60*1000);
 document.addEventListener('visibilitychange',function(){
   if(document.hidden||!window._dataSedia)return;
-  var n=Date.now();if(n-(window._akhirSegar||0)>5*60*1000){window._akhirSegar=n;muatSemua(true);}
+  var n=Date.now();if(n-(window._akhirSegar||0)>60*1000){window._akhirSegar=n;muatSemua(true);}
 });
 
 // ===== EKSPORT CSV (EXCEL) =====
