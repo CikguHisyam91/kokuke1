@@ -383,6 +383,22 @@ body[data-theme="dark"] .sw-tema i{transform:translateX(30px);color:var(--c2);}
 .komp-r .tr i{display:block;height:100%;background:var(--c1);}
 .komp-r b{text-align:right;font-variant-numeric:tabular-nums;}
 .menu-bx h6{margin:0 0 4px;}
+.unit-k.klik{cursor:pointer;}.unit-k.klik:hover{border-color:var(--c1);}
+.rs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;}
+.rs-k{display:flex;flex-direction:column;gap:10px;}
+.rs-k .nm{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:900;letter-spacing:.08em;}
+.rs-k .nm em{width:14px;height:14px;border-radius:4px;display:inline-block;flex-shrink:0;}
+.rs-k .bn{font-size:40px;font-weight:900;line-height:1;font-variant-numeric:tabular-nums;}
+.rs-k .bn small{font-size:12px;font-weight:800;color:var(--sub);letter-spacing:.08em;margin-left:6px;}
+.rs-tr{height:10px;border-radius:999px;background:var(--inp);border:1px solid var(--glow);overflow:hidden;}
+.rs-tr i{display:block;height:100%;}
+.rs-tbl{width:100%;border-collapse:collapse;font-size:12px;font-weight:700;letter-spacing:.04em;}
+.rs-tbl th{font-size:10.5px;font-weight:900;color:var(--sub);letter-spacing:.1em;text-align:center;padding:8px 6px;border-bottom:1px solid var(--glow);}
+.rs-tbl td{padding:9px 6px;border-bottom:1px solid var(--glow);text-align:center;font-variant-numeric:tabular-nums;}
+.rs-tbl td:first-child,.rs-tbl th:first-child{text-align:left;}
+.rs-tbl tr.jum td{font-weight:900;}
+.rs-sek{display:flex;flex-direction:column;gap:12px;}
+.rs-sek h6{margin:0;font-size:12px;font-weight:900;letter-spacing:.14em;color:var(--sub);}
 .menu-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;}
 .mrow{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--glow);border-radius:12px;background:var(--bg);color:var(--txt);font-size:12px;font-weight:800;letter-spacing:.06em;cursor:pointer;text-align:left;}
 .mrow:hover{border-color:var(--c1);}
@@ -943,6 +959,14 @@ body[data-theme="dark"] .sw-tema i{transform:translateX(30px);color:var(--c2);}
   <div id="mod-zone"></div>
 </div>
 
+<!-- RUMAH SUKAN -->
+<div id="view-rumah" class="view-section">
+  <div class="mod-head"><div><h3><i class="fa-solid fa-house-flag me-2" style="color:var(--c1);"></i>Rumah Sukan</h3>
+  <p>Taburan murid ikut rumah sukan. Tekan "Paparan penuh" untuk pecahan ikut tahun, kehadiran ahli dan markah rumah.</p></div>
+  <div class="seg" id="rs-mod"><button type="button" class="on" onclick="rsMod('ringkas')">Ringkas</button><button type="button" onclick="rsMod('penuh')">Paparan penuh</button></div></div>
+  <div id="rs-zone" style="margin-top:16px;"></div>
+</div>
+
 <!-- RUJUKAN: PROSES KERJA (SOP) & SENARAI TUGAS -->
 <div id="view-sop" class="view-section">
   <div class="mod-head"><div><h3><i class="fa-solid fa-route me-2" style="color:var(--c1);"></i>Proses Kerja PK Kokurikulum</h3>
@@ -1054,10 +1078,10 @@ function tukarMenu(id){
   document.querySelectorAll('.view-section').forEach(function(s){s.classList.remove('active');});
   document.getElementById('view-'+v).classList.add('active');
   document.querySelectorAll('.modal-overlay.show').forEach(function(m){m.classList.remove('show');});
-  if(mod||id==='home'||id==='sop'||id==='tugas'||id==='laporan'){
+  if(mod||id==='home'||id==='sop'||id==='tugas'||id==='laporan'||id==='rumah'){
     document.getElementById('btn-back').classList[v==='home'?'add':'remove']('d-none');
     window.scrollTo(0,0);_viewSemasa=v;
-    if(mod)bukaModul(mod);else if(id==='home')paparHome();else if(id==='sop')paparSop();else if(id==='tugas')paparTugas();else sediaLaporan();
+    if(mod)bukaModul(mod);else if(id==='home')paparHome();else if(id==='sop')paparSop();else if(id==='tugas')paparTugas();else if(id==='rumah')paparRumah();else sediaLaporan();
     return;
   }
   if(id==='pencapaian'){if(!window._penModDibuka){window._penModDibuka=true;penMode('kelas');}else penLukisSenarai();}
@@ -1141,6 +1165,7 @@ function paparSemula(){
   if(v==='home'){paparHome();return;}
   if(v==='modul'){paparSenaraiModul();return;}
   if(v==='laporan'){pratontonLaporan();return;}
+  if(v==='rumah'){paparRumah();return;}
   if(v==='utama'){kiraStats();kiraRank(kiraRank._thn||'1');paparPeringkat();muatPajskRank();paparUnitHadir();kiraAlert();kiraAchievements();}
   else if(v==='murid'){muFilter();}
   else if(v==='datamurid'){filterData();pkUnit(true);}
@@ -3403,6 +3428,10 @@ var MODUL={
   medan:[{k:'nama',l:'NAMA PERALATAN',t:'text',wajib:1,full:1},{k:'unit',l:'UNIT / RUMAH',t:'unit'},{k:'kuantiti',l:'KUANTITI',t:'number'},
    {k:'keadaan',l:'KEADAAN',t:'select',o:['BAIK','PERLU DIBAIKI','ROSAK','HILANG','DILUPUSKAN']},{k:'lokasi',l:'LOKASI SIMPANAN',t:'text'},{k:'tarikh',l:'TARIKH TERIMA',t:'date'},
    {k:'sumber',l:'SUMBER',t:'select',o:['PERUNTUKAN KERAJAAN','PIBG','SUMBANGAN / TAJAAN','LAIN-LAIN']},{k:'catatan',l:'CATATAN',t:'textarea',full:1}]},
+ markahrumah:{sheet:'MARKAH RUMAH',nama:'Markah Rumah Sukan',ikon:'fa-ranking-star',ket:'Markah setiap rumah dalam acara, kejohanan dan pertandingan antara rumah. Jumlah dikira automatik.',
+  tajukK:'acara',statusK:'',tapisK:'rumah',tarikhK:'tarikh',
+  medan:[{k:'tarikh',l:'TARIKH',t:'date',wajib:1},{k:'acara',l:'ACARA / PERTANDINGAN',t:'text',wajib:1,full:1},{k:'rumah',l:'RUMAH',t:'rumah',wajib:1},
+   {k:'kedudukan',l:'KEDUDUKAN',t:'select',o:['JOHAN','NAIB JOHAN','KETIGA','KEEMPAT','PENYERTAAN']},{k:'markah',l:'MARKAH',t:'number',wajib:1},{k:'catatan',l:'CATATAN',t:'textarea',full:1}]},
  rujukan:{sheet:'RUJUKAN DOKUMEN',nama:'Dokumen & Pautan Rujukan',ikon:'fa-book-bookmark',ket:'Pekeliling, buku panduan, borang dan templat rasmi. Simpan pautan Google Drive di sini supaya semua guru boleh cari.',
   tajukK:'tajuk',statusK:'',tapisK:'jenis',tarikhK:'',
   medan:[{k:'tajuk',l:'TAJUK DOKUMEN',t:'text',wajib:1,full:1},{k:'jenis',l:'JENIS',t:'select',o:['PEKELILING / SURAT SIARAN','BUKU PANDUAN','BORANG','TEMPLAT','LAMAN WEB','LAIN-LAIN']},
@@ -3416,6 +3445,7 @@ var JUBIN={
  'm-surat':{n:'Surat & Pekeliling',k:'Masuk, keluar, arahan',i:'fa-envelope-open-text',c:'surat pekeliling arahan ppd jpn'},
  'm-kewangan':{n:'Kewangan & Tuntutan',k:'Peruntukan & MSSD',i:'fa-sack-dollar',c:'kewangan tuntutan bajet peruntukan belanja mssd'},
  'm-entiti':{n:'Unit & Guru Penasihat',k:'Organisasi setiap unit',i:'fa-sitemap',c:'unit entiti guru penasihat organisasi jurulatih'},
+ 'rumah':{n:'Rumah Sukan',k:'Taburan, kehadiran, markah',i:'fa-house-flag',c:'rumah sukan taburan markah'},
  'murid':{n:'Pengurusan Murid',k:'Daftar & edit koko',i:'fa-users',c:'murid daftar pengurusan'},
  'datamurid':{n:'Data & Cetakan',k:'Senarai & muat turun',i:'fa-print',c:'data cetak senarai excel pdf muat turun'},
  'jawatankuasa':{n:'Jawatankuasa & PAJSK',k:'AJK murid & profil',i:'fa-id-card',c:'jawatankuasa ajk pajsk profil'},
@@ -3438,7 +3468,7 @@ var JUBIN={
 };
 var RUANG=[
  {t:'Perancangan & Pentadbiran',k:'Takwim, mesyuarat, surat dan kewangan berjalan bersama',w:'--p2',j:['m-takwim','m-mesyuarat','m-surat','m-kewangan']},
- {t:'Unit & Murid',k:'Organisasi unit, keahlian dan jawatankuasa murid',w:'--p3',j:['m-entiti','murid','datamurid','jawatankuasa','semak','arkib']},
+ {t:'Unit & Murid',k:'Organisasi unit, keahlian dan jawatankuasa murid',w:'--p3',j:['m-entiti','rumah','murid','datamurid','jawatankuasa','semak','arkib']},
  {t:'Program & Pelaksanaan',k:'Kertas cadangan, JK, senarai semak, kehadiran dan OPR',w:'--p4',j:['m-program','statushadir','koleksiopr','kehadiran']},
  {t:'Pencapaian & Penilaian',k:'Pencapaian murid, PAJSK dan laporan',w:'--p1',j:['pencapaian','utama','laporan']},
  {t:'Sumber Manusia & Aset',k:'Guru, kursus dan peralatan',w:'--p6',j:['guru','m-kursus','m-aset']},
@@ -3485,7 +3515,7 @@ function muatRekod(){
     if(!res||!res.success){return;}
     _rekodTiada=false;terapRekod(res);
     try{localStorage.setItem('kokoRekod',JSON.stringify(res));}catch(e){}
-    if(_viewSemasa==='home')paparHome();else if(_viewSemasa==='modul')paparModul();else if(_viewSemasa==='laporan')pratontonLaporan();
+    if(_viewSemasa==='home')paparHome();else if(_viewSemasa==='rumah')paparRumah();else if(_viewSemasa==='modul')paparModul();else if(_viewSemasa==='laporan')pratontonLaporan();
   }).withFailureHandler(function(e){
     if(/tidak dibenarkan|tidak dijumpai/i.test(e&&e.message||'')){_rekodTiada=true;if(_viewSemasa==='modul')paparModul();}
   }).dapatkanRekodModul();
@@ -3524,7 +3554,7 @@ function paparHome(){
   var c=[],mx=1;for(var t=1;t<=6;t++){var n=m.filter(function(x){return x.tahun===String(t);}).length;c.push(n);if(n>mx)mx=n;}
   document.getElementById('h-thn').innerHTML=c.map(function(n,i){return '<div><b>'+n+'</b><i style="height:'+Math.max(4,Math.round(n/mx*60))+'px"></i><span>THN '+(i+1)+'</span></div>';}).join('');
   var r=dc.rujukan||{},U=[['rumah','Rumah sukan','fa-house-flag'],['uniform','Unit beruniform','fa-shield-halved'],['kelab','Kelab & persatuan','fa-lightbulb'],['sukan','Sukan & permainan','fa-futbol']],jum=0;
-  document.getElementById('h-unit').innerHTML=U.map(function(u){var n=(r[u[0]]||[]).length;jum+=n;return '<div class="unit-k"><i class="fa-solid '+u[2]+'"></i><div><b>'+n+'</b><span>'+esc(u[1])+'</span></div></div>';}).join('');
+  document.getElementById('h-unit').innerHTML=U.map(function(u){var n=(r[u[0]]||[]).length;jum+=n;var k=u[0]==='rumah';return '<div class="unit-k'+(k?' klik':'')+'"'+(k?' role="button" tabindex="0" onclick="tukarMenu(\'rumah\')" title="Lihat taburan murid ikut rumah sukan"':'')+'><i class="fa-solid '+u[2]+'"></i><div><b>'+n+'</b><span>'+esc(u[1])+(k?' <i class="fa-solid fa-arrow-right" style="width:auto;height:auto;border:none;background:none;font-size:10px;display:inline;"></i>':'')+'</span></div></div>';}).join('');
   document.getElementById('h-unit-jum').textContent=jum+' unit semuanya';
   pajskHome();
   var html='';
@@ -3557,6 +3587,66 @@ function pajskHome(){
    +'<div style="display:flex;flex-direction:column;gap:10px;"><span style="font-size:10.5px;font-weight:900;color:var(--sub);letter-spacing:.1em;">PURATA KOMPONEN</span><div class="komp">'
    +[['sukan','Sukan'],['kelab','Kelab'],['uniform','Uniform']].map(function(k){var v=pur(k[0]);return '<div class="komp-r"><span>'+k[1]+'</span><div class="tr"><i style="width:'+Math.min(100,v)+'%"></i></div><b>'+v.toFixed(1)+'%</b></div>';}).join('')+'</div></div></div>'
    +'<div><button type="button" class="mini" onclick="tukarMenu(\'utama\');if(typeof dashTab===\'function\')dashTab(\'pajsk\')">Lihat ranking penuh <i class="fa-solid fa-arrow-right ms-1"></i></button></div>';
+}
+
+// ---------- RUMAH SUKAN: taburan, ikut tahun, kehadiran ahli, markah rumah ----------
+var _rsMod='ringkas';
+function rsMod(m){_rsMod=m;document.querySelectorAll('#rs-mod button').forEach(function(b,i){b.classList.toggle('on',(i===0&&m==='ringkas')||(i===1&&m==='penuh'));});paparRumah();}
+function warnaRumah(nama,i){
+  var n=String(nama).toUpperCase(),peta={MERAH:'#c0102c',BIRU:'#2f6fb3',HIJAU:'#1f7a45',KUNING:'#c9a227',UNGU:'#6b4fc4',JINGGA:'#d9822b',OREN:'#d9822b',PUTIH:'#9a9a94',HITAM:'#3a3a3a'};
+  for(var k in peta)if(n.indexOf(k)>=0)return peta[k];
+  return ['#c0102c','#2f6fb3','#1f7a45','#c9a227','#6b4fc4','#d9822b'][i%6];
+}
+function paparRumah(){
+  var z=document.getElementById('rs-zone');if(!z)return;
+  var R=(dc.rujukan&&dc.rujukan.rumah||[]).map(function(x){return String(x).toUpperCase();});
+  var M=dc.murid||[];
+  if(!R.length){z.innerHTML='<div class="bx kosong-box">Tiada senarai rumah sukan dalam sheet RUJUKAN.</div>';return;}
+  var ahli={};R.forEach(function(r){ahli[r]=[];});
+  var tiada=0,rumahOf={};
+  M.forEach(function(m){var r=String(m.rumah||'').toUpperCase().trim();rumahOf[m.nama.trim().toUpperCase()]=r;if(ahli[r])ahli[r].push(m);else tiada++;});
+  var tot=M.length||1,mx=Math.max.apply(null,R.map(function(r){return ahli[r].length;}).concat([1]));
+  var h='<div class="rs-grid">'+R.map(function(r,i){var n=ahli[r].length,w=warnaRumah(r,i);
+    return '<div class="bx rs-k"><div class="nm"><em style="background:'+w+'"></em>'+esc(r)+'</div><div class="bn">'+n+'<small>murid · '+Math.round(n/tot*100)+'%</small></div><div class="rs-tr"><i style="width:'+Math.round(n/mx*100)+'%;background:'+w+'"></i></div></div>';}).join('')+'</div>'
+    +(tiada?'<p style="margin:12px 4px 0;font-size:11px;font-weight:800;color:var(--sub);letter-spacing:.06em;">'+tiada+' murid belum ada rumah sukan (kebanyakannya murid baharu).</p>':'');
+  if(_rsMod!=='penuh'){z.innerHTML=h;return;}
+
+  // 1. Ikut tahun
+  var tb='<table class="rs-tbl"><thead><tr><th>Rumah</th>'+[1,2,3,4,5,6].map(function(t){return '<th>Thn '+t+'</th>';}).join('')+'<th>Jumlah</th></tr></thead><tbody>'
+    +R.map(function(r,i){var c=[1,2,3,4,5,6].map(function(t){return ahli[r].filter(function(m){return m.tahun===String(t);}).length;});
+      return '<tr><td><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:'+warnaRumah(r,i)+';margin-right:8px;"></span>'+esc(r)+'</td>'+c.map(function(n){return '<td>'+n+'</td>';}).join('')+'<td><b>'+ahli[r].length+'</b></td></tr>';}).join('')
+    +'<tr class="jum"><td>Jumlah</td>'+[1,2,3,4,5,6].map(function(t){return '<td>'+R.reduce(function(a,r){return a+ahli[r].filter(function(m){return m.tahun===String(t);}).length;},0)+'</td>';}).join('')+'<td>'+R.reduce(function(a,r){return a+ahli[r].length;},0)+'</td></tr></tbody></table>';
+
+  // 2. Kehadiran ahli (semua aktiviti koko) ikut rumah
+  var kh={};R.forEach(function(r){kh[r]={h:0,n:0,u:[0,0],k:[0,0],s:[0,0]};});
+  (dc.kehadiran||[]).forEach(function(l){var r=rumahOf[String(l.namaMurid).trim().toUpperCase()];if(!r||!kh[r])return;var hd=l.status==='Hadir'?1:0;kh[r].n++;kh[r].h+=hd;
+    var k=String(l.kategori).toLowerCase(),a=k==='uniform'?kh[r].u:k==='kelab'?kh[r].k:k==='sukan'?kh[r].s:null;if(a){a[0]+=hd;a[1]++;}});
+  function pc(a){return a[1]?Math.round(a[0]/a[1]*100)+'%':'–';}
+  var kt='<table class="rs-tbl"><thead><tr><th>Rumah</th><th>Rekod</th><th>Uniform</th><th>Kelab</th><th>Sukan</th><th>Keseluruhan</th></tr></thead><tbody>'
+    +R.map(function(r){var x=kh[r];return '<tr><td>'+esc(r)+'</td><td>'+x.n+'</td><td>'+pc(x.u)+'</td><td>'+pc(x.k)+'</td><td>'+pc(x.s)+'</td><td><b>'+pc([x.h,x.n])+'</b></td></tr>';}).join('')+'</tbody></table>';
+
+  // 3. Mata merit pencapaian ahli
+  var mp={};R.forEach(function(r){mp[r]={m:0,n:0};});
+  (dc.pencapaian||[]).forEach(function(p){var r=rumahOf[String(p.nama).trim().toUpperCase()];if(!r||!mp[r])return;mp[r].m+=parseFloat(p.mata)||0;mp[r].n++;});
+  var urut=R.slice().sort(function(a,b){return mp[b].m-mp[a].m;});
+  var mt='<table class="rs-tbl"><thead><tr><th>Kedudukan</th><th>Rumah</th><th>Rekod pencapaian</th><th>Jumlah mata merit</th></tr></thead><tbody>'
+    +urut.map(function(r,i){return '<tr><td>'+(i+1)+'</td><td style="text-align:center;">'+esc(r)+'</td><td>'+mp[r].n+'</td><td><b>'+mp[r].m+'</b></td></tr>';}).join('')+'</tbody></table>';
+
+  // 4. Markah rumah sukan (rekod baharu, perlu Rekod.gs)
+  var mr={};R.forEach(function(r){mr[r]=0;});
+  dr.markahrumah.forEach(function(o){var r=String(o.rumah).toUpperCase();if(mr[r]!=null)mr[r]+=parseFloat(o.markah)||0;});
+  var um=R.slice().sort(function(a,b){return mr[b]-mr[a];});
+  var mk=(_rekodTiada?'<div class="banner">Markah rumah belum boleh disimpan. Bahagian ini memerlukan fail Apps Script Rekod.gs (menunggu kelulusan cikgu).</div>':'')
+    +'<table class="rs-tbl"><thead><tr><th>Kedudukan</th><th>Rumah</th><th>Jumlah markah</th></tr></thead><tbody>'
+    +um.map(function(r,i){return '<tr><td>'+(i+1)+'</td><td style="text-align:center;">'+esc(r)+'</td><td><b>'+mr[r]+'</b></td></tr>';}).join('')+'</tbody></table>'
+    +'<div class="pk-row"><button class="btn btn-info" onclick="tukarMenu(\'m-markahrumah\');bukaBorang(\'markahrumah\')"><i class="fa-solid fa-plus me-1"></i>Tambah markah</button><button class="btn btn-secondary" onclick="tukarMenu(\'m-markahrumah\')">Lihat semua rekod ('+dr.markahrumah.length+')</button></div>';
+
+  h+='<div class="bento" style="margin-top:16px;">'
+    +'<div class="bx bx-12 rs-sek"><h6>Taburan ikut tahun</h6><div style="overflow-x:auto;">'+tb+'</div></div>'
+    +'<div class="bx bx-6 rs-sek"><h6>Kehadiran ahli rumah (semua aktiviti koko)</h6><div style="overflow-x:auto;">'+kt+'</div><p style="margin:0;font-size:10.5px;font-weight:700;color:var(--sub);">Dikira daripada rekod kehadiran (termasuk import Sheet guru) bagi murid setiap rumah.</p></div>'
+    +'<div class="bx bx-6 rs-sek"><h6>Mata merit pencapaian ahli</h6><div style="overflow-x:auto;">'+mt+'</div></div>'
+    +'<div class="bx bx-12 rs-sek"><h6>Rekod markah rumah sukan</h6>'+mk+'</div></div>';
+  z.innerHTML=h;
 }
 
 // ---------- PAPARAN MODUL GENERIK ----------
@@ -3667,6 +3757,7 @@ function bukaBorang(mk,id,awal){
     var v=o[x.k]==null?'':o[x.k],idf='mf-'+x.k,lab='<label for="'+idf+'">'+esc(x.l)+(x.wajib?' *':'')+'</label>',inp;
     if(x.t==='textarea')inp='<textarea id="'+idf+'" class="form-control" rows="3">'+esc(v)+'</textarea>';
     else if(x.t==='select')inp='<select id="'+idf+'" class="form-select"><option value="">— Pilih —</option>'+opsyen(x.o,v)+'</select>';
+    else if(x.t==='rumah')inp='<select id="'+idf+'" class="form-select"><option value="">— Pilih —</option>'+opsyen((dc.rujukan&&dc.rujukan.rumah||[]).map(function(z){return String(z).toUpperCase();}),String(v).toUpperCase())+'</select>';
     else if(x.t==='sop')inp='<select id="'+idf+'" class="form-select"><option value="">LAIN-LAIN (senarai semak sendiri)</option>'+SOP.map(function(s){return '<option value="'+s.id+'"'+(s.id===v?' selected':'')+'>'+esc(s.tajuk.toUpperCase())+'</option>';}).join('')+'</select>';
     else if(x.t==='date')inp='<input id="'+idf+'" type="date" class="form-control" value="'+esc(tglIso(v))+'">';
     else if(x.t==='number')inp='<input id="'+idf+'" type="number" step="any" min="0" class="form-control" value="'+esc(v)+'">';
