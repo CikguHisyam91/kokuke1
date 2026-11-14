@@ -85,7 +85,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="KokoSmart">
-<meta name="theme-color" content="#f4ede7">
+<meta name="theme-color" content="#f5f5f2">
 <link id="fav-icon" rel="icon" type="image/png">
 <link id="apple-icon" rel="apple-touch-icon" href="icon-192.png">
 <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -93,24 +93,21 @@
 <style>
 /* ===== KOKOSMART PRO — CLAYMORPHISM (Urbanist, huruf besar, siang/malam) ===== */
 body,body[data-theme="light"]{
-  --bg:#f4ede7;--card:#fffaf6;--inp:#efe4db;--glow:#e8dbd0;--txt:#2b2226;--sub:#76666b;
-  --c1:#c8213e;--c2:#7253cc;--c3:#25864c;--c4:#d23345;--c5:#c27612;--acct:#ffffff;
-  --suggest:#fffaf6;--shover:#f6ebe2;--row:rgba(150,105,85,.05);
-  --p1:#ffd8de;--p2:#d6e9ff;--p3:#d9f3dd;--p4:#ffefc4;--p5:#eadcff;--p6:#ffe0cc;
-  --clay:10px 12px 24px rgba(150,105,85,.20),inset -6px -6px 12px rgba(150,105,85,.09),inset 6px 6px 12px rgba(255,255,255,.95);
-  --clay-sm:5px 6px 14px rgba(150,105,85,.20),inset -3px -3px 6px rgba(150,105,85,.09),inset 3px 3px 6px rgba(255,255,255,.9);
-  --sunk:inset 4px 4px 10px rgba(150,105,85,.20),inset -4px -4px 10px rgba(255,255,255,.75);
-  --ink-on-pastel:#2b2226;color-scheme:light;
+  /* BENTO: kad rata, garis nipis, tanpa bayang */
+  --bg:#f5f5f2;--card:#ffffff;--inp:#efeee9;--glow:#e2e1dc;--txt:#141414;--sub:#615f59;
+  --c1:#c0102c;--c2:#5b4bc4;--c3:#1f7a45;--c4:#c62f3f;--c5:#a8650c;--acct:#ffffff;
+  --suggest:#ffffff;--shover:#f3f2ee;--row:rgba(0,0,0,.025);
+  --p1:#fdecef;--p2:#eaf2fc;--p3:#e8f5ec;--p4:#fbf3dc;--p5:#f1ebfb;--p6:#fcefe6;
+  --clay:none;--clay-sm:none;--sunk:none;
+  --ink-on-pastel:#141414;color-scheme:light;
 }
 body[data-theme="dark"]{
-  --bg:#261f2b;--card:#372d3f;--inp:#211a26;--glow:#45394e;--txt:#f6eef6;--sub:#b9a9ba;
-  --c1:#ff6b81;--c2:#a78bfa;--c3:#5ccf8a;--c4:#ff6b6b;--c5:#f4b54a;--acct:#2a0c12;
-  --suggest:#372d3f;--shover:#43374c;--row:rgba(255,255,255,.03);
-  --p1:#5c2f3e;--p2:#2c405e;--p3:#2f4b38;--p4:#5a4a26;--p5:#463463;--p6:#5c3c2a;
-  --clay:10px 12px 24px rgba(0,0,0,.42),inset -6px -6px 12px rgba(0,0,0,.20),inset 6px 6px 12px rgba(255,255,255,.06);
-  --clay-sm:5px 6px 14px rgba(0,0,0,.40),inset -3px -3px 6px rgba(0,0,0,.20),inset 3px 3px 6px rgba(255,255,255,.06);
-  --sunk:inset 4px 4px 10px rgba(0,0,0,.45),inset -4px -4px 10px rgba(255,255,255,.04);
-  --ink-on-pastel:#f6eef6;color-scheme:dark;
+  --bg:#0e0e10;--card:#18181b;--inp:#121214;--glow:#2a2a2e;--txt:#f3f3f0;--sub:#a3a29d;
+  --c1:#ff4d5f;--c2:#9d8cff;--c3:#4fc47c;--c4:#ff6b6b;--c5:#f0b04a;--acct:#24060b;
+  --suggest:#18181b;--shover:#202024;--row:rgba(255,255,255,.025);
+  --p1:#2a1a1e;--p2:#18222f;--p3:#182a1f;--p4:#2b2614;--p5:#221b31;--p6:#2c1f17;
+  --clay:none;--clay-sm:none;--sunk:none;
+  --ink-on-pastel:#f3f3f0;color-scheme:dark;
 }
 *{box-sizing:border-box;}
 body{font-family:'Urbanist',system-ui,-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;padding-bottom:48px;-webkit-tap-highlight-color:transparent;text-transform:uppercase;letter-spacing:.02em;font-weight:500;}
@@ -332,6 +329,64 @@ body[data-theme="dark"] .sw-tema i{transform:translateX(30px);color:var(--c2);}
 #dash-tabs .btn{border-radius:999px;}
 #pkt-tabs .btn,#rank-tabs .btn{border-radius:999px;}
 ::-webkit-scrollbar{width:8px;height:8px;}::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--sub) 45%,transparent);border-radius:8px;}
+
+/* ===== BENTO: garis nipis pada semua permukaan (ganti bayang clay) ===== */
+.card-g,.clay,.modal-box,.modal-content,.tile,.chip,.mini,.ib,.pk-chip,.pk-seg button,.pk-mini,.jk-chip,.sop,.st,.rek,.akan-item,.ss-item,.sunk,.anak-bento,
+#koko-cari>div,#koko-profil>div,#koko-mata>div,#koko-gambar>div,#koko-sr>div{border:1px solid var(--glow)!important;box-shadow:none!important;}
+.card-g{border-radius:20px;}
+.form-control,.form-select{border:1px solid var(--glow)!important;box-shadow:none!important;border-radius:12px;}
+.form-control:focus,.form-select:focus{border-color:var(--c1)!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--c1) 22%,transparent)!important;}
+.btn{box-shadow:none!important;border-radius:12px;}
+.btn-secondary,.btn-outline-light,.btn-outline-info,.btn-outline-secondary,.btn-outline-success,.btn-outline-danger,.btn-outline-warning{border:1px solid var(--glow)!important;}
+.tile:hover{transform:none;border-color:var(--c1)!important;}
+.pbar,.prog-bar,.sw-tema{border:1px solid var(--glow);box-shadow:none!important;}
+.topbar{border-bottom:1px solid var(--glow);background:color-mix(in srgb,var(--bg) 92%,transparent);}
+.badge-r,.badge-u,.badge-k,.badge-s{box-shadow:none;}
+.ktoast{box-shadow:0 8px 24px rgba(0,0,0,.18);}
+
+/* ===== Laman utama Bento ===== */
+.bento{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px;margin-bottom:16px;}
+.bx{background:var(--card);border:1px solid var(--glow);border-radius:20px;padding:20px 22px;min-width:0;display:flex;flex-direction:column;gap:14px;}
+.bx-6{grid-column:span 6;}.bx-12{grid-column:span 12;}.bx-4{grid-column:span 4;}
+@media(max-width:860px){.bx-6,.bx-4{grid-column:span 12;}}
+.bx-h{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;}
+.bx-h h6{margin:0;font-size:12px;font-weight:900;letter-spacing:.14em;color:var(--sub);}
+.bx-big{font-size:clamp(44px,7vw,64px);font-weight:900;line-height:1;color:var(--txt);font-variant-numeric:tabular-nums;}
+.bx-big small{font-size:14px;font-weight:800;color:var(--sub);letter-spacing:.1em;margin-left:8px;}
+.thn-bar{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;align-items:end;height:96px;}
+.thn-bar div{display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end;}
+.thn-bar i{display:block;width:100%;max-width:44px;background:var(--c1);border-radius:8px 8px 3px 3px;min-height:4px;}
+.thn-bar b{font-size:12px;font-weight:900;font-variant-numeric:tabular-nums;}
+.thn-bar span{font-size:10px;font-weight:800;color:var(--sub);letter-spacing:.06em;}
+.unit-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+.unit-k{border:1px solid var(--glow);border-radius:14px;padding:12px 14px;background:var(--bg);display:flex;align-items:center;gap:12px;}
+.unit-k i{font-size:18px;color:var(--c1);width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:var(--card);border:1px solid var(--glow);flex-shrink:0;}
+.unit-k b{display:block;font-size:26px;font-weight:900;line-height:1;font-variant-numeric:tabular-nums;}
+.unit-k span{font-size:10.5px;font-weight:800;color:var(--sub);letter-spacing:.08em;}
+.seg{display:inline-flex;border:1px solid var(--glow);border-radius:12px;overflow:hidden;}
+.seg button{border:none;background:var(--card);color:var(--txt);font-size:11px;font-weight:900;letter-spacing:.08em;padding:8px 12px;cursor:pointer;}
+.seg button+button{border-left:1px solid var(--glow);}
+.seg button.on{background:var(--txt);color:var(--bg);}
+.paj-top{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}
+.paj-top div{border:1px solid var(--glow);border-radius:14px;padding:12px 14px;background:var(--bg);}
+@media(max-width:700px){.paj-dua{grid-template-columns:minmax(0,1fr)!important;}}
+.paj-top b{display:block;font-size:28px;font-weight:900;line-height:1.05;font-variant-numeric:tabular-nums;}
+.paj-top span{font-size:10px;font-weight:800;color:var(--sub);letter-spacing:.08em;}
+.gred-bar{display:flex;height:18px;border-radius:999px;overflow:hidden;border:1px solid var(--glow);}
+.gred-bar i{display:block;height:100%;}
+.gred-leg{display:flex;flex-wrap:wrap;gap:12px;font-size:11px;font-weight:800;letter-spacing:.06em;}
+.gred-leg span{display:inline-flex;align-items:center;gap:6px;}
+.gred-leg em{display:inline-block;width:10px;height:10px;border-radius:3px;}
+.komp{display:grid;gap:8px;}
+.komp-r{display:grid;grid-template-columns:92px 1fr 52px;gap:10px;align-items:center;font-size:11px;font-weight:800;letter-spacing:.06em;}
+.komp-r .tr{height:10px;border-radius:999px;background:var(--inp);border:1px solid var(--glow);overflow:hidden;}
+.komp-r .tr i{display:block;height:100%;background:var(--c1);}
+.komp-r b{text-align:right;font-variant-numeric:tabular-nums;}
+.menu-bx h6{margin:0 0 4px;}
+.menu-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;}
+.mrow{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--glow);border-radius:12px;background:var(--bg);color:var(--txt);font-size:12px;font-weight:800;letter-spacing:.06em;cursor:pointer;text-align:left;}
+.mrow:hover{border-color:var(--c1);}
+.mrow i{color:var(--c1);width:18px;text-align:center;}
 </style>
 </head>
 <body data-theme="light">
@@ -359,25 +414,24 @@ body[data-theme="dark"] .sw-tema i{transform:translateX(30px);color:var(--c2);}
 
 <div class="container-fluid px-3 wrapper">
 
-<!-- HOME: PUSAT SEHENTI KOKURIKULUM -->
+<!-- HOME: PUSAT SEHENTI KOKURIKULUM (Bento) -->
 <div id="view-home" class="view-section active">
-  <div class="hero">
-    <div class="clay hero-hi">
-      <h2>Pusat Sehenti Kokurikulum</h2>
-      <p>Semua urusan PK Kokurikulum dari A hingga Z, disusun ikut aliran kerja.</p>
-      <div class="sunk cari-menu"><i class="fa-solid fa-magnifying-glass"></i><input id="cari-menu" type="search" placeholder="Cari menu… contoh: takwim, tuntutan, PAJSK" oninput="paparHome()" autocomplete="off"></div>
-      <div class="stat-row">
-        <div class="st sunk"><b id="h-st-murid">0</b><span>Murid aktif</span></div>
-        <div class="st sunk"><b id="h-st-unit">0</b><span>Unit koko</span></div>
-        <div class="st sunk"><b id="h-st-prog">0</b><span>Program tahun ini</span></div>
-      </div>
+  <div class="bento">
+    <div class="bx bx-6">
+      <div class="bx-h"><h6>Jumlah murid</h6><span style="font-size:10.5px;font-weight:800;color:var(--sub);letter-spacing:.08em;">Ikut tahun</span></div>
+      <div class="bx-big" id="h-murid">0</div>
+      <div class="thn-bar" id="h-thn"></div>
     </div>
-    <div class="clay akan">
-      <h6><i class="fa-solid fa-bell me-1"></i>Akan datang &amp; perlu tindakan</h6>
-      <div id="h-akan"></div>
+    <div class="bx bx-6">
+      <div class="bx-h"><h6>Jumlah unit</h6><span id="h-unit-jum" style="font-size:10.5px;font-weight:800;color:var(--sub);letter-spacing:.08em;"></span></div>
+      <div class="unit-grid" id="h-unit"></div>
+    </div>
+    <div class="bx bx-12">
+      <div class="bx-h"><h6>Analisis PAJSK keseluruhan</h6><div class="seg" id="h-paj-thn"></div></div>
+      <div id="h-paj"></div>
     </div>
   </div>
-  <div id="h-ruang"></div>
+  <div class="bento" id="h-menu"></div>
 </div>
 
 <!-- DASHBOARD -->
@@ -989,7 +1043,7 @@ function togTheme(){
   kemasIkonTema();
   if(_viewSemasa&&_viewSemasa!=='home')paparSemula();
 }
-function kemasIkonTema(){var i=document.getElementById('ico-tema');if(i)i.className='fa-solid '+(isDark()?'fa-moon':'fa-sun');var m=document.querySelector('meta[name=theme-color]');if(m)m.content=isDark()?'#261f2b':'#f4ede7';}
+function kemasIkonTema(){var i=document.getElementById('ico-tema');if(i)i.className='fa-solid '+(isDark()?'fa-moon':'fa-sun');var m=document.querySelector('meta[name=theme-color]');if(m)m.content=isDark()?'#0e0e10':'#f5f5f2';}
 function isDark(){return document.body.getAttribute('data-theme')!=='light';}
 
 // ===== NAV =====
@@ -3462,36 +3516,47 @@ function simpanCacheRekod(){
   try{localStorage.setItem('kokoRekod',JSON.stringify(res));}catch(e){}
 }
 
-// ---------- LAMAN UTAMA ----------
+// ---------- LAMAN UTAMA (Bento: murid, unit, PAJSK, menu ringkas) ----------
+var _hPajThn='';
 function paparHome(){
-  var q=(document.getElementById('cari-menu').value||'').trim().toLowerCase();
+  var m=dc.murid||[];
+  document.getElementById('h-murid').innerHTML=m.length+'<small>murid aktif</small>';
+  var c=[],mx=1;for(var t=1;t<=6;t++){var n=m.filter(function(x){return x.tahun===String(t);}).length;c.push(n);if(n>mx)mx=n;}
+  document.getElementById('h-thn').innerHTML=c.map(function(n,i){return '<div><b>'+n+'</b><i style="height:'+Math.max(4,Math.round(n/mx*60))+'px"></i><span>THN '+(i+1)+'</span></div>';}).join('');
+  var r=dc.rujukan||{},U=[['rumah','Rumah sukan','fa-house-flag'],['uniform','Unit beruniform','fa-shield-halved'],['kelab','Kelab & persatuan','fa-lightbulb'],['sukan','Sukan & permainan','fa-futbol']],jum=0;
+  document.getElementById('h-unit').innerHTML=U.map(function(u){var n=(r[u[0]]||[]).length;jum+=n;return '<div class="unit-k"><i class="fa-solid '+u[2]+'"></i><div><b>'+n+'</b><span>'+esc(u[1])+'</span></div></div>';}).join('');
+  document.getElementById('h-unit-jum').textContent=jum+' unit semuanya';
+  pajskHome();
   var html='';
-  RUANG.forEach(function(r){
-    var j=r.j.filter(function(id){var d=JUBIN[id];return !q||(d.n+' '+d.k+' '+d.c).toLowerCase().indexOf(q)>=0;});
-    if(!j.length)return;
-    html+='<section class="ruang"><div class="ruang-h"><h5>'+esc(r.t)+'</h5><span>'+esc(r.k)+'</span></div><div class="tiles">'
-      +j.map(function(id){var d=JUBIN[id];return '<button type="button" class="tile" style="--tbg:var('+r.w+');" onclick="tukarMenu(\''+id+'\')"><i class="fa-solid '+d.i+'"></i><div><b>'+esc(d.n)+'</b><br><small>'+esc(d.k)+'</small></div></button>';}).join('')
-      +'</div></section>';
+  RUANG.forEach(function(g){
+    html+='<div class="bx bx-4 menu-bx"><h6 style="font-size:12px;font-weight:900;letter-spacing:.14em;color:var(--sub);">'+esc(g.t)+'</h6><div class="menu-list">'
+      +g.j.map(function(id){var d=JUBIN[id];return '<button type="button" class="mrow" onclick="tukarMenu(\''+id+'\')"><i class="fa-solid '+d.i+'"></i>'+esc(d.n)+'</button>';}).join('')+'</div></div>';
   });
-  document.getElementById('h-ruang').innerHTML=html||'<div class="clay kosong-box"><i class="fa-solid fa-magnifying-glass"></i>Tiada menu sepadan dengan carian.</div>';
-  // statistik
-  var thn=String(new Date().getFullYear());
-  document.getElementById('h-st-murid').innerText=(dc.murid||[]).length;
-  var unit=0;['uniform','kelab','sukan'].forEach(function(k){unit+=(dc.rujukan&&dc.rujukan[k]||[]).length;});
-  document.getElementById('h-st-unit').innerText=unit;
-  document.getElementById('h-st-prog').innerText=dr.program.filter(function(p){return tahunDari(p.tarikh)===thn;}).length;
-  // akan datang (takwim + program) dan surat perlu tindakan
-  var kini=hariIniIso(),had=new Date();had.setDate(had.getDate()+45);
-  var hadIso=had.getFullYear()+'-'+('0'+(had.getMonth()+1)).slice(-2)+'-'+('0'+had.getDate()).slice(-2);
-  var item=[];
-  dr.takwim.forEach(function(t){var d=tglIso(t.tarikh);if(d&&d>=kini&&d<=hadIso&&!/BATAL/.test(t.status))item.push({d:d,t:t.aktiviti,s:(t.peringkat||'')+(t.lokasi?' · '+t.lokasi:''),go:'m-takwim'});});
-  dr.program.forEach(function(p){var d=tglIso(p.tarikh);if(d&&d>=kini&&d<=hadIso&&!/BATAL/.test(p.status))item.push({d:d,t:p.nama,s:'Program · '+senaraiSemakRingkas(p),go:'m-program'});});
-  dr.surat.forEach(function(x){if(/BAHARU|TINDAKAN/.test(x.status)){var d=tglIso(x.tarikhTindakan)||tglIso(x.tarikh);item.push({d:d||kini,t:x.perkara,s:'Surat perlu tindakan'+(x.tindakanOleh?' · '+x.tindakanOleh:''),go:'m-surat',surat:1});}});
-  item.sort(function(a,b){return a.d<b.d?-1:a.d>b.d?1:0;});
-  var bln=['JAN','FEB','MAC','APR','MEI','JUN','JUL','OGO','SEP','OKT','NOV','DIS'];
-  document.getElementById('h-akan').innerHTML=item.length?item.slice(0,5).map(function(x){var p=x.d.split('-');
-    return '<div class="akan-item" onclick="tukarMenu(\''+x.go+'\')"><div class="akan-tgl"'+(x.surat?' style="background:var(--c5);color:#1f1300;"':'')+'><b>'+p[2]+'</b><small>'+bln[(+p[1])-1]+'</small></div><div style="min-width:0;"><div class="t">'+esc(x.t)+'</div><div class="s">'+esc(x.s)+'</div></div></div>';}).join('')
-    :'<div class="akan-item" onclick="tukarMenu(\'m-takwim\')"><div class="akan-tgl"><b>+</b><small>BARU</small></div><div><div class="t">Tiada aktiviti 45 hari ke hadapan</div><div class="s">Tekan untuk isi takwim kokurikulum</div></div></div>';
+  document.getElementById('h-menu').innerHTML=html;
+}
+function pajskHome(){
+  var seg=document.getElementById('h-paj-thn'),box=document.getElementById('h-paj');if(!box)return;
+  seg.innerHTML=[['','Semua'],['4','Thn 4'],['5','Thn 5'],['6','Thn 6']].map(function(x){return '<button type="button" class="'+(x[0]===_hPajThn?'on':'')+'" onclick="_hPajThn=\''+x[0]+'\';pajskHome()">'+x[1]+'</button>';}).join('');
+  if(!_pajR){
+    box.innerHTML='<div style="color:var(--sub);font-weight:800;font-size:12px;letter-spacing:.06em;">Memuatkan markah PAJSK…</div>';
+    if(!_pajMuat){_pajMuat=true;google.script.run.withSuccessHandler(function(res){_pajMuat=false;if(res&&res.success){_pajR=res.data||[];try{localStorage.setItem('kokoPajsk',JSON.stringify(_pajR));}catch(e){}}else{_pajR=[];}if(_viewSemasa==='home')pajskHome();})
+      .withFailureHandler(function(){_pajMuat=false;box.innerHTML='<div style="color:var(--sub);font-weight:800;font-size:12px;">Markah PAJSK belum dapat dibaca dari pelayan.</div>';}).dapatkanPAJSK();}
+    return;
+  }
+  var L=_pajR.filter(function(p){return !_hPajThn||String(p.tahun)===_hPajThn;});
+  if(!L.length){box.innerHTML='<div style="color:var(--sub);font-weight:800;font-size:12px;">Tiada markah PAJSK untuk pilihan ini.</div>';return;}
+  function pur(k){return L.reduce(function(a,p){return a+(parseFloat(p[k])||0);},0)/L.length;}
+  var G=['A','B','C','D','E'],W={A:'#1f7a45',B:'#2f6fb3',C:'#c9a227',D:'#d9822b',E:'#c62f3f'},gc={};
+  L.forEach(function(p){var g=String(p.gred||'').toUpperCase();gc[g]=(gc[g]||0)+1;});
+  var ab=(gc.A||0)+(gc.B||0);
+  box.innerHTML='<div class="paj-top"><div><b>'+L.length+'</b><span>Murid dinilai</span></div><div><b>'+pur('markah').toFixed(2)+'</b><span>Purata markah (/10)</span></div><div><b>'+Math.round(ab/L.length*100)+'%</b><span>Gred A &amp; B</span></div></div>'
+   +'<div style="display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:22px;" class="paj-dua">'
+   +'<div style="display:flex;flex-direction:column;gap:10px;"><span style="font-size:10.5px;font-weight:900;color:var(--sub);letter-spacing:.1em;">TABURAN GRED</span><div class="gred-bar">'
+   +G.map(function(g){var n=gc[g]||0;return n?'<i style="width:'+(n/L.length*100)+'%;background:'+W[g]+'" title="Gred '+g+': '+n+'"></i>':'';}).join('')+'</div>'
+   +'<div class="gred-leg">'+G.map(function(g){return '<span><em style="background:'+W[g]+'"></em>Gred '+g+': '+(gc[g]||0)+'</span>';}).join('')+'</div></div>'
+   +'<div style="display:flex;flex-direction:column;gap:10px;"><span style="font-size:10.5px;font-weight:900;color:var(--sub);letter-spacing:.1em;">PURATA KOMPONEN</span><div class="komp">'
+   +[['sukan','Sukan'],['kelab','Kelab'],['uniform','Uniform']].map(function(k){var v=pur(k[0]);return '<div class="komp-r"><span>'+k[1]+'</span><div class="tr"><i style="width:'+Math.min(100,v)+'%"></i></div><b>'+v.toFixed(1)+'%</b></div>';}).join('')+'</div></div></div>'
+   +'<div><button type="button" class="mini" onclick="tukarMenu(\'utama\');if(typeof dashTab===\'function\')dashTab(\'pajsk\')">Lihat ranking penuh <i class="fa-solid fa-arrow-right ms-1"></i></button></div>';
 }
 
 // ---------- PAPARAN MODUL GENERIK ----------

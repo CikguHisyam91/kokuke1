@@ -17,8 +17,9 @@ dan beri arahan langkah demi langkah (gaya "padam semua & tampal semula").
   beri arahan tambah baris sahaja.
 
 ## Reka bentuk & susunan (pilihan pemilik)
-- Gaya **Claymorphism**, font **Urbanist**, semua huruf besar, mod siang/malam (token warna pada `body[data-theme]`).
-- Laman utama = "Pusat Sehenti Kokurikulum": 6 ruang ikut aliran kerja PK Kokurikulum (`RUANG`, `JUBIN` dalam index.html).
+- Gaya **Bento** (kad rata, garis nipis, tanpa bayang), font **Urbanist**, semua huruf besar, mod siang/malam (token warna pada `body[data-theme]`). Pemilik mahu paparan ringkas, tidak serabut.
+- Laman utama = infografik Bento: jumlah murid (ikut tahun), jumlah unit (rumah/uniform/kelab/sukan), analisis PAJSK (pilih tahun), kemudian menu ringkas 6 ruang (`RUANG`, `JUBIN`).
+- Pemilik mahu taklimat/slaid dan kelulusan SEBELUM sebarang perubahan Apps Script.
 - Modul baharu dijana daripada definisi `MODUL` (Takwim, Mesyuarat, Surat, Unit, Program, Kewangan, Kursus, Aset, Rujukan);
   setiap modul = satu sheet "KOKO - <SHEET>" melalui `Rekod.gs`. Tajuk lajur = label medan, jadi jangan tukar label sesuka hati.
 - `SOP` = 13 proses kerja daripada Fail Meja PK Kokurikulum (tcer.my); "Mulakan program" menjadikannya senarai semak program.
