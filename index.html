@@ -994,6 +994,7 @@ function isDark(){return document.body.getAttribute('data-theme')!=='light';}
 
 // ===== NAV =====
 function tukarMenu(id){
+  if(id==='statushadir'){tukarMenu('utama');if(typeof dashTab==='function')dashTab('unithadir');return;}
   var mod=id.indexOf('m-')===0?id.slice(2):'';
   var v=mod?'modul':id;
   document.querySelectorAll('.view-section').forEach(function(s){s.classList.remove('active');});
@@ -1057,7 +1058,9 @@ function normalData(res){
   function str(o,keys){keys.forEach(function(k){o[k]=o[k]==null?'':String(o[k]);});}
   res.murid.forEach(function(m){str(m,['nama','tahun','kelas','rumah','uniform','kelab','sukan']);});
   res.arkib.forEach(function(m){str(m,['nama','tahun','kelas','rumah','uniform','kelab','sukan']);});
-  res.kehadiran.forEach(function(l){str(l,['namaMurid','kategori','namaUnit','perjumpaanKe','tahunAliran','tarikh','status']);});
+  res.kehadiran.forEach(function(l){str(l,['namaMurid','kategori','namaUnit','perjumpaanKe','tahunAliran','tarikh','status']);
+    // Data import dari Sheet guru mungkin bertulis HADIR / TIDAK HADIR / ABSEN — seragamkan
+    var st=l.status.trim();if(/^hadir$/i.test(st))l.status='Hadir';else if(/tidak|absen|^th$/i.test(st))l.status='Tidak Hadir';});
   res.jawatankuasa.forEach(function(j){str(j,['namaMurid','kategori','namaUnit','tahunAliran','jawatan']);});
   res.pencapaian.forEach(function(p){str(p,['nama','peringkat','pertandingan','pencapaian','tarikh','kategori']);p.mata=parseFloat(p.mata)||0;});
   res.guru.forEach(function(g){g.nama=g.nama==null?'':String(g.nama);});
@@ -3284,7 +3287,7 @@ var TUGAS=[
   ['Menyebarkan maklumat dan arahan KPM, JPN, PPD kepada guru, murid dan ibu bapa','m-surat'],['Menyediakan belanjawan tahunan dan menyelia perbelanjaan','m-kewangan']]},
  {tajuk:'Pengurusan Aktiviti',item:[
   ['Perancangan: aktiviti tahunan serta keperluan prasarana, peralatan, dokumen, tenaga dan kewangan','m-takwim'],
-  ['Pelaksanaan: takwim, kertas cadangan, senarai jawatankuasa dan pegawai','m-program'],['Pemantauan dan penyeliaan aktiviti','kehadiran'],
+  ['Pelaksanaan: takwim, kertas cadangan, senarai jawatankuasa dan pegawai','m-program'],['Pemantauan dan penyeliaan aktiviti','statushadir'],
   ['Penilaian: skema penilaian murid (PAJSK) dan standard kualiti','jawatankuasa'],['Pelaporan: laporan tahunan pelaksanaan aktiviti','laporan'],
   ['Kajian tindakan dan penambahbaikan','sop'],['Penghargaan: majlis-majlis penghargaan','m-program']]},
  {tajuk:'Pengurusan Entiti Kokurikulum',item:[
@@ -3365,7 +3368,8 @@ var JUBIN={
  'semak':{n:'Kesan Murid Hilang',k:'Banding senarai rasmi',i:'fa-magnifying-glass-chart',c:'semak hilang pindah'},
  'arkib':{n:'Arkib Murid',k:'Pindah & graduan',i:'fa-box-archive',c:'arkib pindah graduan'},
  'm-program':{n:'Program & Kejohanan',k:'Satu program, satu fail',i:'fa-flag-checkered',c:'program kejohanan pertandingan perkhemahan sukan tahunan senarai semak'},
- 'kehadiran':{n:'Rekod Kehadiran',k:'Hadir & jana OPR',i:'fa-calendar-check',c:'kehadiran hadir opr'},
+ 'statushadir':{n:'Status Kehadiran',k:'Diimport dari Sheet guru',i:'fa-clipboard-check',c:'status kehadiran hadir import sheet sync unit perjumpaan'},
+ 'kehadiran':{n:'Isi Kehadiran Manual',k:'Pilihan jika tiada Sheet',i:'fa-calendar-check',c:'kehadiran hadir manual opr'},
  'koleksiopr':{n:'Koleksi OPR',k:'Laporan satu muka',i:'fa-folder-open',c:'opr laporan koleksi'},
  'pencapaian':{n:'Rekod Pencapaian',k:'Johan, peserta, pangkat',i:'fa-trophy',c:'pencapaian johan pertandingan merit'},
  'utama':{n:'Ringkasan & Analisis',k:'Statistik semasa',i:'fa-chart-pie',c:'ringkasan analisis statistik dashboard'},
@@ -3381,7 +3385,7 @@ var JUBIN={
 var RUANG=[
  {t:'Perancangan & Pentadbiran',k:'Takwim, mesyuarat, surat dan kewangan berjalan bersama',w:'--p2',j:['m-takwim','m-mesyuarat','m-surat','m-kewangan']},
  {t:'Unit & Murid',k:'Organisasi unit, keahlian dan jawatankuasa murid',w:'--p3',j:['m-entiti','murid','datamurid','jawatankuasa','semak','arkib']},
- {t:'Program & Pelaksanaan',k:'Kertas cadangan, JK, senarai semak, kehadiran dan OPR',w:'--p4',j:['m-program','kehadiran','koleksiopr']},
+ {t:'Program & Pelaksanaan',k:'Kertas cadangan, JK, senarai semak, kehadiran dan OPR',w:'--p4',j:['m-program','statushadir','koleksiopr','kehadiran']},
  {t:'Pencapaian & Penilaian',k:'Pencapaian murid, PAJSK dan laporan',w:'--p1',j:['pencapaian','utama','laporan']},
  {t:'Sumber Manusia & Aset',k:'Guru, kursus dan peralatan',w:'--p6',j:['guru','m-kursus','m-aset']},
  {t:'Rujukan & Tetapan',k:'Proses kerja, tugas PK dan dokumen rasmi',w:'--p5',j:['sop','tugas','m-rujukan','tetapan']}
@@ -3767,7 +3771,7 @@ function bahagianLaporan(){
   // 4 kehadiran
   var logs=(dc.kehadiran||[]).filter(function(l){return tahunDari(l.tarikh)===thn;});
   var kh=['uniform','kelab','sukan'].map(function(k){var r=logs.filter(function(l){return String(l.kategori).toLowerCase()===k;}),hd=r.filter(function(l){return l.status==='Hadir';}).length;return [k.toUpperCase(),r.length,hd,r.length?Math.round(hd/r.length*100)+'%':'-'];});
-  h+='<h3>4. KEHADIRAN PERJUMPAAN</h3>'+jadual(['KATEGORI','REKOD','HADIR','PERATUS'],kh);
+  h+='<h3>4. KEHADIRAN PERJUMPAAN</h3><p style="font-size:9.5pt;margin:0 0 6px;">Sumber: rekod kehadiran yang diimport dari Sheet guru (Sync) dan rekod yang diisi dalam sistem.</p>'+jadual(['KATEGORI','REKOD','HADIR','PERATUS'],kh);
   // 5 pencapaian
   var pen=(dc.pencapaian||[]).filter(function(p){return tahunDari(p.tarikh)===thn;});
   var ikut=PERINGKAT.map(function(p){return [p,pen.filter(function(x){return sama(x.peringkat,p);}).length];});
