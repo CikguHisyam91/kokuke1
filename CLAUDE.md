@@ -10,7 +10,7 @@ dan beri arahan langkah demi langkah (gaya "padam semua & tampal semula").
 - `sw.js` — service worker. **Naikkan nombor `CACHE`** setiap kali fail paparan berubah.
 - `logo.png` — logo rasmi sekolah (WAJIB digunakan dalam semua laporan). `icon-*.png` — ikon aplikasi.
 - Data dalam Google Sheet; API ialah Apps Script: `Code.gs`, `Data.gs`, `Simpan.gs` (**tidak** disimpan dalam repo
-  kerana `Code.gs` mengandungi kata laluan asal) dan `apps-script/Rekod.gs`, `Transisi.gs`, `Simpanan.gs` (disimpan dalam repo, tiada rahsia).
+  kerana `Code.gs` mengandungi kata laluan asal) dan `apps-script/Rekod.gs`, `Transisi.gs`, `Simpanan.gs`, `Portal.gs` (disimpan dalam repo, tiada rahsia).
   Pengguna menampalnya sendiri ke Apps Script, kemudian Deploy → Manage deployments → New version.
   Fungsi baharu mesti ditambah ke `senaraiApi()` dalam `Code.gs`, jika tidak ia ditolak oleh `doPost`.
   Code.gs pengguna mungkin telah dikemas kini oleh sesi lain — jangan minta pengguna ganti seluruh Code.gs;
@@ -25,6 +25,7 @@ dan beri arahan langkah demi langkah (gaya "padam semua & tampal semula").
 - Transisi tahun baharu: logik dalam `simulasiTransisi()` (index.html); `jalankanTransisi()` menghantar pelan yang SAMA ke `laksanaTransisiTahun` (Transisi.gs). Sukan dipusing ikut `SUKAN_PUSINGAN`; Tahun 3→4 diagih seimbang; murid bukan Islam (tiada BIN/BINTI) tidak ke unit berunsur Islam.
 - Simpanan: salinan penuh fail data ke folder Drive "KOKOSMART SIMPANAN" (`Simpanan.gs`); menu Simpanan & Tahun Lepas untuk lihat (baca sahaja) dan pulihkan MASTER+ARKIB (simpan "SEBELUM PULIH" dahulu).
 - Sukan Tahunan (menu `sukantahunan`, fungsi `sk*`): 6 sheet melalui Rekod.gs (SUKAN KEJOHANAN/ACARA/PESERTA/KEPUTUSAN/MATA AWAL/REKOD). Mata individu 5-3-2-1, kumpulan 10-7-5-3; pingat tidak kira acara LAIN; rekod baru dikesan automatik (lompat/lontar = lebih jauh lebih baik). Data murid tahun lepas diimport melalui fail JSON (`KOKOSMART-SUKAN`) — nama murid TIDAK disimpan dalam repo.
+- Portal Pengurusan Sekolah (`apps-script/Portal.gs`, `PORTAL_ID`): GURU, JAWATANKUASA+AHLI_JK (unit Kokurikulum) dibaca sahaja → menu `jkguru`, cadangan guru (`semuaGuru()`), guru penasihat dalam Isi Laporan (`ptUnitJk()`). TAKWIM kategori Kokurikulum DUA HALA: modul `takwim` = baris Portal (ID `T###`) + maklumat tambahan dalam KOKO - TAKWIM ikut ID sama (`gabungTakwim`, `simpanTakwimDua`, `padamTakwimDua`). Tab TETAPAN Portal tidak dibaca.
 - `SOP` = 13 proses kerja daripada Fail Meja PK Kokurikulum (tcer.my); "Mulakan program" menjadikannya senarai semak program.
 
 ## Kebenaran pemilik

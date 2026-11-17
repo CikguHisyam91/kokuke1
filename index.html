@@ -977,6 +977,14 @@ body[data-theme="dark"] .sw-tema i{transform:translateX(30px);color:var(--c2);}
   <div id="tr-zone" style="margin-top:16px;"></div>
 </div>
 
+<!-- JK KOKURIKULUM GURU (Portal) -->
+<div id="view-jkguru" class="view-section">
+  <div class="mod-head"><div><h3><i class="fa-solid fa-people-roof me-2" style="color:var(--c1);"></i>JK Kokurikulum Guru</h3>
+  <p>Jawatankuasa guru unit Kokurikulum, dibaca terus dari Portal Pengurusan Sekolah. Kemas kini dibuat di Portal; KokoSmart ikut serta-merta.</p></div>
+  <div class="pk-row"><button class="btn btn-secondary" onclick="muatPortal(true)"><i class="fa-solid fa-rotate me-1"></i>Muat semula</button><button class="btn btn-danger" onclick="cetakJkGuru()"><i class="fa-solid fa-print me-1"></i>Cetak carta</button></div></div>
+  <div id="jk-zone" style="margin-top:16px;"></div>
+</div>
+
 <!-- SUKAN TAHUNAN -->
 <div id="view-sukantahunan" class="view-section">
   <div class="mod-head"><div><h3><i class="fa-solid fa-medal me-2" style="color:var(--c1);"></i>Sukan Tahunan</h3>
@@ -1110,10 +1118,10 @@ function tukarMenu(id){
   document.querySelectorAll('.view-section').forEach(function(s){s.classList.remove('active');});
   document.getElementById('view-'+v).classList.add('active');
   document.querySelectorAll('.modal-overlay.show').forEach(function(m){m.classList.remove('show');});
-  if(mod||id==='home'||id==='sop'||id==='tugas'||id==='laporan'||id==='kat'||id==='transisi'||id==='simpanan'||id==='sukantahunan'){
+  if(mod||id==='home'||id==='sop'||id==='tugas'||id==='laporan'||id==='kat'||id==='transisi'||id==='simpanan'||id==='sukantahunan'||id==='jkguru'){
     document.getElementById('btn-back').classList[v==='home'?'add':'remove']('d-none');
     window.scrollTo(0,0);_viewSemasa=v;
-    if(mod)bukaModul(mod);else if(id==='home')paparHome();else if(id==='sop')paparSop();else if(id==='tugas')paparTugas();else if(id==='kat')paparKat();else if(id==='transisi')paparTransisi();else if(id==='simpanan')muatSimpanan();else if(id==='sukantahunan')paparSukan();else sediaLaporan();
+    if(mod)bukaModul(mod);else if(id==='home')paparHome();else if(id==='sop')paparSop();else if(id==='tugas')paparTugas();else if(id==='kat')paparKat();else if(id==='transisi')paparTransisi();else if(id==='simpanan')muatSimpanan();else if(id==='sukantahunan')paparSukan();else if(id==='jkguru')paparJkGuru();else sediaLaporan();
     return;
   }
   if(id==='pencapaian'){if(!window._penModDibuka){window._penModDibuka=true;penMode('kelas');}else penLukisSenarai();}
@@ -1158,6 +1166,8 @@ document.addEventListener('DOMContentLoaded',function(){
   if(cache&&cache.success){terapData(cache);hideLoad();muatSemua(true);}
   else muatSemua();
   muatRekod();
+  try{var cp=JSON.parse(localStorage.getItem('kokoPortal')||'null');if(cp&&cp.success&&window.kokoAdaToken&&kokoAdaToken()){_pt=cp;gabungTakwim();}}catch(e){}
+  muatPortal();
 });
 
 // Normalkan data supaya tiada medan kosong yang menyebabkan ralat
@@ -1724,7 +1734,9 @@ function hKategori(){
 // Unit dipilih: cadang guru penasihat (menu Unit & Guru Penasihat) jika nama guru masih kosong
 function hPilihUnit(){
   var kat=document.getElementById('h-kat').value,u=document.getElementById('h-unit').value,g=document.getElementById('h-guru');
-  if(u&&g&&!g.value.trim()){var e=(dr.entiti||[]).filter(function(o){return o.kategori===H_KAT_NAMA[kat]&&sama(o.unit,u)&&o.penasihat;})[0];if(e){g.value=e.penasihat;toast('Guru penasihat dicadang: '+e.penasihat,'info');}}
+  if(u&&g&&!g.value.trim()){var e=(dr.entiti||[]).filter(function(o){return o.kategori===H_KAT_NAMA[kat]&&sama(o.unit,u)&&o.penasihat;})[0],nm=e?e.penasihat:'';
+    if(!nm){var p=ptUnitJk().filter(function(x){return x.kat===kat&&sama(x.unit,u)&&x.ketua;})[0];if(p)nm=p.ketua;}
+    if(nm){g.value=nm;toast('Guru penasihat dicadang: '+nm,'info');}}
   hMuatMurid();
 }
 // Guru dipilih: cadang unit yang dinasihati guru itu
@@ -1732,9 +1744,11 @@ function hGuruCadang(){
   var g=(document.getElementById('h-guru').value||'').trim().toUpperCase();if(!g)return;
   var kat=document.getElementById('h-kat').value;if(kat==='lain'||document.getElementById('h-unit').value)return;
   var e=(dr.entiti||[]).filter(function(o){return H_KAT_NAMA[_katNorm(o.kategori)]&&(sama(o.penasihat,g)||String(o.guruLain||'').toUpperCase().indexOf(g)>=0);})[0];
-  if(!e)return;var k=_katNorm(e.kategori);
+  var k,unit;if(e){k=_katNorm(e.kategori);unit=e.unit;}
+  else{var P=ptUnitJk().filter(function(x){return x.unit&&x.kat!=='rumah'&&x.jk.ahli.some(function(a){return a.nama===g;});});
+    var p=P.filter(function(x){return x.kat===kat;})[0]||P[0];if(!p)return;k=p.kat;unit=p.unit;}
   if(k!==kat){document.getElementById('h-kat').value=k;hKategori();}
-  var sel=document.getElementById('h-unit'),opt=[].filter.call(sel.options,function(o){return sama(o.value,e.unit);})[0];
+  var sel=document.getElementById('h-unit'),opt=[].filter.call(sel.options,function(o){return sama(o.value,unit);})[0];
   if(opt){sel.value=opt.value;hMuatMurid();toast('Unit dicadang: '+opt.value,'info');}
 }
 function hMuatMurid(){
@@ -1874,7 +1888,7 @@ function hantarKehadiran(){
 function suggestGuru(val,boxId,inputId){
   var box=document.getElementById(boxId);if(!box)return;
   if(!val||val.length<2){box.classList.add('d-none');return;}
-  var list=(dc.guru||[]).filter(function(g){return g.nama.toLowerCase().includes(val.toLowerCase());}).slice(0,6);
+  var list=semuaGuru().filter(function(g){return g.nama.toLowerCase().includes(val.toLowerCase());}).slice(0,6);
   box.innerHTML='';
   if(!list.length){box.classList.add('d-none');return;}
   box.classList.remove('d-none');
@@ -3450,11 +3464,11 @@ var TUGAS=[
 
 // ---------- DEFINISI MODUL ----------
 var MODUL={
- takwim:{sheet:'TAKWIM',nama:'Takwim Kokurikulum',ikon:'fa-calendar-days',ket:'Takwim tahunan sekolah, selaras dengan takwim MSSD, PPD dan JPN. Program yang didaftarkan juga dipaparkan di sini.',
+ takwim:{sheet:'TAKWIM',nama:'Takwim Kokurikulum',ikon:'fa-calendar-days',ket:'Takwim tahunan sekolah, selaras dengan takwim MSSD, PPD dan JPN. Disambung terus dengan takwim Portal Pengurusan Sekolah. Program yang didaftarkan juga dipaparkan di sini.',
   tajukK:'aktiviti',statusK:'status',tapisK:'peringkat',tarikhK:'tarikh',
   medan:[{k:'tarikh',l:'TARIKH MULA',t:'date',wajib:1},{k:'tarikhAkhir',l:'TARIKH TAMAT',t:'date'},{k:'aktiviti',l:'AKTIVITI',t:'text',wajib:1,full:1},
    {k:'peringkat',l:'PERINGKAT',t:'select',o:PERINGKAT},{k:'kategori',l:'KATEGORI',t:'select',o:KAT_AKTIVITI},{k:'penyelaras',l:'PENYELARAS',t:'guru'},
-   {k:'lokasi',l:'LOKASI',t:'text'},{k:'status',l:'STATUS',t:'select',o:STATUS_AKTIVITI},{k:'catatan',l:'CATATAN',t:'textarea',full:1}]},
+   {k:'lokasi',l:'LOKASI',t:'text'},{k:'status',l:'STATUS',t:'select',o:STATUS_AKTIVITI},{k:'sasaran',l:'SASARAN / JK (PORTAL)',t:'sasaran',full:1,nota:'Siapa terlibat — dipaparkan kepada guru dalam Portal Pengurusan Sekolah.'},{k:'catatan',l:'CATATAN',t:'textarea',full:1}]},
  mesyuarat:{sheet:'MESYUARAT',nama:'Mesyuarat & Minit',ikon:'fa-people-group',ket:'Rekod mesyuarat JK Kokurikulum, unit dan program beserta keputusan dan pautan minit.',
   tajukK:'jenis',statusK:'',tapisK:'jenis',tarikhK:'tarikh',
   medan:[{k:'tarikh',l:'TARIKH',t:'date',wajib:1},{k:'bil',l:'BIL. MESYUARAT',t:'text'},
@@ -3554,6 +3568,7 @@ var JUBIN={
  'utama':{n:'Ringkasan & Analisis',k:'Statistik semasa',i:'fa-chart-pie',c:'ringkasan analisis statistik dashboard'},
  'laporan':{n:'Laporan Tahunan',k:'Jana automatik',i:'fa-book',c:'laporan tahunan'},
  'guru':{n:'Senarai Guru',k:'Nama guru sekolah',i:'fa-chalkboard-user',c:'guru senarai'},
+ 'jkguru':{n:'JK Kokurikulum Guru',k:'Dari Portal Sekolah',i:'fa-people-roof',c:'jawatankuasa guru jk carta organisasi portal tugas guru penasihat'},
  'm-kursus':{n:'Kursus & Latihan',k:'LADAP guru',i:'fa-graduation-cap',c:'kursus latihan ladap'},
  'm-aset':{n:'Inventori Peralatan',k:'Alatan & keadaan',i:'fa-boxes-stacked',c:'aset inventori peralatan alatan'},
  'sop':{n:'Proses Kerja (SOP)',k:'13 aliran kerja',i:'fa-route',c:'sop proses kerja carta aliran senarai semak'},
@@ -3567,7 +3582,7 @@ var RUANG=[
  {t:'Unit & Murid',k:'Organisasi unit, keahlian dan jawatankuasa murid',w:'--p3',j:['m-entiti','rumah','murid','datamurid','jawatankuasa','semak','arkib','transisi']},
  {t:'Program & Pelaksanaan',k:'Kertas cadangan, JK, senarai semak, kehadiran dan OPR',w:'--p4',j:['m-program','sukantahunan','statushadir','koleksiopr','kehadiran']},
  {t:'Pencapaian & Penilaian',k:'Pencapaian murid, PAJSK dan laporan',w:'--p1',j:['pencapaian','utama','laporan']},
- {t:'Sumber Manusia & Aset',k:'Guru, kursus dan peralatan',w:'--p6',j:['guru','m-kursus','m-aset']},
+ {t:'Sumber Manusia & Aset',k:'Guru, kursus dan peralatan',w:'--p6',j:['guru','jkguru','m-kursus','m-aset']},
  {t:'Rujukan & Tetapan',k:'Proses kerja, tugas PK dan dokumen rasmi',w:'--p5',j:['sop','tugas','m-rujukan','simpanan','tetapan']}
 ];
 
@@ -3605,6 +3620,7 @@ function terapRekod(res){
       dr[mk].push(o);
     });
   });
+  _takwimKoko=dr.takwim.slice();gabungTakwim();
   terapTagLaporan();
 }
 function muatRekod(){
@@ -3619,6 +3635,7 @@ function muatRekod(){
 }
 function keLabel(mk,o){var m=MODUL[mk],x={ID:o.id};m.medan.forEach(function(f){x[f.l]=o[f.k]==null?'':String(o[f.k]);});return x;}
 function simpanRekod(mk,o,ok){
+  if(mk==='takwim'&&_pt)return simpanTakwimDua(o,ok);
   if(_rekodTiada)return alert('Bahagian ini perlukan fail Apps Script "Rekod.gs". Sila pasang dahulu.');
   showLoad();
   google.script.run.withSuccessHandler(function(res){
@@ -3629,6 +3646,7 @@ function simpanRekod(mk,o,ok){
   }).withFailureHandler(function(e){hideLoad();alert('Ralat: '+e.message);}).simpanRekodModul(MODUL[mk].sheet,keLabel(mk,o));
 }
 function padamRekod(mk,id){
+  if(mk==='takwim'&&_pt&&/^T\d+$/i.test(id))return padamTakwimDua(id);
   if(!confirm('Padam rekod ini? Tindakan ini tidak boleh dibatalkan.'))return;
   showLoad();
   google.script.run.withSuccessHandler(function(res){
@@ -3926,6 +3944,129 @@ function eksportTransisi(){
   setTimeout(function(){URL.revokeObjectURL(url);},5000);toast('✅ Senarai simulasi dimuat turun.','ok');
 }
 
+
+
+// ---------- PORTAL PENGURUSAN SEKOLAH (Portal.gs) ----------
+var _pt=null,_ptTiada=false,_ptRalat='',_takwimKoko=[],_jkQ={q:'',k:''};
+var PT_KAT={'Unit Beruniform':'uniform','Kelab & Persatuan':'kelab','Sukan & Permainan':'sukan','Rumah Sukan':'rumah'};
+function muatPortal(paksa){
+  if(paksa)showLoad();
+  google.script.run.withSuccessHandler(function(res){
+    if(paksa)hideLoad();
+    if(!res||!res.success){_ptRalat=res&&res.error||'Gagal membaca Portal';if(paksa)alert('Portal: '+_ptRalat+'\n\nPastikan Sheet Portal dikongsi dengan email PKKo sebagai Editor.');if(_viewSemasa==='jkguru')paparJkGuru();return;}
+    _pt=res;_ptTiada=false;_ptRalat='';try{localStorage.setItem('kokoPortal',JSON.stringify(res));}catch(e){}
+    gabungTakwim();isiDatalist();if(paksa)toast('✅ Data Portal dikemas kini.','ok');
+    if(_viewSemasa==='jkguru')paparJkGuru();else if(_viewSemasa==='modul'&&_modSemasa==='takwim')paparModul();
+  }).withFailureHandler(function(e){
+    if(paksa)hideLoad();var m=e&&e.message||String(e||'');
+    if(/tidak dibenarkan|tidak dijumpai/i.test(m)){_ptTiada=true;_ptRalat='fail Apps Script Portal.gs belum dipasang';}else _ptRalat=m;
+    if(paksa)alert('Portal: '+_ptRalat);if(_viewSemasa==='jkguru')paparJkGuru();
+  }).dapatkanPortal();
+}
+function semuaGuru(){
+  var o={},out=[];function t(n){n=String(n||'').replace(/\s+/g,' ').trim().toUpperCase();if(n&&!o[n]){o[n]=1;out.push({nama:n});}}
+  (dc.guru||[]).forEach(function(g){t(g.nama);});
+  if(_pt)(_pt.guru||[]).forEach(function(g){if(!/tidak|bersara|pindah/i.test(g.status||''))t(g.nama);});
+  return out.sort(function(a,b){return a.nama.localeCompare(b.nama);});
+}
+// Takwim: Portal (kategori Kokurikulum) + maklumat tambahan KokoSmart (peringkat, penyelaras, lokasi, status) ikut ID yang sama
+function gabungTakwim(){
+  if(!dr||!dr.takwim)return;
+  if(!_pt){dr.takwim=_takwimKoko.slice();return;}
+  var ex={},ids={};_takwimKoko.forEach(function(o){ex[o.id]=o;});
+  var out=(_pt.takwim||[]).map(function(p){ids[p.id]=1;var o={};MODUL.takwim.medan.forEach(function(f){o[f.k]='';});
+    return Object.assign(o,ex[p.id]||{},{id:p.id,tarikh:p.mula,tarikhAkhir:p.tamat,aktiviti:p.aktiviti,catatan:p.catatan,sasaran:p.pautan,_pt:1});});
+  _takwimKoko.forEach(function(o){if(!ids[o.id]&&!/^T\d+$/i.test(o.id))out.push(o);}); // rekod lama KokoSmart: dihantar ke Portal bila diedit
+  dr.takwim=out;
+}
+function simpanTakwimDua(o,ok){
+  showLoad();var lama=o.id;
+  google.script.run.withSuccessHandler(function(res){
+    if(!res||!res.success){hideLoad();return alert('Gagal simpan ke Portal: '+(res&&res.error||'Ralat'));}
+    o.id=res.id;
+    var p={id:o.id,mula:tglIso(o.tarikh)||o.tarikh,tamat:tglIso(o.tarikhAkhir)||tglIso(o.tarikh)||o.tarikh,aktiviti:o.aktiviti,pautan:o.sasaran||'',catatan:o.catatan||''};
+    var a=_pt.takwim,i=a.map(function(x){return x.id;}).indexOf(o.id);if(i>=0)a[i]=p;else a.push(p);
+    _takwimKoko=_takwimKoko.filter(function(x){return x.id!==o.id&&x.id!==lama;});_takwimKoko.push(Object.assign({},o));
+    try{localStorage.setItem('kokoPortal',JSON.stringify(_pt));}catch(e){}
+    function siap(){hideLoad();gabungTakwim();simpanCacheRekod();if(ok)ok();}
+    if(_rekodTiada)return siap();
+    google.script.run.withSuccessHandler(function(){
+      if(lama&&lama!==o.id)google.script.run.withSuccessHandler(function(){}).withFailureHandler(function(){}).padamRekodModul(MODUL.takwim.sheet,lama);
+      siap();
+    }).withFailureHandler(function(){siap();}).simpanRekodModul(MODUL.takwim.sheet,keLabel('takwim',o));
+  }).withFailureHandler(function(e){hideLoad();alert('Ralat Portal: '+e.message);})
+    .simpanTakwimPortal({id:/^T\d+$/i.test(o.id||'')?o.id:'',mula:tglIso(o.tarikh)||o.tarikh,tamat:tglIso(o.tarikhAkhir)||'',aktiviti:o.aktiviti,pautan:o.sasaran||'',catatan:o.catatan||''});
+}
+function padamTakwimDua(id){
+  if(!confirm('Padam aktiviti ini? Ia juga akan dipadam daripada takwim Portal Pengurusan Sekolah.'))return;
+  showLoad();
+  google.script.run.withSuccessHandler(function(res){
+    if(!res||!res.success){hideLoad();return alert('Gagal: '+(res&&res.error||'Ralat'));}
+    _pt.takwim=_pt.takwim.filter(function(x){return x.id!==id;});_takwimKoko=_takwimKoko.filter(function(x){return x.id!==id;});
+    try{localStorage.setItem('kokoPortal',JSON.stringify(_pt));}catch(e){}
+    if(!_rekodTiada)google.script.run.withSuccessHandler(function(){}).withFailureHandler(function(){}).padamRekodModul(MODUL.takwim.sheet,id);
+    hideLoad();gabungTakwim();simpanCacheRekod();toast('✅ Aktiviti dipadam.','ok');paparModul();
+  }).withFailureHandler(function(e){hideLoad();alert('Ralat: '+e.message);}).padamTakwimPortal(id);
+}
+function ptJk(id){return _pt?(_pt.jk||[]).filter(function(j){return j.id===id;})[0]:null;}
+function ptNamaSasaran(v){
+  return String(v||'').split(';').map(function(x){x=x.trim();if(!x)return '';var j=ptJk(x);if(j)return j.nama;if(x==='*SEMUA')return 'Semua guru';if(x.charAt(0)==='*')return x.slice(1);if(x.charAt(0)==='#')return 'Semua JK '+x.slice(1);return x;}).filter(Boolean).join(', ');
+}
+function ptOpsyenSasaran(v){
+  var L=[['*SEMUA','Semua guru']];Object.keys(PT_KAT).forEach(function(k){L.push(['#'+k,'Semua JK '+k]);});
+  (_pt&&_pt.jk||[]).forEach(function(j){L.push([j.id,j.nama]);});
+  if(v&&!L.some(function(x){return x[0]===v;}))L.unshift([v,ptNamaSasaran(v)]);
+  return L.map(function(x){return '<option value="'+esc(x[0])+'"'+(x[0]===v?' selected':'')+'>'+esc(x[1])+'</option>';}).join('');
+}
+// Padankan nama JK Portal dengan unit dalam senarai RUJUKAN sekolah
+function ptNorm(x){return String(x||'').toUpperCase().replace(/\(.*?\)/g,' ').replace(/\b(KELAB|PERSATUAN|RUMAH|UNIT|ELIT)\b/g,' ').replace(/[^A-Z0-9]/g,'');}
+function ptCariUnit(nama,kat){
+  var C=hUnitSekolah(kat);if(!C.length)return '';
+  var n=ptNorm(nama),kur=(String(nama).match(/\(([^)]+)\)/)||[])[1]||'';
+  return C.filter(function(c){return ptNorm(c)===n;})[0]||C.filter(function(c){return kur&&ptNorm(c)===ptNorm(kur);})[0]
+    ||C.filter(function(c){var x=ptNorm(c);return x&&(n.indexOf(x)>=0||x.indexOf(n)>=0);})[0]||'';
+}
+function ptKetua(j){var A=j.ahli||[];return (A.filter(function(a){return /^ketua|guru penasihat|^pengerusi|^pengurus/i.test(a.jawatan);})[0]||A[0]||{}).nama||'';}
+function ptUnitJk(){
+  if(!_pt)return [];
+  return (_pt.jk||[]).filter(function(j){return PT_KAT[j.kategori];}).map(function(j){var k=PT_KAT[j.kategori];return {jk:j,kat:k,unit:ptCariUnit(j.nama,k),ketua:ptKetua(j)};});
+}
+function paparJkGuru(){
+  var z=document.getElementById('jk-zone');if(!z)return;
+  if(!_pt){z.innerHTML='<div class="banner"><i class="fa-solid fa-link-slash me-1"></i>'+(_ptRalat?'Portal belum disambung: '+esc(_ptRalat)+'.':'Memuatkan data Portal…')+'</div>';return;}
+  var J=_pt.jk||[],kat=[];J.forEach(function(j){if(kat.indexOf(j.kategori)<0)kat.push(j.kategori);});
+  var q=_jkQ.q.trim().toUpperCase(),guruSet={};J.forEach(function(j){j.ahli.forEach(function(a){guruSet[a.nama]=1;});});
+  var L=J.filter(function(j){return (!_jkQ.k||j.kategori===_jkQ.k)&&(!q||j.nama.toUpperCase().indexOf(q)>=0||j.ahli.some(function(a){return a.nama.indexOf(q)>=0;}));});
+  var UJ={};ptUnitJk().forEach(function(u){UJ[u.jk.id]=u;});
+  var h='<div class="paj-top" style="grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:16px;"><div><b>'+J.length+'</b><span>Jawatankuasa Kokurikulum</span></div><div><b>'+Object.keys(guruSet).length+'</b><span>Guru terlibat</span></div><div><b>'+J.reduce(function(s,j){return s+j.ahli.length;},0)+'</b><span>Tugasan</span></div></div>'
+   +'<div class="bx rs-sek"><div class="pk-row"><input id="jk-q" type="search" class="form-control" style="flex:1 1 240px;" placeholder="Cari nama guru atau JK…" value="'+esc(_jkQ.q)+'" oninput="_jkQ.q=this.value;tunda(\'jkq\',paparJkGuru,250)">'
+   +'<select class="form-select" style="flex:0 1 240px;" onchange="_jkQ.k=this.value;paparJkGuru()"><option value="">Semua kategori</option>'+kat.map(function(k){return '<option'+(k===_jkQ.k?' selected':'')+'>'+esc(k)+'</option>';}).join('')+'</select></div>';
+  if(q&&q.length>=3){var tg=[];J.forEach(function(j){j.ahli.forEach(function(a){if(a.nama.indexOf(q)>=0)tg.push({j:j,a:a});});});
+    if(tg.length){var nm=tg[0].a.nama;h+='<div class="banner" style="margin-top:10px;background:var(--p2);"><b>'+esc(nm)+'</b>: '+tg.length+' tugasan Kokurikulum — '+tg.map(function(t){return esc(t.a.jawatan)+' '+esc(t.j.nama);}).join(' · ')+'</div>';}}
+  h+='<p style="margin:8px 0 0;font-size:11px;font-weight:800;color:var(--sub);">'+L.length+' jawatankuasa · dikemas kini '+esc(new Date(_pt.masa||Date.now()).toLocaleString('ms-MY'))+'</p></div>';
+  h+='<div class="rs-grid" style="margin-top:16px;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));">'+L.map(function(j){
+    var u=UJ[j.id],grp={},ord=[];j.ahli.forEach(function(a){if(!grp[a.jawatan]){grp[a.jawatan]=[];ord.push(a.jawatan);}grp[a.jawatan].push(a.nama);});
+    return '<div class="bx" style="padding:14px;"><div style="display:flex;justify-content:space-between;gap:8px;"><b style="font-size:12px;letter-spacing:.04em;">'+esc(j.nama)+'</b><span class="tag">'+esc(j.id)+'</span></div>'
+     +'<small style="color:var(--sub);font-weight:800;font-size:10.5px;display:block;margin-top:2px;">'+esc(j.kategori)+(u?(u.unit?' · unit sistem: '+esc(u.unit):' · <span style="color:var(--c4);">tiada padanan unit</span>'):'')+'</small>'
+     +'<div style="margin-top:8px;display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:700;">'
+     +(ord.length?ord.map(function(k){return '<div><span style="color:var(--sub);">'+esc(k)+':</span> '+grp[k].map(function(n){return '<span'+(q&&n.indexOf(q)>=0?' style="background:var(--p4);border-radius:4px;padding:0 3px;"':'')+'>'+esc(n)+'</span>';}).join(', ')+'</div>';}).join(''):'<span style="color:var(--sub);">Tiada ahli direkod</span>')
+     +(j.catatan?'<div style="color:var(--sub);">'+esc(j.catatan)+'</div>':'')+'</div>'
+     +'<div class="pk-row" style="margin-top:8px;"><button class="mini" onclick="cetakJkGuru(\''+j.id+'\')"><i class="fa-solid fa-print me-1"></i>Cetak</button></div></div>';}).join('')+'</div>';
+  var foc=document.activeElement&&document.activeElement.id==='jk-q';z.innerHTML=h;
+  if(foc){var e=document.getElementById('jk-q');e.focus();e.setSelectionRange(e.value.length,e.value.length);}
+}
+function cetakJkGuru(id){
+  if(!_pt)return alert('Data Portal belum dimuatkan.');
+  var td='border:1px solid #000;padding:4px 7px;font-size:10pt;',J=(_pt.jk||[]).filter(function(j){return id?j.id===id:(!_jkQ.k||j.kategori===_jkQ.k);});
+  var h=kepalaKertas(id&&J[0]?J[0].nama.toUpperCase():'CARTA ORGANISASI JAWATANKUASA KOKURIKULUM GURU',id?'':'Sumber: Portal Pengurusan Sekolah · '+fmtTgl(hariIniIso()));
+  J.forEach(function(j){
+    h+=(id?'':'<h3>'+esc(j.nama.toUpperCase())+' <small style="font-weight:normal;">('+esc(j.kategori)+')</small></h3>')
+     +'<table><tr style="background:#d9e2f3;font-weight:bold;"><th style="'+td+'width:6%;">BIL</th><th style="'+td+'width:32%;">JAWATAN</th><th style="'+td+'">NAMA GURU</th></tr>'
+     +(j.ahli.length?j.ahli.map(function(a,i){return '<tr><td style="'+td+'text-align:center;">'+(i+1)+'</td><td style="'+td+'">'+esc(a.jawatan)+'</td><td style="'+td+'">'+esc(a.nama)+'</td></tr>';}).join(''):'<tr><td colspan="3" style="'+td+'">Tiada ahli direkod</td></tr>')+'</table>'
+     +(j.tugas?'<p style="font-size:9.5pt;margin:4px 0 0;"><b>Senarai tugas:</b> '+esc(j.tugas)+'</p>':'');
+  });
+  paparKertas([h],id?'JK '+id:'Carta JK Kokurikulum');
+}
 
 // ---------- TAGGING LAPORAN LAIN-LAIN (disemak PKKo / SU Koku) ----------
 function kunciLapor(tarikh,program,siri){return [String(tarikh||'').trim(),String(program||'').replace(/\s+/g,' ').trim().toUpperCase(),String(siri||'').trim()].join('|');}
@@ -4429,7 +4570,7 @@ function pulihSimpanan(i){
 
 // ---------- PAPARAN MODUL GENERIK ----------
 function bukaModul(mk){_modSemasa=mk;if(!_modState[mk])_modState[mk]={q:'',f:'',st:''};paparModul();}
-function nilaiMedan(o,f){var v=o[f.k];if(f.t==='date')return fmtTgl(v);if(f.t==='number'&&v!=='')return f.l.indexOf('RM')>=0?rm(v):String(v);return v==null?'':String(v);}
+function nilaiMedan(o,f){var v=o[f.k];if(f.t==='sasaran')return ptNamaSasaran(v);if(f.t==='date')return fmtTgl(v);if(f.t==='number'&&v!=='')return f.l.indexOf('RM')>=0?rm(v):String(v);return v==null?'':String(v);}
 function ahliUnit2(o){
   var map={'UNIT BERUNIFORM':'uniform','KELAB & PERSATUAN':'kelab','SUKAN & PERMAINAN':'sukan','RUMAH SUKAN':'rumah'};
   var k=map[o.kategori];if(!k)return 0;return (dc.murid||[]).filter(function(m){return sama(m[k],o.unit);}).length;
@@ -4488,6 +4629,8 @@ function paparModul(){
    +'<button class="btn btn-success" onclick="eksportModul(\'excel\')"><i class="fa-solid fa-file-excel me-1"></i>Excel</button>'
    +'<button class="btn btn-danger" onclick="eksportModul(\'pdf\')"><i class="fa-solid fa-file-pdf me-1"></i>PDF</button></div></div>';
   if(_rekodTiada)h+='<div class="banner"><i class="fa-solid fa-triangle-exclamation me-1"></i>Bahagian ini belum boleh menyimpan data. Pasang fail Apps Script <b>Rekod.gs</b> dan kemas kini <b>Code.gs</b>, kemudian Deploy → Manage deployments → New version.</div>';
+  if(mk==='takwim')h+=_pt?'<div class="banner" style="background:var(--p3);"><i class="fa-solid fa-link me-1"></i>Disambung terus dengan <b>Portal Pengurusan Sekolah</b> ('+_pt.takwim.length+' aktiviti Kokurikulum). Tambah, edit atau padam di sini = berubah di Portal juga, dan sebaliknya.</div>'
+    :'<div class="banner"><i class="fa-solid fa-link-slash me-1"></i>Belum disambung dengan Portal Pengurusan Sekolah'+(_ptRalat?': '+esc(_ptRalat):'')+'</div>';
   h+=ringkasanModul(mk);
   h+='<div class="mod-tools"><div class="sunk cari"><i class="fa-solid fa-magnifying-glass" style="color:var(--sub);"></i><input id="mod-cari" type="search" placeholder="Cari…" value="'+esc(st.q)+'" oninput="_modState[_modSemasa].q=this.value;tunda(\'mod\',paparSenaraiModul,150)"></div>'
    +(fF&&fF.o?'<select class="form-select" onchange="_modState[_modSemasa].f=this.value;paparSenaraiModul()"><option value="">Semua '+esc(fF.l.toLowerCase())+'</option>'+opsyen(fF.o,st.f)+'</select>':'')
@@ -4537,6 +4680,7 @@ function bukaBorang(mk,id,awal){
     else if(x.t==='select')inp='<select id="'+idf+'" class="form-select"><option value="">— Pilih —</option>'+opsyen(x.o,v)+'</select>';
     else if(x.t==='rumah')inp='<select id="'+idf+'" class="form-select"><option value="">— Pilih —</option>'+opsyen((dc.rujukan&&dc.rujukan.rumah||[]).map(function(z){return String(z).toUpperCase();}),String(v).toUpperCase())+'</select>';
     else if(x.t==='sop')inp='<select id="'+idf+'" class="form-select"><option value="">LAIN-LAIN (senarai semak sendiri)</option>'+SOP.map(function(s){return '<option value="'+s.id+'"'+(s.id===v?' selected':'')+'>'+esc(s.tajuk.toUpperCase())+'</option>';}).join('')+'</select>';
+    else if(x.t==='sasaran')inp='<select id="'+idf+'" class="form-select"><option value="">— Tiada —</option>'+ptOpsyenSasaran(v)+'</select>';
     else if(x.t==='date')inp='<input id="'+idf+'" type="date" class="form-control" value="'+esc(tglIso(v))+'">';
     else if(x.t==='number')inp='<input id="'+idf+'" type="number" step="any" min="0" class="form-control" value="'+esc(v)+'">';
     else if(x.t==='url')inp='<input id="'+idf+'" type="url" class="form-control" placeholder="https://drive.google.com/…" value="'+esc(v)+'">';
@@ -4551,7 +4695,7 @@ function bukaBorang(mk,id,awal){
     m.medan.forEach(function(x){
       if(x.t==='hidden'){baru[x.k]=o[x.k]||'';return;}
       var v=document.getElementById('mf-'+x.k).value;v=String(v==null?'':v).trim();
-      if(x.t!=='url'&&x.t!=='date'&&x.t!=='number'&&x.t!=='sop')v=v.toUpperCase();
+      if(x.t!=='url'&&x.t!=='date'&&x.t!=='number'&&x.t!=='sop'&&x.t!=='sasaran'&&mk!=='takwim')v=v.toUpperCase();
       if(x.wajib&&!v)kurang.push(x.l);baru[x.k]=v;
     });
     if(kurang.length)return alert('Sila isi: '+kurang.join(', '));
@@ -4739,7 +4883,7 @@ function janaLaporanTahunan(jenis){
 
 // ---------- SENARAI CADANGAN (guru & unit) ----------
 function isiDatalist(){
-  var g=document.getElementById('dl-guru');if(g)g.innerHTML=(dc.guru||[]).map(function(x){return '<option value="'+esc(x.nama)+'">';}).join('');
+  var g=document.getElementById('dl-guru');if(g)g.innerHTML=semuaGuru().map(function(x){return '<option value="'+esc(x.nama)+'">';}).join('');
   var u=document.getElementById('dl-unit');
   if(!u){u=document.createElement('datalist');u.id='dl-unit';document.body.appendChild(u);}
   var semua=[];['uniform','kelab','sukan','rumah'].forEach(function(k){(dc.rujukan&&dc.rujukan[k]||[]).forEach(function(x){if(semua.indexOf(x)<0)semua.push(x);});});
@@ -4747,5 +4891,5 @@ function isiDatalist(){
 }
 
 // Muat semula rekod Pusat Sehenti secara senyap setiap 3 minit
-setInterval(function(){if(document.hidden||!navigator.onLine||_rekodTiada||!(window.kokoAdaToken&&kokoAdaToken()))return;muatRekod();},3*60*1000);
+setInterval(function(){if(document.hidden||!navigator.onLine||!(window.kokoAdaToken&&kokoAdaToken()))return;if(!_rekodTiada)muatRekod();if(!_ptTiada)muatPortal();},3*60*1000);
 </script></body></html>

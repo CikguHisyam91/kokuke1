@@ -1,0 +1,128 @@
+// ============================================================
+// KOKOSMART PRO — Portal.gs
+// Sambungan terus ke Google Sheet "Portal Pengurusan Sekolah" (Portal Tugas Guru).
+//  - GURU, JAWATANKUASA, AHLI_JK  : dibaca sahaja (kemas kini dibuat di Portal)
+//  - TAKWIM (kategori Kokurikulum): dibaca DAN ditulis — edit di KokoSmart terus masuk ke Portal,
+//    edit di Portal terus nampak di KokoSmart.
+// Tab TETAPAN (kata laluan admin Portal) TIDAK dibaca.
+// Akaun yang menjalankan Web App KokoSmart perlu ada akses Editor pada Sheet Portal
+// (Viewer cukup untuk membaca, tetapi Editor diperlukan untuk menulis takwim).
+// ============================================================
+
+// ID Sheet Portal TIDAK disimpan di GitHub (repo awam). Tampal ID Sheet Portal di antara tanda petik di bawah
+// selepas menampal fail ini ke Apps Script. ID = kod panjang dalam pautan .../spreadsheets/d/<ID>/edit
+var PORTAL_ID = 'TAMPAL_ID_SHEET_PORTAL_DI_SINI';
+var PORTAL_KAT_TAKWIM = 'Kokurikulum';
+
+function _ptSS() {
+  var id = PropertiesService.getScriptProperties().getProperty('PORTAL_ID') || PORTAL_ID;
+  if (!id || /TAMPAL/.test(id)) throw new Error('ID Sheet Portal belum diisi dalam Portal.gs');
+  return SpreadsheetApp.openById(id);
+}
+function _ptS(v) { return String(v == null ? '' : v).replace(/\s+/g, ' ').trim(); }
+function _ptTgl(v, tz) {
+  if (v instanceof Date) return Utilities.formatDate(v, tz, 'yyyy-MM-dd');
+  return _ptS(v);
+}
+// Baca satu tab sebagai senarai objek ikut tajuk lajur baris 1
+function _ptJadual(ss, nama) {
+  var sh = ss.getSheetByName(nama);
+  if (!sh || sh.getLastRow() < 2) return { sh: sh, h: [], rows: [] };
+  var data = sh.getRange(1, 1, sh.getLastRow(), sh.getLastColumn()).getValues();
+  var h = data[0].map(function (x) { return _ptS(x).toUpperCase(); });
+  return { sh: sh, h: h, rows: data.slice(1) };
+}
+function _ptCol(h, nama) { return h.indexOf(nama); }
+
+// Semua data Portal yang diperlukan KokoSmart (sekali panggil)
+function dapatkanPortal() {
+  try {
+    var ss = _ptSS(), tz = ss.getSpreadsheetTimeZone() || 'Asia/Kuala_Lumpur';
+    var G = _ptJadual(ss, 'GURU'), J = _ptJadual(ss, 'JAWATANKUASA'), A = _ptJadual(ss, 'AHLI_JK'), T = _ptJadual(ss, 'TAKWIM');
+    function o(t, r) { var x = {}; t.h.forEach(function (k, i) { x[k] = _ptS(r[i]); }); return x; }
+
+    var guru = G.rows.map(function (r) { return o(G, r); }).filter(function (g) { return g.NAMA; })
+      .map(function (g) { return { id: g.ID, nama: g.NAMA.toUpperCase(), jawatan: g.JAWATAN, kategori: g.KATEGORI, kelas: g.KELAS, status: g.STATUS }; });
+
+    var ahli = {};
+    A.rows.forEach(function (r) {
+      var a = o(A, r); if (!a.ID_JK || !a.NAMA_GURU) return;
+      (ahli[a.ID_JK] = ahli[a.ID_JK] || []).push({ jawatan: a.JAWATAN, nama: a.NAMA_GURU.toUpperCase(), idGuru: a.ID_GURU });
+    });
+    var jk = J.rows.map(function (r) { return o(J, r); })
+      .filter(function (j) { return j.ID && j.UNIT.toLowerCase() === PORTAL_KAT_TAKWIM.toLowerCase(); })
+      .map(function (j) { return { id: j.ID, kategori: j.KATEGORI, nama: j.NAMA, tugas: j.SENARAI_TUGAS, catatan: j.CATATAN, rujukan: j.RUJUKAN, status: j.STATUS, tahun: j.TAHUN, ahli: ahli[j.ID] || [] }; });
+
+    var iT = T.h;
+    var takwim = T.rows.filter(function (r) { return _ptS(r[_ptCol(iT, 'ID')]) && _ptS(r[_ptCol(iT, 'KATEGORI')]).toLowerCase() === PORTAL_KAT_TAKWIM.toLowerCase(); })
+      .map(function (r) {
+        return { id: _ptS(r[_ptCol(iT, 'ID')]), mula: _ptTgl(r[_ptCol(iT, 'TARIKH_MULA')], tz), tamat: _ptTgl(r[_ptCol(iT, 'TARIKH_TAMAT')], tz),
+          aktiviti: _ptS(r[_ptCol(iT, 'AKTIVITI')]), pautan: _ptS(r[_ptCol(iT, 'PAUTAN')]), catatan: _ptS(r[_ptCol(iT, 'CATATAN')]) };
+      });
+
+    return { success: true, nama: ss.getName(), guru: guru, jk: jk, takwim: takwim, masa: new Date().getTime() };
+  } catch (e) { return { success: false, error: e.toString() }; }
+}
+
+// Tambah / kemas kini satu aktiviti takwim Kokurikulum dalam Portal.
+// rekod: { id (kosong = baharu), mula, tamat, aktiviti, pautan, catatan }
+function simpanTakwimPortal(rekod) {
+  var lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(20000);
+    rekod = rekod || {};
+    if (!_ptS(rekod.aktiviti) || !_ptS(rekod.mula)) return { success: false, error: 'Aktiviti dan tarikh mula wajib diisi.' };
+    var T = _ptJadual(_ptSS(), 'TAKWIM'), sh = T.sh, h = T.h;
+    if (!sh) return { success: false, error: 'Tab TAKWIM tiada dalam Portal.' };
+    if (!h.length) h = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(function (x) { return _ptS(x).toUpperCase(); });
+    var c = {}; ['ID', 'TARIKH_MULA', 'TARIKH_TAMAT', 'AKTIVITI', 'KATEGORI', 'PAUTAN', 'CATATAN'].forEach(function (k) { c[k] = h.indexOf(k); });
+    if (c.ID < 0 || c.AKTIVITI < 0) return { success: false, error: 'Tajuk lajur TAKWIM dalam Portal tidak dikenali.' };
+
+    var id = _ptS(rekod.id), baris = -1, maks = 0;
+    T.rows.forEach(function (r, i) {
+      var x = _ptS(r[c.ID]), m = x.match(/^T(\d+)$/i);
+      if (m) maks = Math.max(maks, parseInt(m[1], 10));
+      if (id && x === id) baris = i + 2;
+    });
+    if (baris > 0 && c.KATEGORI >= 0 && _ptS(T.rows[baris - 2][c.KATEGORI]).toLowerCase() !== PORTAL_KAT_TAKWIM.toLowerCase())
+      return { success: false, error: 'Aktiviti ini bukan kategori Kokurikulum dalam Portal — tidak boleh diubah dari KokoSmart.' };
+    var baru = baris < 0;
+    if (baru) { id = 'T' + ('00' + (maks + 1)).slice(-3); baris = sh.getLastRow() + 1; }
+
+    var nilai = {};
+    nilai[c.ID] = id;
+    nilai[c.TARIKH_MULA] = _ptS(rekod.mula);
+    nilai[c.TARIKH_TAMAT] = _ptS(rekod.tamat) || _ptS(rekod.mula);
+    nilai[c.AKTIVITI] = _ptS(rekod.aktiviti);
+    if (c.KATEGORI >= 0) nilai[c.KATEGORI] = PORTAL_KAT_TAKWIM;
+    if (c.PAUTAN >= 0 && rekod.pautan != null) nilai[c.PAUTAN] = _ptS(rekod.pautan);
+    if (c.CATATAN >= 0 && rekod.catatan != null) nilai[c.CATATAN] = _ptS(rekod.catatan);
+    Object.keys(nilai).forEach(function (k) {
+      k = parseInt(k, 10); if (k < 0) return;
+      var sel = sh.getRange(baris, k + 1);
+      sel.setNumberFormat('@'); // kekal sebagai teks seperti data asal Portal (tarikh yyyy-MM-dd)
+      sel.setValue(nilai[k]);
+    });
+    return { success: true, id: id, baru: baru };
+  } catch (e) { return { success: false, error: e.toString() };
+  } finally { try { lock.releaseLock(); } catch (x) {} }
+}
+
+// Padam satu aktiviti takwim (hanya kategori Kokurikulum)
+function padamTakwimPortal(id) {
+  var lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(20000);
+    var T = _ptJadual(_ptSS(), 'TAKWIM'), c = T.h.indexOf('ID'), k = T.h.indexOf('KATEGORI');
+    for (var i = T.rows.length - 1; i >= 0; i--) {
+      if (_ptS(T.rows[i][c]) !== _ptS(id)) continue;
+      if (k >= 0 && _ptS(T.rows[i][k]).toLowerCase() !== PORTAL_KAT_TAKWIM.toLowerCase()) return { success: false, error: 'Bukan aktiviti Kokurikulum.' };
+      T.sh.deleteRow(i + 2);
+      return { success: true };
+    }
+    return { success: true, tiada: true };
+  } catch (e) { return { success: false, error: e.toString() };
+  } finally { try { lock.releaseLock(); } catch (x) {} }
+}
+
+// ===== TAMAT Portal.gs =====
