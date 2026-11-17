@@ -635,13 +635,15 @@ body[data-theme="dark"] .sw-tema i{transform:translateX(30px);color:var(--c2);}
     <div class="card-g">
       <h5 style="color:var(--c3);" class="mb-3"><i class="fa-solid fa-user-plus me-2"></i>Daftar Murid Baharu</h5>
       <div class="row g-2 mb-3">
+        <div class="col-12" style="font-size:11px;font-weight:800;color:var(--sub);">Tahun &amp; kelas di bawah ialah nilai lalai. Boleh juga taip setiap baris: <b>NAMA, TAHUN, KELAS</b> (cth. ALI BIN ABU, 5, BRILLIANT) atau tampal 3 lajur dari Excel.</div>
         <div class="col-6"><label class="small fw-bold mb-1">Aliran Darjah</label><select id="reg-tahun" class="form-select" onchange="janaBorang()"><option value="1">Darjah 1</option><option value="2">Darjah 2</option><option value="3">Darjah 3</option><option value="4">Darjah 4</option><option value="5">Darjah 5</option><option value="6">Darjah 6</option></select></div>
-        <div class="col-6"><label class="small fw-bold mb-1">Nama Kelas</label><select id="reg-kelas" class="form-select"></select></div>
+        <div class="col-6"><label class="small fw-bold mb-1">Nama Kelas</label><select id="reg-kelas" class="form-select" onchange="janaBorang()"></select></div>
       </div>
-      <div class="mb-3"><label class="small fw-bold mb-1">Nama Murid (Satu Baris Satu Nama)</label><textarea id="reg-nama" class="form-control" rows="5" placeholder="Tampal nama murid..." oninput="tunda('reg',janaBorang,250)"></textarea></div>
+      <div class="mb-3"><label class="small fw-bold mb-1">Nama Murid (satu baris satu murid)</label><textarea id="reg-nama" class="form-control" rows="5" placeholder="ALI BIN ABU&#10;SITI BINTI AHMAD, 5, BRILLIANT&#10;TAN WEI MING, 4, CREATIVE" oninput="tunda('reg',janaBorang,250)"></textarea></div>
       <div id="reg-notif" class="mb-2"></div>
-      <div class="table-responsive"><table class="table align-middle" style="font-size:12px;"><thead><tr><th>Nama</th><th>Rumah</th><th>Uniform</th><th>Kelab</th><th>Sukan</th></tr></thead><tbody id="tbody-reg"></tbody></table></div>
-      <button class="btn btn-success w-100 mt-2 fw-bold py-2" onclick="hantarReg()"><i class="fa-solid fa-cloud-arrow-up me-2"></i>Sahkan &amp; Simpan</button>
+      <div class="table-responsive"><table class="table align-middle" style="font-size:12px;"><thead><tr><th>Nama</th><th>Tahun</th><th>Kelas</th><th>Rumah</th><th>Uniform</th><th>Kelab</th><th>Sukan</th></tr></thead><tbody id="tbody-reg"></tbody></table></div>
+      <p style="font-size:10.5px;font-weight:800;color:var(--sub);margin:4px 0 0;">Unit sudah dicadang secara seimbang (murid bukan Islam tidak ke unit berunsur Islam). Ubah jika perlu — jika tidak diubah, cadangan itu yang disimpan.</p>
+      <button class="btn btn-success w-100 mt-2 fw-bold py-2" onclick="hantarReg()"><i class="fa-solid fa-wand-magic-sparkles me-2"></i>Agih &amp; Daftar</button>
     </div>
   </div>
 </div>
@@ -1480,52 +1482,58 @@ function simpanKoko(){
 }
 
 // ===== DAFTAR MURID =====
-function janaBorang(){
-  var thn=document.getElementById('reg-tahun').value;
-  var txt=document.getElementById('reg-nama').value;
-  var tbody=document.getElementById('tbody-reg');
-  var notif=document.getElementById('reg-notif');
-  tbody.innerHTML='';notif.innerHTML='';
-  if(!txt.trim()){tbody.innerHTML='<tr><td colspan="5" class="text-center text-muted py-2">Tampal nama murid...</td></tr>';return;}
-  var senarai=txt.split('\n').map(function(n){return n.trim().replace(/\s+/g,' ');}).filter(function(n,i,a){return n&&a.indexOf(n)===i;});
-  var isTahap1=parseInt(thn)<=3;
-  senarai.forEach(function(nama){
-    var lama=dc.murid.find(function(m){return m.nama.toLowerCase()===nama.toLowerCase();});
-    var r=lama?lama.rumah:unitPalingSikit('rumah',thn);
-    var u=lama?lama.uniform:(isTahap1?'-':unitPalingSikit('uniform',thn));
-    var kb=lama?lama.kelab:(isTahap1?'-':unitPalingSikit('kelab',thn));
-    var sk=lama?lama.sukan:(isTahap1?'-':unitPalingSikit('sukan',thn));
-    if(lama)notif.insertAdjacentHTML('beforeend','<div class="alert alert-warning py-1 mb-1 small">⚠️ <strong>'+esc(nama)+'</strong> sudah wujud — unit dikekalkan.</div>');
-    var htmlR=opsyen(dc.rujukan.rumah,r);
-    var htmlU=isTahap1?'<option value="-">-</option>':opsyen(dc.rujukan.uniform,u);
-    var htmlK=isTahap1?'<option value="-">-</option>':opsyen(dc.rujukan.kelab,kb);
-    var htmlS=isTahap1?'<option value="-">-</option>':opsyen(dc.rujukan.sukan,sk);
-    tbody.insertAdjacentHTML('beforeend','<tr class="row-reg" data-nama="'+esc(nama)+'"><td>'+esc(nama)+'</td><td><select class="form-select form-select-sm sel-r">'+htmlR+'</select></td><td><select class="form-select form-select-sm sel-u"'+(isTahap1?' disabled':'')+'>'+htmlU+'</select></td><td><select class="form-select form-select-sm sel-k"'+(isTahap1?' disabled':'')+'>'+htmlK+'</select></td><td><select class="form-select form-select-sm sel-s"'+(isTahap1?' disabled':'')+'>'+htmlS+'</select></td></tr>');
-  });
-}
-function unitPalingSikit(jenis,thn){
-  var senarai=dc.rujukan[jenis]||[];if(!senarai.length)return'-';
-  var minC=Infinity,pilih=senarai[0];
-  senarai.forEach(function(u){var c=dc.murid.filter(function(m){return m.tahun===String(thn)&&sama(m[jenis],u);}).length;if(c<minC){minC=c;pilih=u;}});
+// Cadangan unit seimbang: unit paling sedikit ahli (tahun sama, kemudian keseluruhan); murid bukan Islam tidak ke unit berunsur Islam
+function cadangUnit(jenis,thn,nama,tambahan){
+  var L=(dc.rujukan[jenis]||[]).filter(function(u){return String(u).trim()&&!(jenis!=='rumah'&&!muridIslam(nama)&&unitIslam(u));});if(!L.length)return '-';
+  tambahan=tambahan||{};
+  function kira(u,t){return (dc.murid||[]).filter(function(m){return (!t||m.tahun===String(t))&&sama(m[jenis],u);}).length+((tambahan[jenis]||{})[(t?t+'|':'')+String(u).toUpperCase()]||0);}
+  var pilih=L.slice().sort(function(a,b){return kira(a,thn)-kira(b,thn)||kira(a)-kira(b)||String(a).localeCompare(String(b));})[0];
+  var T=tambahan[jenis]=tambahan[jenis]||{},K=String(pilih).toUpperCase();T[thn+'|'+K]=(T[thn+'|'+K]||0)+1;T[K]=(T[K]||0)+1;
   return pilih;
 }
-function hantarReg(){
-  var baris=document.querySelectorAll('.row-reg');
-  if(!baris.length)return alert('Tiada nama murid!');
-  var thn=document.getElementById('reg-tahun').value;
-  var kls=document.getElementById('reg-kelas').value;
-  if(!kls)return alert('Pilih nama kelas dahulu!');
-  var senarai=[];
-  baris.forEach(function(r){
-    var lama=dc.murid.find(function(m){return m.nama.toLowerCase()===r.getAttribute('data-nama').toLowerCase();});
-    if(!lama)senarai.push({nama:r.getAttribute('data-nama'),tahun:thn,kelas:kls,rumah:r.querySelector('.sel-r').value,uniform:r.querySelector('.sel-u').value,kelab:r.querySelector('.sel-k').value,sukan:r.querySelector('.sel-s').value});
+function unitPalingSikit(jenis,thn){return cadangUnit(jenis,thn,'BIN');}
+function janaBorang(){
+  var thn0=document.getElementById('reg-tahun').value,kls0=document.getElementById('reg-kelas').value;
+  var txt=document.getElementById('reg-nama').value;
+  var tbody=document.getElementById('tbody-reg'),notif=document.getElementById('reg-notif');
+  tbody.innerHTML='';notif.innerHTML='';
+  if(!txt.trim()){tbody.innerHTML='<tr><td colspan="7" class="text-center text-muted py-2">Taip atau tampal nama murid...</td></tr>';return;}
+  var seen={},baris=[];
+  txt.split('\n').forEach(function(line){
+    var p=line.split(/\t|;|,/).map(function(x){return x.trim().replace(/\s+/g,' ');});var nama=(p[0]||'').toUpperCase();if(!nama||seen[nama])return;seen[nama]=1;
+    var t=(p[1]||'').match(/[1-6]/),k=(p[2]||'').toUpperCase();
+    baris.push({nama:nama,tahun:t?t[0]:thn0,kelas:k||kls0});
   });
-  if(!senarai.length)return alert('Semua nama sudah ada dalam sistem.');
+  var tambah={},kelasL=dc.kelas||[];
+  baris.forEach(function(b){
+    var lama=dc.murid.find(function(m){return m.nama.toUpperCase()===b.nama;}),t1=+b.tahun<=3;
+    if(lama)notif.insertAdjacentHTML('beforeend','<div class="alert alert-warning py-1 mb-1 small">⚠️ <strong>'+esc(b.nama)+'</strong> sudah wujud — tidak didaftar semula.</div>');
+    var r=lama?lama.rumah:cadangUnit('rumah',b.tahun,b.nama,tambah);
+    var u=lama?lama.uniform:(t1?'-':cadangUnit('uniform',b.tahun,b.nama,tambah));
+    var kb=lama?lama.kelab:(t1?'-':cadangUnit('kelab',b.tahun,b.nama,tambah));
+    var sk=lama?lama.sukan:(t1?'-':cadangUnit('sukan',b.tahun,b.nama,tambah));
+    function sel(c,list,v){return t1&&c!=='sel-r'?'<select class="form-select form-select-sm '+c+'" disabled><option value="-">-</option></select>':'<select class="form-select form-select-sm '+c+'">'+opsyen(list,v)+'</select>';}
+    tbody.insertAdjacentHTML('beforeend','<tr class="row-reg" data-nama="'+esc(b.nama)+'"'+(lama?' data-lama="1" style="opacity:.5;"':'')+'><td>'+esc(b.nama)+(muridIslam(b.nama)?'':' <span class="tag" title="Tiada BIN/BINTI — tidak dicadang ke unit berunsur Islam">BUKAN ISLAM?</span>')+'</td>'
+      +'<td><select class="form-select form-select-sm sel-t" onchange="this.closest(\'tr\').querySelectorAll(\'.sel-u,.sel-k,.sel-s\').forEach(function(x){x.disabled=+this.value<=3;},this)">'+[1,2,3,4,5,6].map(function(n){return '<option'+(String(n)===b.tahun?' selected':'')+'>'+n+'</option>';}).join('')+'</select></td>'
+      +'<td><select class="form-select form-select-sm sel-c">'+opsyen(kelasL,b.kelas)+(b.kelas&&kelasL.indexOf(b.kelas)<0?'<option selected>'+esc(b.kelas)+'</option>':'')+'</select></td>'
+      +'<td>'+sel('sel-r',dc.rujukan.rumah,r)+'</td><td>'+sel('sel-u',dc.rujukan.uniform,u)+'</td><td>'+sel('sel-k',dc.rujukan.kelab,kb)+'</td><td>'+sel('sel-s',dc.rujukan.sukan,sk)+'</td></tr>');
+  });
+}
+function hantarReg(){
+  var baris=document.querySelectorAll('.row-reg:not([data-lama])');
+  if(!baris.length)return alert(document.querySelectorAll('.row-reg').length?'Semua nama sudah ada dalam sistem.':'Tiada nama murid!');
+  var senarai=[],tiadaKelas=[];
+  baris.forEach(function(r){
+    var t=r.querySelector('.sel-t').value,k=r.querySelector('.sel-c').value,t1=+t<=3;if(!k)tiadaKelas.push(r.getAttribute('data-nama'));
+    senarai.push({nama:r.getAttribute('data-nama'),tahun:t,kelas:k,rumah:r.querySelector('.sel-r').value,uniform:t1?'-':r.querySelector('.sel-u').value,kelab:t1?'-':r.querySelector('.sel-k').value,sukan:t1?'-':r.querySelector('.sel-s').value});
+  });
+  if(tiadaKelas.length)return alert('Pilih kelas untuk: '+tiadaKelas.join(', '));
+  if(!confirm('Daftar '+senarai.length+' murid baharu dengan unit yang dicadang?'))return;
   showLoad();
   google.script.run.withSuccessHandler(function(res){
     hideLoad();
     if(res&&res.success){toast('✅ Berjaya daftar '+(res.berjaya||senarai.length)+' murid!','ok');document.getElementById('reg-nama').value='';janaBorang();muatSemua(true);}
-    else{alert('Gagal: '+(res?res.error:'Ralat'));hideLoad();}
+    else alert('Gagal: '+(res?res.error:'Ralat'));
   }).withFailureHandler(function(e){hideLoad();alert('Ralat: '+e.message);}).simpanPendaftaranMurid(senarai);
 }
 
@@ -3884,18 +3892,58 @@ function kadUnit(d,k){
 }
 // Info ringkas (tetingkap kecil) bila kotak di laman utama ditekan
 function bukaInfoKat(k){
-  var cfg=KAT[k],d=dataKat(k),el=pastiModal('mod-kat');
+  var cfg=KAT[k],d=dataKat(k),el=pastiModal('mod-kat');el._kunci=false;el.firstChild.onclick=null;
   var urut=d.R.slice().sort(function(a,b){return d.ahli[b].length-d.ahli[a].length;});
   var mx=Math.max.apply(null,d.R.map(function(r){return d.ahli[r].length;}).concat([1]));
   var ada=d.M.length-d.tiada;
   el.firstChild.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px;"><h5 style="margin:0;"><i class="fa-solid '+cfg.i+' me-2" style="color:var(--c1);"></i>'+esc(cfg.n)+'</h5><button class="ib" style="width:38px;height:38px;" onclick="document.getElementById(\'mod-kat\').classList.remove(\'show\')" aria-label="Tutup"><i class="fa-solid fa-xmark"></i></button></div>'
-   +'<div class="paj-top" style="margin:10px 0 14px;"><div><b>'+d.R.length+'</b><span>Unit</span></div><div><b>'+ada+'</b><span>'+(k==='rumah'?'Murid berumah':'Murid ahli')+'</span></div><div><b>'+d.tiada+'</b><span>'+(k==='rumah'?'Belum ada rumah':'Belum ada unit')+'</span></div></div>'
+   +'<div class="paj-top" style="margin:10px 0 14px;"><div class="klik" role="button" onclick="tukarMenu(\'kat-'+k+'\')"><b>'+d.R.length+'</b><span>Unit</span></div><div class="klik" role="button" onclick="tukarMenu(\'kat-'+k+'\')"><b>'+ada+'</b><span>'+(k==='rumah'?'Murid berumah':'Murid ahli')+'</span></div><div class="klik" role="button" onclick="agihBelum(\''+k+'\')" style="'+(d.tiada?'border-color:#dc2626;':'')+'"><b style="'+(d.tiada?'color:#dc2626;':'')+'">'+d.tiada+'</b><span>'+(k==='rumah'?'Belum ada rumah':'Belum ada unit')+(d.tiada?' · tekan untuk agih':'')+'</span></div></div>'
    +'<div style="display:flex;flex-direction:column;gap:8px;max-height:46vh;overflow-y:auto;">'+urut.map(function(r){var n=d.ahli[r].length,w=warnaRumah(r,d.R.indexOf(r));
-     return '<div class="komp-r" style="grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) 44px;"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><em style="display:inline-block;width:9px;height:9px;border-radius:3px;background:'+w+';margin-right:6px;"></em>'+esc(r)+'</span><div class="tr"><i style="width:'+Math.round(n/mx*100)+'%;background:'+w+'"></i></div><b>'+n+'</b></div>';}).join('')+'</div>'
+     return '<div class="komp-r klik" role="button" title="Lihat ahli" onclick="ahliUnitModal(\''+k+'\',\''+esc(r).replace(/'/g,"\\'")+'\')" style="grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) 44px;cursor:pointer;"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><em style="display:inline-block;width:9px;height:9px;border-radius:3px;background:'+w+';margin-right:6px;"></em>'+esc(r)+'</span><div class="tr"><i style="width:'+Math.round(n/mx*100)+'%;background:'+w+'"></i></div><b>'+n+'</b></div>';}).join('')+'</div>'
    +'<p style="margin:12px 0 0;font-size:10.5px;font-weight:700;color:var(--sub);letter-spacing:.05em;">'+(k==='rumah'?'Semua murid Tahun 1–6.':'Murid Tahun 4–6 sahaja.')+'</p>'
    +'<div class="pk-row" style="margin-top:14px;"><button class="btn btn-info pk-btn" onclick="tukarMenu(\'kat-'+k+'\')"><i class="fa-solid fa-table-list me-1"></i>Paparan penuh</button><button class="btn btn-secondary pk-btn" onclick="document.getElementById(\'mod-kat\').classList.remove(\'show\')">Tutup</button></div>';
   el.classList.add('show');
 }
+
+// Senarai ahli satu unit (dari info ringkas)
+function ahliUnitModal(k,u){
+  var cfg=KAT[k],L=(dc.murid||[]).filter(function(m){return cfg.thn.indexOf(+m.tahun)>=0&&sama(m[k],u);}).sort(function(a,b){return (a.tahun-b.tahun)||a.kelas.localeCompare(b.kelas)||a.nama.localeCompare(b.nama);});
+  var el=pastiModal('mod-kat');
+  el.firstChild.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;"><h5 style="margin:0;">'+esc(u)+' <small style="color:var(--sub);">('+L.length+' murid)</small></h5><button class="ib" style="width:38px;height:38px;" onclick="bukaInfoKat(\''+k+'\')" aria-label="Kembali"><i class="fa-solid fa-arrow-left"></i></button></div>'
+   +'<div style="max-height:56vh;overflow-y:auto;"><table class="rs-tbl"><thead><tr><th>Nama</th><th>Tahun</th><th>Kelas</th><th></th></tr></thead><tbody>'
+   +L.map(function(m){return '<tr><td>'+esc(m.nama)+'</td><td>'+esc(m.tahun)+'</td><td>'+esc(m.kelas)+'</td><td><button class="mini" data-bil="'+esc(m.bil)+'"><i class="fa-solid fa-pen"></i></button></td></tr>';}).join('')+'</tbody></table></div>'
+   +'<div class="pk-row" style="margin-top:12px;"><button class="btn btn-info" onclick="tukarMenu(\'kat-'+k+'\')"><i class="fa-solid fa-table-list me-1"></i>Paparan penuh</button><button class="btn btn-secondary" onclick="bukaInfoKat(\''+k+'\')">Kembali</button></div>';
+  el.firstChild.onclick=function(e){var b=e.target.closest('button[data-bil]');if(!b)return;var m=dc.murid.filter(function(x){return String(x.bil)===b.getAttribute('data-bil');})[0];if(m){el.classList.remove('show');bukaKoko(m);}};
+  el.classList.add('show');
+}
+// Murid yang belum ada unit: cadangan seimbang, agih sekali tekan
+function agihBelum(k){
+  var cfg=KAT[k],R=(dc.rujukan[k]||[]).map(function(x){return String(x).toUpperCase().trim();});
+  var L=(dc.murid||[]).filter(function(m){if(cfg.thn.indexOf(+m.tahun)<0)return false;var u=String(m[k]||'').toUpperCase().trim();return R.indexOf(u)<0;}).sort(function(a,b){return (a.tahun-b.tahun)||a.kelas.localeCompare(b.kelas)||a.nama.localeCompare(b.nama);});
+  var el=pastiModal('mod-kat'),tambah={};el._kunci=true;
+  el.firstChild.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px;"><h5 style="margin:0;">Agih '+esc(cfg.n.toLowerCase())+' ('+L.length+' murid)</h5><button class="ib" style="width:38px;height:38px;" onclick="var e=document.getElementById(\'mod-kat\');e._kunci=false;bukaInfoKat(\''+k+'\')" aria-label="Kembali"><i class="fa-solid fa-arrow-left"></i></button></div>'
+   +'<p style="font-size:10.5px;font-weight:800;color:var(--sub);margin:0 0 8px;">Unit sudah dicadang secara seimbang'+(k==='rumah'?'':' (murid bukan Islam tidak ke unit berunsur Islam)')+'. Ubah jika perlu, kemudian tekan Agih.</p>'
+   +(L.length?'<div style="max-height:52vh;overflow-y:auto;"><table class="rs-tbl"><thead><tr><th>Nama</th><th>Thn</th><th>Kelas</th><th>'+esc(cfg.n)+'</th></tr></thead><tbody>'
+   +L.map(function(m,i){return '<tr><td>'+esc(m.nama)+'</td><td>'+esc(m.tahun)+'</td><td>'+esc(m.kelas)+'</td><td><select class="form-select form-select-sm ag-sel" data-i="'+i+'"><option value="">— Jangan agih —</option>'+opsyen(dc.rujukan[k]||[],cadangUnit(k,m.tahun,m.nama,tambah))+'</select></td></tr>';}).join('')+'</tbody></table></div>'
+   :'<div class="kosong-box">Semua murid sudah ada '+esc(cfg.n.toLowerCase())+'.</div>')
+   +'<div class="pk-row" style="margin-top:12px;">'+(L.length?'<button class="btn btn-danger" id="ag-ok"><i class="fa-solid fa-wand-magic-sparkles me-1"></i>Agih</button>':'')+'<button class="btn btn-secondary" onclick="var e=document.getElementById(\'mod-kat\');e._kunci=false;e.classList.remove(\'show\')">Tutup</button></div>';
+  el.classList.add('show');
+  var ok=document.getElementById('ag-ok');if(!ok)return;
+  ok.onclick=function(){
+    var kerja=[];el.querySelectorAll('.ag-sel').forEach(function(s){if(s.value)kerja.push({m:L[+s.getAttribute('data-i')],u:s.value});});
+    if(!kerja.length)return alert('Tiada murid dipilih untuk diagih.');
+    if(!confirm('Agih '+kerja.length+' murid ke '+cfg.n.toLowerCase()+'?'))return;
+    var i=0,gagal=0;showLoad();
+    (function satu(){
+      if(i>=kerja.length){hideLoad();el._kunci=false;el.classList.remove('show');toast('✅ '+(kerja.length-gagal)+' murid diagih'+(gagal?' ('+gagal+' gagal)':'')+'.',gagal?'info':'ok');if(_viewSemasa==='home')paparHome();else if(_viewSemasa==='kat')paparKat();return;}
+      var w=kerja[i++],m=w.m,v={rumah:m.rumah||'-',uniform:m.uniform||'-',kelab:m.kelab||'-',sukan:m.sukan||'-'};v[k]=w.u;
+      toast('Mengagih '+i+'/'+kerja.length+'…','info');
+      google.script.run.withSuccessHandler(function(res){if(res&&res.success)m[k]=w.u;else gagal++;satu();}).withFailureHandler(function(){gagal++;satu();})
+        .kemaskiniDataMurid(m.bil,v.rumah,v.uniform,v.kelab,v.sukan,m.nama);
+    })();
+  };
+}
+
 function paparKat(){
   var k=_katSemasa,cfg=KAT[k],z=document.getElementById('kat-zone');if(!z||!cfg)return;
   document.getElementById('kat-tajuk').innerHTML='<i class="fa-solid '+cfg.i+' me-2" style="color:var(--c1);"></i>'+esc(cfg.n);
