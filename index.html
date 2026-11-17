@@ -968,9 +968,19 @@ body[data-theme="dark"] .sw-tema i{transform:translateX(30px);color:var(--c2);}
 <!-- TRANSISI TAHUN BAHARU (SIMULASI) -->
 <div id="view-transisi" class="view-section">
   <div class="mod-head"><div><h3><i class="fa-solid fa-forward me-2" style="color:var(--c1);"></i>Transisi Tahun Baharu <span id="tr-thn"></span></h3>
-  <p>Simulasi sahaja: tiada data diubah. Semak hasil di bawah sebelum transisi sebenar dijalankan.</p></div>
+  <p>Simulasi sahaja: tiada data diubah. Semak hasil di bawah sebelum transisi sebenar dijalankan.</p>
+  <div class="pk-row" style="align-items:center;margin-top:8px;"><label for="tr-lama" style="font-size:10.5px;color:var(--sub);margin:0;">Data semasa ialah tahun</label><select id="tr-lama" class="form-select" style="width:auto;min-width:120px;" onchange="paparTransisi()"></select></div></div>
   <button class="btn btn-success" onclick="eksportTransisi()"><i class="fa-solid fa-file-excel me-1"></i>Muat turun senarai simulasi</button></div>
   <div id="tr-zone" style="margin-top:16px;"></div>
+</div>
+
+<!-- SIMPANAN & TAHUN LEPAS -->
+<div id="view-simpanan" class="view-section">
+  <div class="mod-head"><div><h3><i class="fa-solid fa-clock-rotate-left me-2" style="color:var(--c1);"></i>Simpanan &amp; Tahun Lepas</h3>
+  <p>Setiap simpanan ialah salinan penuh fail data dalam folder Google Drive "KOKOSMART SIMPANAN". Lihat data tahun lepas atau pulihkan senarai murid daripada simpanan.</p></div>
+  <button class="btn btn-info" onclick="buatSimpananSekarang()"><i class="fa-solid fa-floppy-disk me-1"></i>Buat simpanan sekarang</button></div>
+  <div id="sm-senarai" style="margin-top:16px;"></div>
+  <div id="sm-lihat" style="margin-top:16px;"></div>
 </div>
 
 <!-- RUJUKAN: PROSES KERJA (SOP) & SENARAI TUGAS -->
@@ -1086,10 +1096,10 @@ function tukarMenu(id){
   document.querySelectorAll('.view-section').forEach(function(s){s.classList.remove('active');});
   document.getElementById('view-'+v).classList.add('active');
   document.querySelectorAll('.modal-overlay.show').forEach(function(m){m.classList.remove('show');});
-  if(mod||id==='home'||id==='sop'||id==='tugas'||id==='laporan'||id==='kat'||id==='transisi'){
+  if(mod||id==='home'||id==='sop'||id==='tugas'||id==='laporan'||id==='kat'||id==='transisi'||id==='simpanan'){
     document.getElementById('btn-back').classList[v==='home'?'add':'remove']('d-none');
     window.scrollTo(0,0);_viewSemasa=v;
-    if(mod)bukaModul(mod);else if(id==='home')paparHome();else if(id==='sop')paparSop();else if(id==='tugas')paparTugas();else if(id==='kat')paparKat();else if(id==='transisi')paparTransisi();else sediaLaporan();
+    if(mod)bukaModul(mod);else if(id==='home')paparHome();else if(id==='sop')paparSop();else if(id==='tugas')paparTugas();else if(id==='kat')paparKat();else if(id==='transisi')paparTransisi();else if(id==='simpanan')muatSimpanan();else sediaLaporan();
     return;
   }
   if(id==='pencapaian'){if(!window._penModDibuka){window._penModDibuka=true;penMode('kelas');}else penLukisSenarai();}
@@ -3473,6 +3483,7 @@ var JUBIN={
  'm-aset':{n:'Inventori Peralatan',k:'Alatan & keadaan',i:'fa-boxes-stacked',c:'aset inventori peralatan alatan'},
  'sop':{n:'Proses Kerja (SOP)',k:'13 aliran kerja',i:'fa-route',c:'sop proses kerja carta aliran senarai semak'},
  'tugas':{n:'Senarai Tugas PK',k:'Fail meja',i:'fa-list-check',c:'tugas fail meja pk'},
+ 'simpanan':{n:'Simpanan & Tahun Lepas',k:'Lihat & pulihkan data',i:'fa-clock-rotate-left',c:'simpanan backup tahun lepas pulih data drive'},
  'm-rujukan':{n:'Dokumen & Pautan',k:'Pekeliling, borang',i:'fa-book-bookmark',c:'rujukan dokumen borang pekeliling panduan pautan'},
  'tetapan':{n:'Tetapan',k:'Sekolah & kata laluan',i:'fa-sliders',c:'tetapan kata laluan sekolah'}
 };
@@ -3482,7 +3493,7 @@ var RUANG=[
  {t:'Program & Pelaksanaan',k:'Kertas cadangan, JK, senarai semak, kehadiran dan OPR',w:'--p4',j:['m-program','statushadir','koleksiopr','kehadiran']},
  {t:'Pencapaian & Penilaian',k:'Pencapaian murid, PAJSK dan laporan',w:'--p1',j:['pencapaian','utama','laporan']},
  {t:'Sumber Manusia & Aset',k:'Guru, kursus dan peralatan',w:'--p6',j:['guru','m-kursus','m-aset']},
- {t:'Rujukan & Tetapan',k:'Proses kerja, tugas PK dan dokumen rasmi',w:'--p5',j:['sop','tugas','m-rujukan','tetapan']}
+ {t:'Rujukan & Tetapan',k:'Proses kerja, tugas PK dan dokumen rasmi',w:'--p5',j:['sop','tugas','m-rujukan','simpanan','tetapan']}
 ];
 
 // ---------- DATA REKOD ----------
@@ -3723,8 +3734,14 @@ function bolehMasuk(m,unit){
   return true;
 }
 function kosongU(v){v=String(v||'').trim();return !v||v==='-';}
+// Tahun data semasa: Okt–Dis = tahun ini; Jan–Sep = tahun lepas (transisi biasanya awal Januari)
+function tahunDataSemasa(){
+  var el=document.getElementById('tr-lama'),d=new Date(),y=d.getFullYear(),lalai=d.getMonth()>=9?y:y-1;
+  if(el&&!el.options.length){el.innerHTML=[y-1,y].map(function(t){return '<option value="'+t+'"'+(t===lalai?' selected':'')+'>'+t+'</option>';}).join('');}
+  return el&&el.value?parseInt(el.value,10):lalai;
+}
 function simulasiTransisi(){
-  var lama=new Date().getFullYear(),baru=lama+1,rows=[];
+  var lama=tahunDataSemasa(),baru=lama+1,rows=[];
   (dc.murid||[]).forEach(function(m){
     var t=parseInt(m.tahun,10),up=function(v){return String(v||'').toUpperCase().trim()||'-';};
     var r={m:m,uniformBaru:up(m.uniform),kelabBaru:up(m.kelab),sukanBaru:up(m.sukan),agih:false};
@@ -3761,7 +3778,7 @@ function paparTransisi(){
   var h='<div class="banner" style="background:var(--p2);"><i class="fa-solid fa-flask me-1"></i>Ini <b>simulasi</b>. Tiada data dalam Google Sheet diubah. Transisi sebenar hanya dijalankan selepas cikgu setuju.</div>'
    +'<div class="paj-top" style="grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:16px;"><div><b>'+R.length+'</b><span>Murid '+S.lama+'</span></div><div><b>'+naik.length+'</b><span>Naik darjah</span></div><div><b>'+grad.length+'</b><span>Graduan Thn 6 → arkib</span></div><div><b>'+S.baruT4.filter(function(r){return r.agih;}).length+'</b><span>Thn 4 baharu diagih</span></div></div>';
   var langkah='<h6>Apa yang akan berlaku (ikut urutan)</h6><ol class="sop-steps" style="margin:0;">'
-   +'<li><span><em>LANGKAH 1</em>Salinan penuh data '+S.lama+' disimpan sebagai sheet baharu "SIMPANAN '+S.lama+' - MASTER" sebelum apa-apa diubah.</span></li>'
+   +'<li><span><em>LANGKAH 1</em>Salinan penuh fail data '+S.lama+' disimpan dalam folder Google Drive "KOKOSMART SIMPANAN" sebelum apa-apa diubah. Boleh dilihat dan dipulihkan melalui menu Simpanan &amp; Tahun Lepas.</span></li>'
    +'<li><span><em>LANGKAH 2</em>Murid Tahun 1–5 naik satu darjah (nama kelas sama). '+grad.length+' murid Tahun 6 dipindah ke Arkib sebagai graduan '+S.lama+'.</span></li>'
    +'<li><span><em>LANGKAH 3</em>Rumah sukan, unit beruniform dan kelab &amp; persatuan <b>kekal sama</b>.</span></li>'
    +'<li><span><em>LANGKAH 4</em>Sukan dipusing satu langkah. Sukan di luar urutan tidak dilibatkan (kekal).</span></li>'
@@ -3831,6 +3848,109 @@ function eksportTransisi(){
   var blob=new Blob([xml],{type:'application/vnd.ms-excel'}),url=URL.createObjectURL(blob),a=document.createElement('a');
   a.href=url;a.download='SIMULASI_TRANSISI_'+S.baru+'.xls';document.body.appendChild(a);a.click();document.body.removeChild(a);
   setTimeout(function(){URL.revokeObjectURL(url);},5000);toast('✅ Senarai simulasi dimuat turun.','ok');
+}
+
+// ---------- SIMPANAN & TAHUN LEPAS (Simpanan.gs) ----------
+var _smList=null,_smData=null,_smQ={thn:'',kls:'',q:'',tab:'murid'};
+function smRalat(e){
+  var m=e&&e.message||String(e||'');
+  return /tidak dibenarkan|tidak dijumpai/i.test(m)?'Fail Apps Script Simpanan.gs belum dipasang. Ikut arahan pemasangan dahulu.':'Ralat: '+m;
+}
+function muatSimpanan(){
+  var z=document.getElementById('sm-senarai');
+  z.innerHTML='<div class="bx" style="color:var(--sub);font-weight:800;">Memuatkan senarai simpanan…</div>';
+  google.script.run.withSuccessHandler(function(res){
+    if(!res||!res.success){z.innerHTML='<div class="banner">'+esc(res&&res.error||'Gagal membaca senarai simpanan.')+'</div>';return;}
+    _smList=res.data||[];paparSenaraiSimpanan();
+  }).withFailureHandler(function(e){z.innerHTML='<div class="banner">'+esc(smRalat(e))+'</div>';}).senaraiSimpanan();
+}
+function paparSenaraiSimpanan(){
+  var z=document.getElementById('sm-senarai');
+  if(!_smList.length){z.innerHTML='<div class="bx kosong-box"><i class="fa-solid fa-box-open"></i>Belum ada simpanan. Tekan "Buat simpanan sekarang".</div>';return;}
+  z.innerHTML='<div class="bx rs-sek"><h6>Senarai simpanan ('+_smList.length+')</h6><div style="overflow-x:auto;"><table class="rs-tbl" style="min-width:640px;"><thead><tr><th>Nama simpanan</th><th>Tahun data</th><th>Dibuat</th><th></th></tr></thead><tbody>'
+   +_smList.map(function(f,i){var d=new Date(f.tarikh);return '<tr><td style="text-transform:none;">'+esc(f.nama)+'</td><td><b>'+esc(f.tahun||'-')+'</b></td><td>'+fmtTgl(d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2))+'</td>'
+     +'<td style="white-space:nowrap;text-align:right;"><button class="mini utama" onclick="lihatSimpanan('+i+')"><i class="fa-solid fa-eye me-1"></i>Lihat</button> <a class="mini" href="'+esc(f.url)+'" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block;">Drive</a> <button class="mini mer" onclick="pulihSimpanan('+i+')"><i class="fa-solid fa-rotate-left me-1"></i>Pulihkan</button></td></tr>';}).join('')
+   +'</tbody></table></div></div>';
+}
+function buatSimpananSekarang(){
+  showLoad();
+  google.script.run.withSuccessHandler(function(res){hideLoad();if(res&&res.success){toast('✅ Simpanan dibuat dalam Google Drive:\n'+res.nama,'ok');muatSimpanan();}else alert('Gagal: '+(res&&res.error||'Ralat'));})
+    .withFailureHandler(function(e){hideLoad();alert(smRalat(e));}).buatSimpanan('MANUAL');
+}
+function lihatSimpanan(i){
+  var f=_smList[i];if(!f)return;var z=document.getElementById('sm-lihat');
+  z.innerHTML='<div class="bx" style="color:var(--sub);font-weight:800;">Membaca data '+esc(f.nama)+'…</div>';showLoad();
+  google.script.run.withSuccessHandler(function(res){hideLoad();
+    if(!res||!res.success){z.innerHTML='<div class="banner">'+esc(res&&res.error||'Gagal membaca simpanan.')+'</div>';return;}
+    _smData=res;_smQ={thn:'',kls:'',q:'',tab:'murid'};paparLihatSimpanan();z.scrollIntoView({block:'start'});
+  }).withFailureHandler(function(e){hideLoad();z.innerHTML='<div class="banner">'+esc(smRalat(e))+'</div>';}).bacaSimpanan(f.id);
+}
+function paparLihatSimpanan(){
+  var D=_smData,z=document.getElementById('sm-lihat');if(!D)return;
+  var M=D.murid||[],c=[],mx=1;for(var t=1;t<=6;t++){var n=M.filter(function(m){return m.tahun===String(t);}).length;c.push(n);if(n>mx)mx=n;}
+  var r=D.rujukan||{},hd=(D.kehadiran||[]).filter(function(l){return /^hadir$/i.test(l.status);}).length,kn=(D.kehadiran||[]).length;
+  var kel=M.map(function(m){return m.kelas;}).filter(function(v,i,a){return v&&a.indexOf(v)===i;}).sort();
+  var h='<div class="banner" style="background:var(--p2);"><i class="fa-solid fa-eye me-1"></i>Paparan <b>baca sahaja</b>: '+esc(D.nama)+'. Tiada perubahan boleh dibuat di sini.</div>'
+   +'<div class="bento">'
+   +'<div class="bx bx-6"><div class="bx-h"><h6>Jumlah murid</h6></div><div class="bx-big">'+M.length+'<small>murid · '+(D.arkib||[]).length+' arkib</small></div><div class="thn-bar">'+c.map(function(n,i){return '<div><b>'+n+'</b><i style="height:'+Math.max(4,Math.round(n/mx*60))+'px"></i><span>THN '+(i+1)+'</span></div>';}).join('')+'</div></div>'
+   +'<div class="bx bx-6"><div class="bx-h"><h6>Ringkasan</h6></div><div class="paj-top" style="grid-template-columns:repeat(2,minmax(0,1fr));">'
+   +'<div><b>'+((r.rumah||[]).length+(r.uniform||[]).length+(r.kelab||[]).length+(r.sukan||[]).length)+'</b><span>Unit (rumah, uniform, kelab, sukan)</span></div>'
+   +'<div><b>'+(D.pencapaian||[]).length+'</b><span>Rekod pencapaian</span></div>'
+   +'<div><b>'+kn+'</b><span>Rekod kehadiran</span></div><div><b>'+(kn?Math.round(hd/kn*100)+'%':'–')+'</b><span>Peratus hadir</span></div></div></div></div>'
+   +'<div class="bx rs-sek" style="margin-top:16px;"><div class="bx-h"><div class="seg">'
+   +[['murid','Murid'],['arkib','Arkib'],['pencapaian','Pencapaian']].map(function(x){return '<button type="button" class="'+(_smQ.tab===x[0]?'on':'')+'" onclick="_smQ.tab=\''+x[0]+'\';paparLihatSimpanan()">'+x[1]+'</button>';}).join('')
+   +'</div><button class="mini" onclick="eksportSimpanan()"><i class="fa-solid fa-file-excel me-1"></i>Excel</button></div>';
+  if(_smQ.tab==='pencapaian'){
+    var P=(D.pencapaian||[]).filter(function(p){return !_smQ.q||p.nama.toLowerCase().indexOf(_smQ.q.toLowerCase())>=0;});
+    h+='<div class="sunk cari" style="display:flex;gap:8px;padding:10px 12px;border-radius:12px;"><i class="fa-solid fa-magnifying-glass" style="color:var(--sub);"></i><input id="sm-q" type="search" style="border:none;background:transparent;outline:none;color:var(--txt);width:100%;font-weight:700;" placeholder="Cari nama murid…" value="'+esc(_smQ.q)+'" oninput="_smQ.q=this.value;tunda(\'smq\',paparLihatSimpanan,250)"></div>'
+     +'<div style="overflow-x:auto;max-height:520px;overflow-y:auto;"><table class="rs-tbl" style="min-width:700px;"><thead><tr><th>Tarikh</th><th>Nama</th><th>Pertandingan</th><th>Peringkat</th><th>Pencapaian</th><th>Mata</th></tr></thead><tbody>'
+     +P.map(function(p){return '<tr><td>'+esc(p.tarikh)+'</td><td>'+esc(p.nama)+'</td><td>'+esc(p.pertandingan)+'</td><td>'+esc(p.peringkat)+'</td><td>'+esc(p.pencapaian)+'</td><td>'+p.mata+'</td></tr>';}).join('')+'</tbody></table></div>';
+  } else {
+    var src=_smQ.tab==='arkib'?(D.arkib||[]):M;
+    var L=src.filter(function(m){return (!_smQ.thn||m.tahun===_smQ.thn)&&(!_smQ.kls||m.kelas===_smQ.kls)&&(!_smQ.q||m.nama.toLowerCase().indexOf(_smQ.q.toLowerCase())>=0);});
+    h+='<div class="pk-row"><select class="form-select" style="width:auto;" onchange="_smQ.thn=this.value;paparLihatSimpanan()"><option value="">Semua tahun</option>'+[1,2,3,4,5,6].map(function(t){return '<option value="'+t+'"'+(_smQ.thn===String(t)?' selected':'')+'>Tahun '+t+'</option>';}).join('')+'</select>'
+     +'<select class="form-select" style="width:auto;" onchange="_smQ.kls=this.value;paparLihatSimpanan()"><option value="">Semua kelas</option>'+opsyen(kel,_smQ.kls)+'</select>'
+     +'<input id="sm-q" type="search" class="form-control" style="flex:1 1 200px;" placeholder="Cari nama murid…" value="'+esc(_smQ.q)+'" oninput="_smQ.q=this.value;tunda(\'smq\',paparLihatSimpanan,250)"></div>'
+     +'<p style="margin:0;font-size:11px;font-weight:800;color:var(--sub);">'+L.length+' murid</p>'
+     +'<div style="overflow-x:auto;max-height:520px;overflow-y:auto;"><table class="rs-tbl" style="min-width:760px;"><thead><tr><th>Nama</th><th>Tahun</th><th>Kelas</th><th>Rumah</th><th>Uniform</th><th>Kelab</th><th>Sukan</th></tr></thead><tbody>'
+     +L.map(function(m){return '<tr><td>'+esc(m.nama)+'</td><td>'+esc(m.tahun)+'</td><td>'+esc(m.kelas)+'</td><td>'+esc(m.rumah)+'</td><td>'+esc(m.uniform)+'</td><td>'+esc(m.kelab)+'</td><td>'+esc(m.sukan)+'</td></tr>';}).join('')+'</tbody></table></div>';
+  }
+  h+='</div>';
+  var foc=document.activeElement&&document.activeElement.id==='sm-q';
+  z.innerHTML=h;
+  if(foc){var q=document.getElementById('sm-q');if(q){q.focus();q.setSelectionRange(q.value.length,q.value.length);}}
+}
+function eksportSimpanan(){
+  var D=_smData;if(!D)return;
+  var x=function(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');};
+  var cel=function(v,st){return '<Cell'+(st?' ss:StyleID="'+st+'"':'')+'><Data ss:Type="String">'+x(v)+'</Data></Cell>';};
+  function helaian(nama,H,rows){return '<Worksheet ss:Name="'+x(nama)+'"><Table><Row>'+H.map(function(h){return cel(h,'h');}).join('')+'</Row>'+rows.map(function(r){return '<Row>'+r.map(function(v){return cel(v);}).join('')+'</Row>';}).join('')+'</Table></Worksheet>';}
+  var HM=['NAMA','TAHUN','KELAS','RUMAH','UNIFORM','KELAB','SUKAN'],fm=function(m){return [m.nama,m.tahun,m.kelas,m.rumah,m.uniform,m.kelab,m.sukan];};
+  var xml='<?xml version="1.0" encoding="UTF-8"?><?mso-application progid="Excel.Sheet"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><Styles><Style ss:ID="h"><Font ss:Bold="1"/><Interior ss:Color="#D9E2F3" ss:Pattern="Solid"/></Style></Styles>'
+   +helaian('MURID',HM,(D.murid||[]).map(fm))+helaian('ARKIB',HM,(D.arkib||[]).map(fm))
+   +helaian('PENCAPAIAN',['TARIKH','NAMA','PERTANDINGAN','PERINGKAT','PENCAPAIAN','MATA'],(D.pencapaian||[]).map(function(p){return [p.tarikh,p.nama,p.pertandingan,p.peringkat,p.pencapaian,p.mata];}))+'</Workbook>';
+  var blob=new Blob([xml],{type:'application/vnd.ms-excel'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download=String(D.nama||'SIMPANAN').replace(/[^\w-]+/g,'_')+'.xls';document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(url);},5000);toast('✅ Data simpanan dimuat turun.','ok');
+}
+function pulihSimpanan(i){
+  var f=_smList[i];if(!f)return;var el=pastiModal('mod-pulih');
+  el.firstChild.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;"><h5 style="margin:0;color:var(--c4);"><i class="fa-solid fa-rotate-left me-2"></i>Pulihkan data</h5><button class="ib" style="width:38px;height:38px;" onclick="document.getElementById(\'mod-pulih\').classList.remove(\'show\')" aria-label="Tutup"><i class="fa-solid fa-xmark"></i></button></div>'
+   +'<p style="font-size:12px;font-weight:700;line-height:1.55;margin:0 0 10px;text-transform:none;">'+esc(f.nama)+'</p>'
+   +'<div class="ss-list" style="margin-bottom:12px;"><div class="ss-item" style="cursor:default;"><i class="fa-solid fa-rotate-left" style="color:var(--c4);margin-top:3px;"></i><span><b>Dipulihkan:</b> senarai murid (MASTER) dan arkib, kembali seperti dalam simpanan ini.</span></div>'
+   +'<div class="ss-item" style="cursor:default;"><i class="fa-solid fa-shield-halved" style="color:var(--c3);margin-top:3px;"></i><span><b>Tidak disentuh:</b> kehadiran, pencapaian, jawatankuasa dan rekod lain.<span class="who">Data semasa disimpan dahulu ("SEBELUM PULIH"), jadi tindakan ini boleh diundur.</span></span></div></div>'
+   +'<input id="pulih-pwd" type="password" class="form-control" placeholder="Kata laluan sistem" autocomplete="off">'
+   +'<div class="pk-row" style="margin-top:14px;"><button class="btn btn-danger pk-btn" id="pulih-ok">Pulihkan</button><button class="btn btn-secondary pk-btn" onclick="document.getElementById(\'mod-pulih\').classList.remove(\'show\')">Batal</button></div>';
+  el.classList.add('show');
+  document.getElementById('pulih-ok').onclick=function(){
+    var pwd=(document.getElementById('pulih-pwd').value||'').trim();if(!pwd)return alert('Masukkan kata laluan sistem.');
+    if(!confirm('Pulihkan senarai murid & arkib daripada simpanan ini?'))return;
+    el.classList.remove('show');showLoad();
+    google.script.run.withSuccessHandler(function(res){hideLoad();
+      if(res&&res.success){toast('✅ Dipulihkan: '+res.murid+' murid, '+res.arkib+' arkib.\nSimpanan sebelum pulih: '+res.simpananSebelum,'ok');muatSemua(true);muatSimpanan();}
+      else alert('Gagal: '+(res&&res.error||'Ralat'));
+    }).withFailureHandler(function(e){hideLoad();alert(smRalat(e));}).pulihkanSimpanan(pwd,f.id);
+  };
 }
 
 // ---------- PAPARAN MODUL GENERIK ----------

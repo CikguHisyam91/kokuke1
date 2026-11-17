@@ -10,7 +10,7 @@ dan beri arahan langkah demi langkah (gaya "padam semua & tampal semula").
 - `sw.js` — service worker. **Naikkan nombor `CACHE`** setiap kali fail paparan berubah.
 - `logo.png` — logo rasmi sekolah (WAJIB digunakan dalam semua laporan). `icon-*.png` — ikon aplikasi.
 - Data dalam Google Sheet; API ialah Apps Script: `Code.gs`, `Data.gs`, `Simpan.gs` (**tidak** disimpan dalam repo
-  kerana `Code.gs` mengandungi kata laluan asal) dan `apps-script/Rekod.gs`, `apps-script/Transisi.gs` (disimpan dalam repo, tiada rahsia).
+  kerana `Code.gs` mengandungi kata laluan asal) dan `apps-script/Rekod.gs`, `Transisi.gs`, `Simpanan.gs` (disimpan dalam repo, tiada rahsia).
   Pengguna menampalnya sendiri ke Apps Script, kemudian Deploy → Manage deployments → New version.
   Fungsi baharu mesti ditambah ke `senaraiApi()` dalam `Code.gs`, jika tidak ia ditolak oleh `doPost`.
   Code.gs pengguna mungkin telah dikemas kini oleh sesi lain — jangan minta pengguna ganti seluruh Code.gs;
@@ -23,6 +23,7 @@ dan beri arahan langkah demi langkah (gaya "padam semua & tampal semula").
 - Modul baharu dijana daripada definisi `MODUL` (Takwim, Mesyuarat, Surat, Unit, Program, Kewangan, Kursus, Aset, Rujukan);
   setiap modul = satu sheet "KOKO - <SHEET>" melalui `Rekod.gs`. Tajuk lajur = label medan, jadi jangan tukar label sesuka hati.
 - Transisi tahun baharu: logik dalam `simulasiTransisi()` (index.html); `jalankanTransisi()` menghantar pelan yang SAMA ke `laksanaTransisiTahun` (Transisi.gs). Sukan dipusing ikut `SUKAN_PUSINGAN`; Tahun 3→4 diagih seimbang; murid bukan Islam (tiada BIN/BINTI) tidak ke unit berunsur Islam.
+- Simpanan: salinan penuh fail data ke folder Drive "KOKOSMART SIMPANAN" (`Simpanan.gs`); menu Simpanan & Tahun Lepas untuk lihat (baca sahaja) dan pulihkan MASTER+ARKIB (simpan "SEBELUM PULIH" dahulu).
 - `SOP` = 13 proses kerja daripada Fail Meja PK Kokurikulum (tcer.my); "Mulakan program" menjadikannya senarai semak program.
 
 ## Kebenaran pemilik

@@ -4,7 +4,8 @@
 // (menu: Transisi Tahun Baharu). Fail ini berdiri sendiri.
 //
 // Urutan:
-//   1. Salin sheet MASTER dan ARKIB sebagai "SIMPANAN <tahun> - MASTER/ARKIB"
+//   1. Simpanan penuh ke folder Drive "KOKOSMART SIMPANAN" (perlu Simpanan.gs);
+//      jika tiada, salin sheet MASTER & ARKIB sebagai "SIMPANAN <tahun> - MASTER/ARKIB"
 //   2. Murid NAIK: tahun, uniform, kelab, sukan dikemas kini ikut pelan
 //      (rumah sukan & kelas tidak diubah)
 //   3. Murid GRADUAN (Tahun 6): dipindah ke ARKIB dengan catatan "GRADUASI <tahun>"
@@ -29,10 +30,18 @@ function laksanaTransisiTahun(pwd, pelan, tahunLama) {
     }
     var thn = String(tahunLama || new Date().getFullYear());
 
-    // 1) SALINAN SIMPANAN dahulu
-    var namaSimpan = _trNamaUnik(ss, 'SIMPANAN ' + thn + ' - MASTER');
-    master.copyTo(ss).setName(namaSimpan);
-    arkib.copyTo(ss).setName(_trNamaUnik(ss, 'SIMPANAN ' + thn + ' - ARKIB'));
+    // 1) SALINAN SIMPANAN dahulu: fail penuh dalam folder Drive "KOKOSMART SIMPANAN" (Simpanan.gs);
+    //    jika Simpanan.gs belum dipasang, salin sheet MASTER & ARKIB dalam fail yang sama.
+    var namaSimpan;
+    if (typeof buatSimpanan === 'function') {
+      var sp = buatSimpanan('SEBELUM TRANSISI ' + (parseInt(thn, 10) + 1), thn);
+      if (!sp.success) return { success: false, error: 'Simpanan gagal, transisi dibatalkan: ' + sp.error };
+      namaSimpan = sp.nama;
+    } else {
+      namaSimpan = _trNamaUnik(ss, 'SIMPANAN ' + thn + ' - MASTER');
+      master.copyTo(ss).setName(namaSimpan);
+      arkib.copyTo(ss).setName(_trNamaUnik(ss, 'SIMPANAN ' + thn + ' - ARKIB'));
+    }
 
     // Peta pelan: cuba BIL+NAMA dahulu, kemudian NAMA sahaja
     var ikutBilNama = {}, ikutNama = {};
