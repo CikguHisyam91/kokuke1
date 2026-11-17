@@ -721,8 +721,8 @@ body[data-theme="dark"] .sw-tema i{transform:translateX(30px);color:var(--c2);}
       <div class="col-6 col-md-3 d-none" id="h-prog-col"><label class="small fw-bold mb-1">Nama Program / Aktiviti</label><input type="text" id="h-program" class="form-control" placeholder="Cth. Hari Kokurikulum" autocomplete="off"><small style="font-size:10px;color:var(--sub);font-weight:700;">PKKo / SU Koku akan tag ke unit kemudian.</small></div>
       <div class="col-6 col-md-2"><label class="small fw-bold mb-1">Tahun Aliran</label><select id="h-thn" class="form-select" onchange="hMuatMurid()"><option value="4">4</option><option value="5">5</option><option value="6">6</option></select></div>
       <div class="col-6 col-md-2 d-none" id="h-kls-col"><label class="small fw-bold mb-1">Kelas</label><select id="h-kls" class="form-select" onchange="hMuatMurid()"></select></div>
-      <div class="col-6 col-md-2"><label class="small fw-bold mb-1">Siri Ke-</label><select id="h-siri" class="form-select"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></div>
-      <div class="col-12 col-md-2"><label class="small fw-bold mb-1">Tarikh</label><input type="date" id="h-tarikh" class="form-control"></div>
+      <div class="col-6 col-md-2"><label class="small fw-bold mb-1">Siri Ke-</label><select id="h-siri" class="form-select"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option></select></div>
+      <div class="col-12 col-md-2"><label class="small fw-bold mb-1">Tarikh</label><input type="date" id="h-tarikh" class="form-control" onchange="hSiriTakwim()"></div>
       <div class="col-12 position-relative"><label class="small fw-bold mb-1" style="color:var(--c1);">👨‍🏫 Nama Guru Bertugas</label>
         <input type="text" id="h-guru" class="form-control" placeholder="Taip nama guru..." autocomplete="off" oninput="suggestGuru(this.value,'sg-hadir','h-guru')" onchange="hGuruCadang()">
         <div id="sg-hadir" class="suggest-box d-none"></div>
@@ -775,6 +775,7 @@ body[data-theme="dark"] .sw-tema i{transform:translateX(30px);color:var(--c2);}
       <div class="col-md-4 d-flex align-items-end"><button class="btn w-100 fw-bold" onclick="window.print()" style="background:var(--c5);color:#000;border:none;"><i class="fa-solid fa-print me-1"></i>Cetak Pukal</button></div>
     </div>
   </div>
+  <div id="kopr-status" class="no-print"></div>
   <div id="kopr-zone"></div>
 </div>
 
@@ -2253,7 +2254,7 @@ function koprTab(tab){
 }
 function koprKategori(){
   var kat=document.getElementById('kopr-kat').value;
-  isiSelect('kopr-unit',dc.rujukan[kat]||[]);
+  isiSelect('kopr-unit',hUnitSekolah(kat));
   koprLoad();
 }
 function _imgsHtml(link,tinggi){
@@ -2271,6 +2272,7 @@ function _oprCard(o,gi){
     +'<div class="d-flex justify-content-between align-items-center mt-2 no-print"><button onclick="editStatusKehadiran(this,'+gi+')" style="background:rgba(6,182,212,.15);color:#0e7490;border:none;border-radius:6px;padding:5px 12px;font-weight:700;font-size:11px;cursor:pointer;">✏️ Edit Status</button><button onclick="cetakSatuOpr(this)" style="background:#ef4444;color:#fff;border:none;border-radius:6px;padding:5px 12px;font-weight:700;font-size:11px;cursor:pointer;">🖨️ Cetak</button></div></div>';
 }
 function koprLoad(){
+  try{koprStatus();}catch(e){}
   var unit=document.getElementById('kopr-unit').value;
   var zone=document.getElementById('kopr-zone');
   _oprGrp=[];
@@ -4022,6 +4024,83 @@ function eksportTransisi(){
 
 
 
+
+
+// ---------- STATUS 12 PERJUMPAAN WAJIB (Koleksi OPR) ----------
+var OPR_WAJIB=12,_kpBuka='',JNAMA={};
+var KP_KAT={uniform:{k:'Unit Beruniform',re:/uniform/i},kelab:{k:'Kelab & Persatuan',re:/kelab|persatuan/i},sukan:{k:'Sukan & Permainan',re:/sukan|permainan/i}};
+// Jadual perjumpaan daripada takwim (cth. "Unit Uniform 3" bersasaran #Unit Beruniform)
+function jadualPerjumpaan(kat,thn){
+  var c=KP_KAT[kat];if(!c)return {};var o={};
+  (dr.takwim||[]).forEach(function(t){
+    var tg=tglIso(t.tarikh);if(!tg||tg.slice(0,4)!==thn)return;
+    if(String(t.sasaran||'').indexOf('#'+c.k)<0&&!c.re.test(t.aktiviti||''))return;
+    var m=String(t.aktiviti||'').match(/(?:kali\s*(?:ke-?)?\s*)?(\d{1,2})\s*$/i);if(!m||!c.re.test(t.aktiviti||''))return;
+    var n=+m[1];if(n>=1&&n<=OPR_WAJIB&&!o[n]){o[n]=tg;JNAMA[kat+'|'+n]=t.aktiviti;}
+  });
+  return o;
+}
+function oprUnit(unit,thn){
+  var s={};(dc.kehadiran||[]).forEach(function(l){if(!sama(l.namaUnit,unit))return;var y=tahunDari(l.tarikh)||tglIso(l.tarikh).slice(0,4);if(y&&y!==thn)return;
+    var n=parseInt(l.perjumpaanKe,10);if(!n)return;(s[n]=s[n]||{t:{},tarikh:l.tarikh})[ 't' ][l.tahunAliran||'-']=1;});
+  return s;
+}
+function koprStatus(){
+  var z=document.getElementById('kopr-status');if(!z)return;
+  var kat=document.getElementById('kopr-kat').value,thn=String(new Date().getFullYear()),hi=hariIniIso();
+  var J=jadualPerjumpaan(kat,thn),nJ=Object.keys(J).length,U=hUnitSekolah(kat),pilih=document.getElementById('kopr-unit').value;
+  var lepas=Object.keys(J).filter(function(n){return J[n]<=hi;}).map(Number);
+  var rows=U.map(function(u){var s=oprUnit(u,thn),ada=Object.keys(s).map(Number).filter(function(n){return n<=OPR_WAJIB;});var tung=lepas.filter(function(n){return !s[n];});return {u:u,s:s,n:ada.length,tung:tung};});
+  var lengkap=rows.filter(function(r){return r.n>=OPR_WAJIB;}).length,tert=rows.filter(function(r){return r.tung.length;}).length;
+  var h='<div class="card-g"><div class="bx-h" style="margin-bottom:10px;"><h6 style="margin:0;font-size:12px;font-weight:900;letter-spacing:.12em;color:var(--sub);">STATUS '+OPR_WAJIB+' PERJUMPAAN WAJIB '+thn+' · '+esc(KP_KAT[kat].k.toUpperCase())+'</h6></div>'
+   +'<div class="tk-stat"><div style="border-left-color:#1f9d55;"><b>'+lengkap+'/'+U.length+'</b><span>UNIT LENGKAP</span></div><div style="border-left-color:#dc2626;"><b>'+tert+'</b><span>UNIT ADA TERTUNGGAK</span></div>'
+   +'<div style="border-left-color:#2f6fb3;"><b>'+lepas.length+'/'+OPR_WAJIB+'</b><span>PERJUMPAAN SEPATUTNYA SELESAI</span></div><div style="border-left-color:#eab308;"><b>'+nJ+'</b><span>PERJUMPAAN DALAM TAKWIM</span></div></div>'
+   +(nJ<OPR_WAJIB?'<div class="banner" style="margin-bottom:10px;"><i class="fa-solid fa-triangle-exclamation me-1"></i>Takwim '+thn+' hanya ada <b>'+nJ+'</b> daripada '+OPR_WAJIB+' perjumpaan '+esc(KP_KAT[kat].k)+'. Tambah perjumpaan yang belum dijadualkan dalam Takwim (contoh: "'+esc(kat==='uniform'?'Unit Uniform':kat==='kelab'?'Kelab Persatuan':'Sukan Permainan')+' '+(nJ+1)+'").</div>':'')
+   +(tert?'<div class="pk-row" style="margin-bottom:10px;"><button class="btn btn-danger" onclick="kpSalinPeringatan()"><i class="fa-solid fa-copy me-1"></i>Salin mesej peringatan (WhatsApp / Telegram)</button><button class="btn btn-secondary" onclick="kpCetakPeringatan()"><i class="fa-solid fa-print me-1"></i>Cetak senarai tertunggak</button></div>':'')
+   +'<div style="display:flex;flex-direction:column;gap:6px;">'+rows.map(function(r){
+     var pct=Math.min(100,Math.round(r.n/OPR_WAJIB*100)),ok=r.n>=OPR_WAJIB,w=ok?'#1f9d55':r.tung.length?'#dc2626':'#eab308',buka=_kpBuka===r.u||(!_kpBuka&&sama(pilih,r.u));
+     var h2='<div class="kp-row" style="border:1px solid var(--glow);border-left:5px solid '+w+';border-radius:12px;padding:8px 12px;cursor:pointer;" onclick="_kpBuka=_kpBuka===\''+esc(r.u).replace(/'/g,"\\'")+'\'?\'-\':\''+esc(r.u).replace(/'/g,"\\'")+'\';document.getElementById(\'kopr-unit\').value=\''+esc(r.u).replace(/'/g,"\\'")+'\';koprLoad()">'
+      +'<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center;"><b style="font-size:12px;letter-spacing:.05em;">'+esc(r.u)+'</b>'
+      +'<span class="tag" style="background:'+w+';color:#fff;">'+(ok?'LENGKAP':'TIDAK LENGKAP')+' · '+r.n+'/'+OPR_WAJIB+'</span></div>'
+      +'<div style="height:8px;border-radius:5px;background:var(--inp);overflow:hidden;margin-top:6px;"><i style="display:block;height:100%;width:'+pct+'%;background:'+w+';"></i></div>'
+      +(r.tung.length?'<div style="margin-top:6px;display:flex;flex-direction:column;gap:2px;">'+r.tung.map(function(n){return '<div style="font-size:10.5px;font-weight:800;color:#dc2626;">✗ '+kpHari(J[n])+' : '+esc(JNAMA[kat+'|'+n]||('Perjumpaan '+n))+'</div>';}).join('')+'</div>':'');
+     if(buka){h2+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:6px;margin-top:8px;">';
+       for(var n=1;n<=OPR_WAJIB;n++){var a=r.s[n],tg=J[n],st=a?'ok':tg&&tg<=hi?'tung':tg?'akan':'tiada';
+         var C={ok:['#1f9d55','✓ ADA OPR'],tung:['#dc2626','✗ TERTUNGGAK'],akan:['#2f6fb3','AKAN DATANG'],tiada:['#94a3b8','TIADA DLM TAKWIM']}[st];
+         h2+='<div style="border:1px solid '+C[0]+';border-radius:10px;padding:6px 8px;background:'+(st==='ok'?'rgba(31,157,85,.1)':st==='tung'?'rgba(220,38,38,.08)':'transparent')+';"><div style="font-size:11px;font-weight:900;">P'+n+(tg?' · '+fmtTgl(tg).slice(0,5):'')+'</div><div style="font-size:9.5px;font-weight:900;letter-spacing:.06em;color:'+C[0]+';">'+C[1]+'</div>'
+          +(a?'<div style="font-size:9.5px;font-weight:800;color:var(--sub);">'+Object.keys(a.t).sort().map(function(t){return 'T'+t;}).join(' ')+'</div>':'')+'</div>';}
+       h2+='</div>';}
+     return h2+'</div>';}).join('')+'</div>'
+   +'<p style="margin:8px 0 0;font-size:10.5px;font-weight:800;color:var(--sub);">Lengkap = '+OPR_WAJIB+' perjumpaan berbeza (ikut "Siri Ke-") ada OPR. Tertunggak = tarikh perjumpaan dalam takwim sudah lepas tetapi tiada OPR. Tekan nama unit untuk butiran P1–P'+OPR_WAJIB+'.</p></div>';
+  z.innerHTML=h;_kpRows={kat:kat,thn:thn,J:J,rows:rows};
+}
+
+var _kpRows=null,HARI_PENUH=['Ahad','Isnin','Selasa','Rabu','Khamis','Jumaat','Sabtu'];
+function kpHari(tg){if(!tg)return '-';var d=new Date(tg+'T00:00:00');return fmtTgl(tg)+' ('+HARI_PENUH[d.getDay()]+')';}
+function kpTeks(){
+  if(!_kpRows)return '';var R=_kpRows,L=R.rows.filter(function(r){return r.tung.length;});
+  return '*PERINGATAN OPR KOKURIKULUM '+R.thn+'*\n'+KP_KAT[R.kat].k.toUpperCase()+'\nPerjumpaan berikut belum ada laporan OPR. Mohon guru penasihat mengisi laporan dalam KokoSmart (Isi Laporan).\n\n'
+   +L.map(function(r){return '*'+r.u+'* ('+r.n+'/'+OPR_WAJIB+')\n'+r.tung.map(function(n){return '- '+kpHari(R.J[n])+' : '+(JNAMA[R.kat+'|'+n]||'Perjumpaan '+n);}).join('\n');}).join('\n\n')
+   +'\n\nTerima kasih.';
+}
+function kpSalinPeringatan(){
+  var t=kpTeks();if(!t)return;
+  var ok=function(){toast('✅ Mesej peringatan disalin. Tampal dalam WhatsApp / Telegram.','ok');};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(ok,function(){prompt('Salin mesej ini:',t);});else prompt('Salin mesej ini:',t);
+}
+function kpCetakPeringatan(){
+  if(!_kpRows)return;var R=_kpRows,td='border:1px solid #000;padding:4px 7px;font-size:10pt;',L=R.rows.filter(function(r){return r.tung.length;});
+  var h=kepalaKertas('SENARAI PERJUMPAAN BELUM ADA OPR '+R.thn,KP_KAT[R.kat].k.toUpperCase()+' · dikemas kini '+fmtTgl(hariIniIso()))
+   +'<table><tr style="background:#d9e2f3;font-weight:bold;"><th style="'+td+'">BIL</th><th style="'+td+'">UNIT</th><th style="'+td+'">OPR</th><th style="'+td+'">TARIKH PERJUMPAAN</th><th style="'+td+'">JENIS PERJUMPAAN</th></tr>';
+  var b=0;L.forEach(function(r){r.tung.forEach(function(n,i){h+='<tr>'+(i===0?'<td rowspan="'+r.tung.length+'" style="'+td+'text-align:center;">'+(++b)+'</td><td rowspan="'+r.tung.length+'" style="'+td+'font-weight:bold;">'+esc(r.u)+'</td><td rowspan="'+r.tung.length+'" style="'+td+'text-align:center;">'+r.n+'/'+OPR_WAJIB+'</td>':'')+'<td style="'+td+'">'+esc(kpHari(R.J[n]))+'</td><td style="'+td+'">'+esc(JNAMA[R.kat+'|'+n]||'Perjumpaan '+n)+'</td></tr>';});});
+  paparKertas([h+'</table>'],'Perjumpaan tertunggak');
+}
+
+// Isi Laporan: tarikh sepadan perjumpaan dalam takwim → siri dicadang
+function hSiriTakwim(){
+  var kat=document.getElementById('h-kat').value,tg=document.getElementById('h-tarikh').value;if(!KP_KAT[kat]||!tg)return;
+  var J=jadualPerjumpaan(kat,tg.slice(0,4));for(var n in J)if(J[n]===tg){document.getElementById('h-siri').value=String(n);toast('Perjumpaan ke-'+n+' (ikut takwim)','info');return;}
+}
 
 // ---------- MENU PANTAS (laman utama) ----------
 function hPantas(){
