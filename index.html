@@ -345,6 +345,31 @@ body[data-theme="dark"] .sw-tema i{transform:translateX(30px);color:var(--c2);}
 .ktoast{box-shadow:0 8px 24px rgba(0,0,0,.18);}
 
 /* ===== Laman utama Bento ===== */
+.oc-wrap{overflow-x:auto;padding:4px 2px 10px;}
+.oc,.oc ul{margin:0;padding:0;}
+.oc{width:max-content;min-width:100%;}
+.oc-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+.oc-grid{display:flex;flex-wrap:wrap;gap:4px 12px;justify-content:center;max-width:760px;border:2px dashed var(--oc-line,#b9b1aa);border-radius:20px;padding:4px 14px 14px;margin-top:0;}
+.oc-grid .oc-n{width:200px;}
+.oc ul{display:flex;justify-content:center;padding-top:22px;position:relative;}
+.oc>ul{padding-top:0;}
+.oc li{list-style:none;text-align:center;position:relative;padding:22px 6px 0;display:flex;flex-direction:column;align-items:center;}
+.oc li::before,.oc li::after{content:'';position:absolute;top:0;right:50%;width:50%;height:22px;border-top:2px solid var(--oc-line,#b9b1aa);}
+.oc li::after{right:auto;left:50%;border-left:2px solid var(--oc-line,#b9b1aa);}
+.oc li:only-child::before,.oc li:only-child::after{display:none;}
+.oc li:only-child{padding-top:0;}
+.oc li:first-child::before,.oc li:last-child::after{border:0 none;}
+.oc li:last-child::before{border-right:2px solid var(--oc-line,#b9b1aa);border-radius:0 10px 0 0;}
+.oc li:first-child::after{border-radius:10px 0 0 0;}
+.oc ul ul::before{content:'';position:absolute;top:0;left:50%;height:22px;border-left:2px solid var(--oc-line,#b9b1aa);}
+.oc-n{min-width:150px;max-width:240px;background:var(--card,#fff);color:var(--txt,#141414);border:1px solid var(--glow,#e4ded8);border-top:5px solid var(--w);border-radius:16px;padding:22px 12px 10px;position:relative;margin-top:16px;text-align:center;}
+.oc-n .ik{position:absolute;top:-18px;left:50%;transform:translateX(-50%);width:36px;height:36px;border-radius:50%;background:var(--w);color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;border:3px solid var(--card,#fff);}
+.oc-n .jw{font-size:9.5px;font-weight:900;letter-spacing:.12em;color:var(--w);text-transform:uppercase;margin-bottom:4px;}
+.oc-n .nm{font-size:10.5px;font-weight:800;line-height:1.35;letter-spacing:.02em;text-transform:uppercase;}
+.oc-n .nm div+div{border-top:1px dashed var(--glow,#e4ded8);margin-top:3px;padding-top:3px;}
+.oc-n.t1{min-width:200px;}.oc-n.t1 .nm{font-size:12px;}
+.oc-n.kump{background:transparent;border-style:dashed;border-top-style:solid;}
+@media(max-width:700px){.oc{width:auto;}.oc-grid{max-width:100%;padding:4px 6px 10px;}.oc ul{flex-direction:column;align-items:center;}.oc li{padding:16px 0 0;}.oc li::before,.oc li::after{display:none;}.oc ul ul::before{display:none;}.oc li+li{border-top:0;}.oc-n{min-width:220px;}}
 .qk-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;}
 @media(max-width:860px){.qk-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
 .qk{display:flex;align-items:center;gap:12px;border:1px solid var(--glow);border-radius:16px;padding:12px 14px;background:var(--card);color:var(--txt);text-align:left;cursor:pointer;min-width:0;min-height:64px;}
@@ -1021,7 +1046,7 @@ body[data-theme="dark"] .sw-tema i{transform:translateX(30px);color:var(--c2);}
 <div id="view-jkguru" class="view-section">
   <div class="mod-head"><div><h3><i class="fa-solid fa-people-roof me-2" style="color:var(--c1);"></i>JK Kokurikulum Guru</h3>
   <p>Jawatankuasa guru unit Kokurikulum, dibaca terus dari Portal Pengurusan Sekolah. Kemas kini dibuat di Portal; KokoSmart ikut serta-merta.</p></div>
-  <div class="pk-row"><button class="btn btn-secondary" onclick="muatPortal(true)"><i class="fa-solid fa-rotate me-1"></i>Muat semula</button><button class="btn btn-danger" onclick="cetakJkGuru()"><i class="fa-solid fa-print me-1"></i>Cetak carta</button></div></div>
+  <div class="pk-row"><button class="btn btn-secondary" onclick="muatPortal(true)"><i class="fa-solid fa-rotate me-1"></i>Muat semula</button><button class="btn btn-danger" onclick="cetakCarta()"><i class="fa-solid fa-sitemap me-1"></i>Cetak semua carta</button><button class="btn btn-secondary" onclick="cetakJkGuru()"><i class="fa-solid fa-table me-1"></i>Cetak senarai</button></div></div>
   <div id="jk-zone" style="margin-top:16px;"></div>
 </div>
 
@@ -4171,6 +4196,8 @@ function paparJkGuru(){
    +'<select class="form-select" style="flex:0 1 240px;" onchange="_jkQ.k=this.value;paparJkGuru()"><option value="">Semua kategori</option>'+kat.map(function(k){return '<option'+(k===_jkQ.k?' selected':'')+'>'+esc(k)+'</option>';}).join('')+'</select></div>';
   if(q&&q.length>=3){var tg=[];J.forEach(function(j){j.ahli.forEach(function(a){if(a.nama.indexOf(q)>=0)tg.push({j:j,a:a});});});
     if(tg.length){var nm=tg[0].a.nama;h+='<div class="banner" style="margin-top:10px;background:var(--p2);"><b>'+esc(nm)+'</b>: '+tg.length+' tugasan Kokurikulum — '+tg.map(function(t){return esc(t.a.jawatan)+' '+esc(t.j.nama);}).join(' · ')+'</div>';}}
+  var induk=J.filter(function(j){return /induk/i.test(j.nama);})[0];
+  if(induk&&!q&&!_jkQ.k)h+='<div class="bx-h" style="margin-top:14px;"><h6>Carta organisasi '+esc(induk.nama)+'</h6><button class="mini" onclick="cetakCarta(\''+induk.id+'\')"><i class="fa-solid fa-print me-1"></i>Cetak</button></div><div class="oc-wrap">'+ocHtml(induk)+'</div>';
   h+='<p style="margin:8px 0 0;font-size:11px;font-weight:800;color:var(--sub);">'+L.length+' jawatankuasa · dikemas kini '+esc(new Date(_pt.masa||Date.now()).toLocaleString('ms-MY'))+'</p></div>';
   h+='<div class="rs-grid" style="margin-top:16px;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));">'+L.map(function(j){
     var u=UJ[j.id],grp={},ord=[];j.ahli.forEach(function(a){if(!grp[a.jawatan]){grp[a.jawatan]=[];ord.push(a.jawatan);}grp[a.jawatan].push(a.nama);});
@@ -4179,10 +4206,60 @@ function paparJkGuru(){
      +'<div style="margin-top:8px;display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:700;">'
      +(ord.length?ord.map(function(k){return '<div><span style="color:var(--sub);">'+esc(k)+':</span> '+grp[k].map(function(n){return '<span'+(q&&n.indexOf(q)>=0?' style="background:var(--p4);border-radius:4px;padding:0 3px;"':'')+'>'+esc(n)+'</span>';}).join(', ')+'</div>';}).join(''):'<span style="color:var(--sub);">Tiada ahli direkod</span>')
      +(j.catatan?'<div style="color:var(--sub);">'+esc(j.catatan)+'</div>':'')+'</div>'
-     +'<div class="pk-row" style="margin-top:8px;"><button class="mini" onclick="cetakJkGuru(\''+j.id+'\')"><i class="fa-solid fa-print me-1"></i>Cetak</button></div></div>';}).join('')+'</div>';
+     +'<div class="pk-row" style="margin-top:8px;"><button class="mini utama" onclick="bukaCarta(\''+j.id+'\')"><i class="fa-solid fa-sitemap me-1"></i>Carta</button><button class="mini" onclick="cetakCarta(\''+j.id+'\')"><i class="fa-solid fa-print me-1"></i>Cetak carta</button><button class="mini" onclick="cetakJkGuru(\''+j.id+'\')"><i class="fa-solid fa-table me-1"></i>Senarai</button></div></div>';}).join('')+'</div>';
   var foc=document.activeElement&&document.activeElement.id==='jk-q';z.innerHTML=h;
   if(foc){var e=document.getElementById('jk-q');e.focus();e.setSelectionRange(e.value.length,e.value.length);}
 }
+
+// ---------- CARTA ALIR ORGANISASI (gaya SmartArt) ----------
+function ocIkon(j){
+  var x=String(j||'').toLowerCase();
+  var P=[[/^pengerusi|^ketua|^guru besar|^pengurus$/,'fa-crown'],[/timbalan|naib|penolong kem/,'fa-user-tie'],[/kem komandan/,'fa-campground'],[/penolong setiausaha|setiausaha/,'fa-pen-nib'],[/bendahari/,'fa-coins'],[/quartermaster/,'fa-boxes-stacked'],
+   [/guru penasihat/,'fa-chalkboard-user'],[/penyelaras tahun/,'fa-layer-group'],[/penyelaras/,'fa-sitemap'],[/jurulatih|hakim|penjaga masa/,'fa-stopwatch'],[/checkpoint/,'fa-flag'],[/pertolongan|kecemasan/,'fa-kit-medical'],
+   [/jurufoto|dokumentasi|pelaporan|pencatat/,'fa-camera'],[/hadiah|cenderamata/,'fa-gift'],[/siaraya|banner|brosur/,'fa-bullhorn'],[/pendaftaran/,'fa-clipboard-list'],[/makanan/,'fa-utensils'],[/marshal|keselamatan/,'fa-shield-halved'],
+   [/pengacara/,'fa-microphone'],[/kawad/,'fa-person-walking'],[/ikatan/,'fa-link'],[/ice|senamrobik/,'fa-face-smile'],[/buku program|sijil/,'fa-certificate'],[/persiapan|tempat/,'fa-screwdriver-wrench'],[/j\/kuasa|ajk/,'fa-users']];
+  for(var i=0;i<P.length;i++)if(P[i][0].test(x))return P[i][1];return 'fa-user';
+}
+function ocTier(j){var x=String(j||'').toLowerCase();if(/^pengerusi|^ketua|^guru besar|^pengurus$|^penyelaras$|^kem komandan/.test(x))return 1;if(/timbalan|naib|penolong kem/.test(x))return 2;if(/setiausaha|bendahari|quartermaster|pencatat/.test(x))return 3;return 4;}
+var OC_W=['#c0102c','#7c3aed','#2f6fb3','#1f9d55','#d9822b','#0f8a8a','#c9a227','#db2777','#475569'];
+function ocKad(jw,nama,w,t,kump){
+  return '<div class="oc-n t'+t+(kump?' kump':'')+'" style="--w:'+w+';"><span class="ik"><i class="fa-solid '+ocIkon(jw)+'"></i></span><div class="jw">'+esc(jw)+'</div><div class="nm">'+nama.map(function(n){return '<div>'+esc(n)+'</div>';}).join('')+'</div></div>';
+}
+function ocHtml(j){
+  var g={},ord=[];(j.ahli||[]).forEach(function(a){var k=a.jawatan||'AJK';if(!g[k]){g[k]=[];ord.push(k);}g[k].push(a.nama);});
+  if(!ord.length)return '<div class="kosong-box">Tiada ahli direkod untuk JK ini.</div>';
+  var top=ord.filter(function(k){return ocTier(k)===1;});
+  if(!top.length)top=ord.filter(function(k){return /guru penasihat/i.test(k);});
+  if(!top.length)top=[ord[0]];
+  var t2=ord.filter(function(k){return top.indexOf(k)<0&&ocTier(k)===2;}),t3=ord.filter(function(k){return top.indexOf(k)<0&&ocTier(k)===3;}),t4=ord.filter(function(k){return top.indexOf(k)<0&&t2.indexOf(k)<0&&t3.indexOf(k)<0;});
+  var wi=3;function w4(){return OC_W[(wi++)%OC_W.length];}
+  var bawah='';
+  var anak=t3.map(function(k){return '<li>'+ocKad(k,g[k],OC_W[2],3)+'</li>';});
+  if(t4.length){
+    var ahli=t4.length>5?'<ul><li><div class="oc-grid">'+t4.map(function(k){return ocKad(k,g[k],w4(),4);}).join('')+'</div></li></ul>'
+      :'<ul>'+t4.map(function(k){return '<li>'+ocKad(k,g[k],w4(),4)+'</li>';}).join('')+'</ul>';
+    if(anak.length)anak.push('<li>'+ocKad('Ahli Jawatankuasa',[t4.reduce(function(s,k){return s+g[k].length;},0)+' orang guru'],OC_W[3],4,1)+ahli+'</li>');
+    else bawah=ahli;
+  }
+  var tengah=anak.length?'<ul>'+anak.join('')+'</ul>':bawah;
+  var lv2=t2.length?'<ul><li><div class="oc-row">'+t2.map(function(k){return ocKad(k,g[k],OC_W[1],2);}).join('')+'</div>'+tengah+'</li></ul>':tengah;
+  return '<div class="oc"><ul><li><div class="oc-row">'+top.map(function(k){return ocKad(k,g[k],OC_W[0],1);}).join('')+'</div>'+lv2+'</li></ul></div>';
+}
+function bukaCarta(id){
+  var j=ptJk(id);if(!j)return;var el=pastiModal('mod-carta');el.firstChild.style.width='min(1200px,100%)';
+  el.firstChild.innerHTML='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px;"><div><h5 style="margin:0;">'+esc(j.nama)+'</h5><small style="color:var(--sub);font-weight:800;">'+esc(j.kategori)+' · '+(j.ahli||[]).length+' ahli</small></div>'
+   +'<div class="pk-row"><button class="btn btn-danger" onclick="cetakCarta(\''+j.id+'\')"><i class="fa-solid fa-print me-1"></i>Cetak</button><button class="ib" style="width:38px;height:38px;" onclick="document.getElementById(\'mod-carta\').classList.remove(\'show\')" aria-label="Tutup"><i class="fa-solid fa-xmark"></i></button></div></div>'
+   +'<div class="oc-wrap">'+ocHtml(j)+'</div>';
+  el.classList.add('show');
+}
+function cetakCarta(id){
+  var J=id?[ptJk(id)].filter(Boolean):(_pt&&_pt.jk||[]).filter(function(j){return !_jkQ.k||j.kategori===_jkQ.k;});if(!J.length)return;
+  var css='';try{[].forEach.call(document.styleSheets,function(ss){try{[].forEach.call(ss.cssRules,function(r){if(/^\.oc/.test(r.selectorText||''))css+=r.cssText;});}catch(e){}});}catch(e){}
+  var hal=J.map(function(j){return '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><style>@page{size:A4 landscape;margin:8mm;}.hal{max-width:none!important;}'+css+'.oc-n{border-left-color:#bdb5ae;border-right-color:#bdb5ae;border-bottom-color:#bdb5ae;background:#fff;}*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}</style>'
+    +kepalaKertas('CARTA ORGANISASI '+j.nama.toUpperCase(),j.kategori+' · Sumber: Portal Pengurusan Sekolah')+'<div style="display:flex;justify-content:center;">'+ocHtml(j)+'</div>';});
+  paparKertas(hal,id?'Carta '+J[0].nama:'Carta Organisasi JK');
+}
+
 function cetakJkGuru(id){
   if(!_pt)return alert('Data Portal belum dimuatkan.');
   var td='border:1px solid #000;padding:4px 7px;font-size:10pt;',J=(_pt.jk||[]).filter(function(j){return id?j.id===id:(!_jkQ.k||j.kategori===_jkQ.k);});
