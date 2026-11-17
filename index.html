@@ -4064,10 +4064,12 @@ function koprStatus(){
   var lepas=Object.keys(J).filter(function(n){return J[n]<=hi;}).map(Number);
   var rows=U.map(function(u){var s=oprUnit(u,thn),ada=Object.keys(s).map(Number).filter(function(n){return n<=OPR_WAJIB;});var tung=lepas.filter(function(n){return !s[n];});return {u:u,s:s,n:ada.length,tung:tung};});
   var lengkap=rows.filter(function(r){return r.n>=OPR_WAJIB;}).length,tert=rows.filter(function(r){return r.tung.length;}).length;
-  var h='<div class="card-g"><div class="bx-h" style="margin-bottom:10px;"><h6 style="margin:0;font-size:12px;font-weight:900;letter-spacing:.12em;color:var(--sub);">STATUS '+OPR_WAJIB+' PERJUMPAAN WAJIB '+thn+' · '+esc(KP_KAT[kat].k.toUpperCase())+'</h6></div>'
+  var h='<div class="card-g"><div class="bx-h" style="margin-bottom:10px;"><h6 style="margin:0;font-size:12px;font-weight:900;letter-spacing:.12em;color:var(--sub);">STATUS '+OPR_WAJIB+' PERJUMPAAN WAJIB '+thn+' · '+esc(KP_KAT[kat].k.toUpperCase())+'</h6>'
+   +(hsBukaPk()?'<button class="btn btn-secondary" onclick="try{sessionStorage.removeItem(\'kokoPkHingga\')}catch(e){};koprStatus()"><i class="fa-solid fa-lock-open me-1"></i>Kunci semula</button>':'<button class="btn btn-secondary" onclick="hsSahPk(function(){koprStatus();})" title="PK Kokurikulum sahaja"><i class="fa-solid fa-lock me-1"></i>PK Kokurikulum</button>')+'</div>'
    +'<div class="tk-stat"><div style="border-left-color:#1f9d55;"><b>'+lengkap+'/'+U.length+'</b><span>UNIT LENGKAP</span></div><div style="border-left-color:#dc2626;"><b>'+tert+'</b><span>UNIT ADA TERTUNGGAK</span></div>'
    +'<div style="border-left-color:#2f6fb3;"><b>'+lepas.length+'/'+OPR_WAJIB+'</b><span>PERJUMPAAN SEPATUTNYA SELESAI</span></div><div style="border-left-color:#eab308;"><b>'+nJ+'</b><span>PERJUMPAAN DALAM TAKWIM</span></div></div>'
    +(nJ<OPR_WAJIB?'<div class="banner" style="margin-bottom:10px;"><i class="fa-solid fa-triangle-exclamation me-1"></i>Takwim '+thn+' hanya ada <b>'+nJ+'</b> daripada '+OPR_WAJIB+' perjumpaan '+esc(KP_KAT[kat].k)+'. Tambah perjumpaan yang belum dijadualkan dalam Takwim (contoh: "'+esc(kat==='uniform'?'Unit Uniform':kat==='kelab'?'Kelab Persatuan':'Sukan Permainan')+' '+(nJ+1)+'").</div>':'')
+   +(hsBukaPk()?hsPanel(kat,thn):'')
    +(tert?'<div class="pk-row" style="margin-bottom:10px;"><button class="btn btn-danger" onclick="kpSalinPeringatan()"><i class="fa-solid fa-copy me-1"></i>Salin mesej peringatan (WhatsApp / Telegram)</button><button class="btn btn-secondary" onclick="kpCetakPeringatan()"><i class="fa-solid fa-print me-1"></i>Cetak senarai tertunggak</button></div>':'')
    +'<div style="display:flex;flex-direction:column;gap:6px;">'+rows.map(function(r){
      var pct=Math.min(100,Math.round(r.n/OPR_WAJIB*100)),ok=r.n>=OPR_WAJIB,w=ok?'#1f9d55':r.tung.length?'#dc2626':'#eab308',buka=_kpBuka===r.u||(!_kpBuka&&sama(pilih,r.u));
@@ -4083,7 +4085,6 @@ function koprStatus(){
           +(a?'<div style="font-size:9.5px;font-weight:800;color:var(--sub);">'+Object.keys(a.t).sort().map(function(t){return 'T'+t;}).join(' ')+'</div>':'')+'</div>';}
        h2+='</div>';}
      return h2+'</div>';}).join('')+'</div>'
-   +hsPanel(kat,thn)
    +'<p style="margin:8px 0 0;font-size:10.5px;font-weight:800;color:var(--sub);">Lengkap = '+OPR_WAJIB+' perjumpaan berbeza (ikut "Siri Ke-") ada OPR. Tertunggak = tarikh perjumpaan dalam takwim sudah lepas tetapi tiada OPR. Tekan nama unit untuk butiran P1–P'+OPR_WAJIB+'.</p></div>';
   z.innerHTML=h;_kpRows={kat:kat,thn:thn,J:J,rows:rows};
 }
@@ -4107,9 +4108,8 @@ function hsGuruUnit(kat,u){
 }
 function hsBukaPk(){try{return +sessionStorage.getItem('kokoPkHingga')>Date.now();}catch(e){return false;}}
 function hsPanel(kat,thn){
-  if(!hsBukaPk())return '<div style="margin-top:10px;text-align:right;"><button class="mini" onclick="hsSahPk(function(){koprStatus();})" title="PK Kokurikulum sahaja"><i class="fa-solid fa-lock"></i> PK</button></div>';
   var P=hsPelan(kat,thn);
-  return '<div style="margin-top:12px;border:2px dashed var(--glow);border-radius:14px;padding:12px;"><div class="bx-h" style="margin-bottom:6px;"><b style="font-size:11px;letter-spacing:.1em;"><i class="fa-solid fa-lock me-1"></i>PERJUMPAAN DIANGGAP HADIR · PK KOKURIKULUM SAHAJA</b>'
+  return '<div style="margin-bottom:12px;border:2px dashed var(--c1);border-radius:14px;padding:12px;"><div class="bx-h" style="margin-bottom:6px;"><b style="font-size:11px;letter-spacing:.1em;"><i class="fa-solid fa-lock me-1"></i>PERJUMPAAN DIANGGAP HADIR · PK KOKURIKULUM SAHAJA</b>'
    +'<button class="mini" onclick="hsBorang(\''+kat+'\')"><i class="fa-solid fa-plus me-1"></i>Tambah perjumpaan</button></div>'
    +'<p style="margin:0 0 8px;font-size:10.5px;font-weight:800;color:var(--sub);">Acara sekolah yang menggantikan perjumpaan unit. Bila dilaksanakan, rekod kehadiran <b>HADIR</b> dimasukkan untuk semua ahli setiap unit '+esc(HS_KAT[kat].toLowerCase())+' (Tahun 4–6).</p>'
    +P.map(function(p,i){return '<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center;border-top:1px solid var(--glow);padding:8px 0;">'
