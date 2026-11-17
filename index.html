@@ -974,6 +974,16 @@ body[data-theme="dark"] .sw-tema i{transform:translateX(30px);color:var(--c2);}
   <div id="tr-zone" style="margin-top:16px;"></div>
 </div>
 
+<!-- SUKAN TAHUNAN -->
+<div id="view-sukantahunan" class="view-section">
+  <div class="mod-head"><div><h3><i class="fa-solid fa-medal me-2" style="color:var(--c1);"></i>Sukan Tahunan</h3>
+  <p>Kejohanan olahraga tahunan: acara, pendaftaran peserta, keputusan, mata rumah, pingat dan rekod kejohanan.</p>
+  <div class="pk-row" style="align-items:center;margin-top:8px;"><label for="sk-thn" style="font-size:10.5px;color:var(--sub);margin:0;">Tahun kejohanan</label><select id="sk-thn" class="form-select" style="width:auto;min-width:120px;" onchange="_sk.thn=this.value;paparSukan()"></select></div></div>
+  <div class="pk-row"><button class="btn btn-danger" onclick="skCetakMata()"><i class="fa-solid fa-print me-1"></i>Cetak keputusan</button><button class="btn btn-success" onclick="skExcel()"><i class="fa-solid fa-file-excel me-1"></i>Excel</button>
+  <label class="btn btn-secondary" style="margin:0;"><i class="fa-solid fa-file-import me-1"></i>Import data<input type="file" accept=".json,application/json" style="display:none;" onchange="skImport(this)"></label></div></div>
+  <div id="sk-zone" style="margin-top:16px;"></div>
+</div>
+
 <!-- SIMPANAN & TAHUN LEPAS -->
 <div id="view-simpanan" class="view-section">
   <div class="mod-head"><div><h3><i class="fa-solid fa-clock-rotate-left me-2" style="color:var(--c1);"></i>Simpanan &amp; Tahun Lepas</h3>
@@ -1096,10 +1106,10 @@ function tukarMenu(id){
   document.querySelectorAll('.view-section').forEach(function(s){s.classList.remove('active');});
   document.getElementById('view-'+v).classList.add('active');
   document.querySelectorAll('.modal-overlay.show').forEach(function(m){m.classList.remove('show');});
-  if(mod||id==='home'||id==='sop'||id==='tugas'||id==='laporan'||id==='kat'||id==='transisi'||id==='simpanan'){
+  if(mod||id==='home'||id==='sop'||id==='tugas'||id==='laporan'||id==='kat'||id==='transisi'||id==='simpanan'||id==='sukantahunan'){
     document.getElementById('btn-back').classList[v==='home'?'add':'remove']('d-none');
     window.scrollTo(0,0);_viewSemasa=v;
-    if(mod)bukaModul(mod);else if(id==='home')paparHome();else if(id==='sop')paparSop();else if(id==='tugas')paparTugas();else if(id==='kat')paparKat();else if(id==='transisi')paparTransisi();else if(id==='simpanan')muatSimpanan();else sediaLaporan();
+    if(mod)bukaModul(mod);else if(id==='home')paparHome();else if(id==='sop')paparSop();else if(id==='tugas')paparTugas();else if(id==='kat')paparKat();else if(id==='transisi')paparTransisi();else if(id==='simpanan')muatSimpanan();else if(id==='sukantahunan')paparSukan();else sediaLaporan();
     return;
   }
   if(id==='pencapaian'){if(!window._penModDibuka){window._penModDibuka=true;penMode('kelas');}else penLukisSenarai();}
@@ -3451,6 +3461,28 @@ var MODUL={
   tajukK:'acara',statusK:'',tapisK:'rumah',tarikhK:'tarikh',
   medan:[{k:'tarikh',l:'TARIKH',t:'date',wajib:1},{k:'acara',l:'ACARA / PERTANDINGAN',t:'text',wajib:1,full:1},{k:'rumah',l:'RUMAH',t:'rumah',wajib:1},
    {k:'kedudukan',l:'KEDUDUKAN',t:'select',o:['JOHAN','NAIB JOHAN','KETIGA','KEEMPAT','PENYERTAAN']},{k:'markah',l:'MARKAH',t:'number',wajib:1},{k:'catatan',l:'CATATAN',t:'textarea',full:1}]},
+ sukankej:{sheet:'SUKAN KEJOHANAN',nama:'Sukan Tahunan · Maklumat Kejohanan',ikon:'fa-medal',ket:'Maklumat kejohanan olahraga tahunan dan anugerah.',
+  tajukK:'nama',statusK:'',tapisK:'tahun',tarikhK:'tarikh',
+  medan:[{k:'tahun',l:'TAHUN',t:'text',wajib:1},{k:'nama',l:'NAMA KEJOHANAN',t:'text',wajib:1,full:1},{k:'tarikh',l:'TARIKH',t:'date'},{k:'tempat',l:'TEMPAT',t:'text'},
+   {k:'anugerah',l:'ANUGERAH (OLAHRAGAWAN / OLAHRAGAWATI / ATLET TERBAIK)',t:'textarea',full:1},{k:'catatan',l:'CATATAN',t:'textarea',full:1}]},
+ sukanacara:{sheet:'SUKAN ACARA',nama:'Sukan Tahunan · Acara',ikon:'fa-person-running',ket:'Senarai acara kejohanan olahraga ikut tahun.',
+  tajukK:'acara',statusK:'',tapisK:'tahun',tarikhK:'',
+  medan:[{k:'tahun',l:'TAHUN',t:'text',wajib:1},{k:'acara',l:'ACARA',t:'text',wajib:1},{k:'kelas',l:'KELAS / KATEGORI',t:'text',nota:'Cth. T4, T5 (L), PRA (P). Murid Tahun 4 sahaja dipaparkan semasa pendaftaran jika diisi T4.'},
+   {k:'jenis',l:'JENIS',t:'select',wajib:1,o:['INDIVIDU','KUMPULAN','LAIN']},{k:'urutan',l:'URUTAN',t:'number'}]},
+ sukanpeserta:{sheet:'SUKAN PESERTA',nama:'Sukan Tahunan · Peserta',ikon:'fa-user-check',ket:'Pendaftaran peserta setiap acara ikut rumah sukan.',
+  tajukK:'nama',statusK:'',tapisK:'rumah',tarikhK:'',
+  medan:[{k:'tahun',l:'TAHUN',t:'text',wajib:1},{k:'acaraId',l:'ID ACARA',t:'hidden'},{k:'acara',l:'ACARA',t:'text',wajib:1},{k:'rumah',l:'RUMAH',t:'rumah',wajib:1},{k:'nama',l:'NAMA PESERTA',t:'text',wajib:1,full:1},{k:'kelas',l:'KELAS MURID',t:'text'}]},
+ sukankeputusan:{sheet:'SUKAN KEPUTUSAN',nama:'Sukan Tahunan · Keputusan',ikon:'fa-stopwatch',ket:'Keputusan setiap acara: tempat, rumah, masa/jarak dan mata.',
+  tajukK:'acara',statusK:'',tapisK:'rumah',tarikhK:'',
+  medan:[{k:'tahun',l:'TAHUN',t:'text',wajib:1},{k:'acaraId',l:'ID ACARA',t:'hidden'},{k:'acara',l:'ACARA',t:'text',wajib:1},{k:'tempat',l:'TEMPAT',t:'number',wajib:1},{k:'rumah',l:'RUMAH',t:'rumah',wajib:1},
+   {k:'nama',l:'NAMA / PASUKAN',t:'text',full:1},{k:'catatan',l:'CATATAN MASA / JARAK',t:'text'},{k:'mata',l:'MATA',t:'number'}]},
+ sukanmata:{sheet:'SUKAN MATA AWAL',nama:'Sukan Tahunan · Mata Awal',ikon:'fa-plus-minus',ket:'Mata rumah sebelum hari kejohanan (merentas desa, Hari Sukan Negara, sukaneka, Sukantara).',
+  tajukK:'perkara',statusK:'',tapisK:'rumah',tarikhK:'',
+  medan:[{k:'tahun',l:'TAHUN',t:'text',wajib:1},{k:'perkara',l:'PERKARA',t:'text',wajib:1,full:1},{k:'rumah',l:'RUMAH',t:'rumah',wajib:1},{k:'mata',l:'MATA',t:'number',wajib:1}]},
+ sukanrekod:{sheet:'SUKAN REKOD',nama:'Sukan Tahunan · Rekod Kejohanan',ikon:'fa-star',ket:'Rekod rasmi kejohanan olahraga sekolah.',
+  tajukK:'acara',statusK:'status',tapisK:'status',tarikhK:'',
+  medan:[{k:'acara',l:'ACARA',t:'text',wajib:1},{k:'kelas',l:'KELAS / KATEGORI',t:'text'},{k:'catatan',l:'CATATAN MASA / JARAK',t:'text',wajib:1},{k:'nama',l:'NAMA PEMEGANG REKOD',t:'text',wajib:1,full:1},
+   {k:'rumah',l:'RUMAH',t:'rumah'},{k:'tahun',l:'TAHUN',t:'text',wajib:1},{k:'status',l:'STATUS',t:'select',o:['RASMI','LAMA']}]},
  rujukan:{sheet:'RUJUKAN DOKUMEN',nama:'Dokumen & Pautan Rujukan',ikon:'fa-book-bookmark',ket:'Pekeliling, buku panduan, borang dan templat rasmi. Simpan pautan Google Drive di sini supaya semua guru boleh cari.',
   tajukK:'tajuk',statusK:'',tapisK:'jenis',tarikhK:'',
   medan:[{k:'tajuk',l:'TAJUK DOKUMEN',t:'text',wajib:1,full:1},{k:'jenis',l:'JENIS',t:'select',o:['PEKELILING / SURAT SIARAN','BUKU PANDUAN','BORANG','TEMPLAT','LAMAN WEB','LAIN-LAIN']},
@@ -3471,6 +3503,7 @@ var JUBIN={
  'jawatankuasa':{n:'Jawatankuasa & PAJSK',k:'AJK murid & profil',i:'fa-id-card',c:'jawatankuasa ajk pajsk profil'},
  'semak':{n:'Kesan Murid Hilang',k:'Banding senarai rasmi',i:'fa-magnifying-glass-chart',c:'semak hilang pindah'},
  'arkib':{n:'Arkib Murid',k:'Pindah & graduan',i:'fa-box-archive',c:'arkib pindah graduan'},
+ 'sukantahunan':{n:'Sukan Tahunan',k:'Daftar, keputusan, rekod',i:'fa-medal',c:'sukan tahunan olahraga kejohanan rumah acara pingat rekod mata pendaftaran'},
  'm-program':{n:'Program & Kejohanan',k:'Satu program, satu fail',i:'fa-flag-checkered',c:'program kejohanan pertandingan perkhemahan sukan tahunan senarai semak'},
  'statushadir':{n:'Status Kehadiran',k:'Diimport dari Sheet guru',i:'fa-clipboard-check',c:'status kehadiran hadir import sheet sync unit perjumpaan'},
  'kehadiran':{n:'Isi Kehadiran Manual',k:'Pilihan jika tiada Sheet',i:'fa-calendar-check',c:'kehadiran hadir manual opr'},
@@ -3490,7 +3523,7 @@ var JUBIN={
 var RUANG=[
  {t:'Perancangan & Pentadbiran',k:'Takwim, mesyuarat, surat dan kewangan berjalan bersama',w:'--p2',j:['m-takwim','m-mesyuarat','m-surat','m-kewangan']},
  {t:'Unit & Murid',k:'Organisasi unit, keahlian dan jawatankuasa murid',w:'--p3',j:['m-entiti','rumah','murid','datamurid','jawatankuasa','semak','arkib','transisi']},
- {t:'Program & Pelaksanaan',k:'Kertas cadangan, JK, senarai semak, kehadiran dan OPR',w:'--p4',j:['m-program','statushadir','koleksiopr','kehadiran']},
+ {t:'Program & Pelaksanaan',k:'Kertas cadangan, JK, senarai semak, kehadiran dan OPR',w:'--p4',j:['m-program','sukantahunan','statushadir','koleksiopr','kehadiran']},
  {t:'Pencapaian & Penilaian',k:'Pencapaian murid, PAJSK dan laporan',w:'--p1',j:['pencapaian','utama','laporan']},
  {t:'Sumber Manusia & Aset',k:'Guru, kursus dan peralatan',w:'--p6',j:['guru','m-kursus','m-aset']},
  {t:'Rujukan & Tetapan',k:'Proses kerja, tugas PK dan dokumen rasmi',w:'--p5',j:['sop','tugas','m-rujukan','simpanan','tetapan']}
@@ -3850,6 +3883,356 @@ function eksportTransisi(){
   setTimeout(function(){URL.revokeObjectURL(url);},5000);toast('✅ Senarai simulasi dimuat turun.','ok');
 }
 
+// ---------- SUKAN TAHUNAN (Kejohanan Olahraga) ----------
+// Data disimpan melalui Rekod.gs dalam 6 sheet: KOKO - SUKAN KEJOHANAN / ACARA / PESERTA / KEPUTUSAN / MATA AWAL / REKOD
+var SUK_MATA={INDIVIDU:[5,3,2,1],KUMPULAN:[10,7,5,3],LAIN:[10,7,5,3]};
+var SUK_WARNA={CAMERON:'#2f6fb3',STAINER:'#c0102c',STEVEN:'#1f7a45',FREEMAN:'#c9a227'};
+var SUK_ACARA_STANDARD=[['LOMPAT JAUH','T4','INDIVIDU'],['LOMPAT JAUH','T5','INDIVIDU'],['LOMPAT JAUH','T6','INDIVIDU'],['LOMPAT TINGGI','T4','INDIVIDU'],['LOMPAT TINGGI','T5','INDIVIDU'],['LOMPAT TINGGI','T6','INDIVIDU'],
+ ['LONTAR PELURU','T4','INDIVIDU'],['LONTAR PELURU','T5','INDIVIDU'],['LONTAR PELURU','T6','INDIVIDU'],['200M','T4','INDIVIDU'],['200M','T5','INDIVIDU'],['200M','T6','INDIVIDU'],
+ ['4X200M','T4','KUMPULAN'],['4X200M','T5','KUMPULAN'],['4X200M','T6','KUMPULAN'],['SUKANEKA','T1','KUMPULAN'],['SUKANEKA','T2','KUMPULAN'],['SUKANEKA','T3','KUMPULAN'],['SUKANEKA','PRA 1','KUMPULAN'],['SUKANEKA','PRA 2','KUMPULAN'],
+ ['50M','PRA (P)','INDIVIDU'],['50M','PRA (L)','INDIVIDU'],['50M','T1','INDIVIDU'],['50M','T2','INDIVIDU'],['80M','T3','INDIVIDU'],['100M','T4','INDIVIDU'],['100M','T5','INDIVIDU'],['100M','T6','INDIVIDU'],
+ ['4X25M','PRA (P)','KUMPULAN'],['4X25M','PRA (L)','KUMPULAN'],['4X50M','T1','KUMPULAN'],['4X50M','T2','KUMPULAN'],['4X50M','T3','KUMPULAN'],['4X100M','T4','KUMPULAN'],['4X100M','T5','KUMPULAN'],['4X100M','T6','KUMPULAN'],
+ ['TARIK TALI','AKHIR','LAIN'],['RUMAH TERCANTIK','','LAIN'],['PERBARISAN','','LAIN']];
+var _sk={thn:'',tab:'mata',acara:'',daftarRumah:'',q:''};
+function skRumah(){
+  var r=(dc.rujukan&&dc.rujukan.rumah||[]).map(function(x){return String(x).toUpperCase().trim();}).filter(Boolean);
+  return r.length?r:['CAMERON','STAINER','FREEMAN','STEVEN'];
+}
+function skRumahSah(x){x=String(x||'').toUpperCase().trim();if(!x)return '';var R=skRumah();for(var i=0;i<R.length;i++){if(R[i]===x||R[i].indexOf(x)>=0||x.indexOf(R[i])>=0)return R[i];}return x;}
+function skWarna(r){var n=String(r).toUpperCase();for(var k in SUK_WARNA)if(n.indexOf(k)>=0)return SUK_WARNA[k];return warnaRumah(r,skRumah().indexOf(r));}
+function skTitik(r){return '<span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:'+skWarna(r)+';margin-right:6px;"></span>';}
+function skKelas(k){
+  k=String(k||'').toUpperCase();var g=/\(P\)/.test(k)?'(P)':/\(L\)/.test(k)?'(L)':'';
+  if(/PRA/.test(k))return 'PRA'+(g||(k.match(/\d+/)||[''])[0]);
+  var m=k.match(/\d/);return (m?'T'+m[0]:k.replace(/\s+/g,''))+g;
+}
+function skKunci(acara,kelas){return String(acara||'').toUpperCase().replace(/\s+/g,'')+'|'+skKelas(kelas);}
+function skJarak(acara){return /LOMPAT|LONTAR|LEMPAR|REJAM/i.test(acara);}
+function skNilai(v){
+  v=String(v||'').trim().toLowerCase().replace(/,/g,'.');if(!v)return null;var m;
+  if((m=v.match(/^(\d+):(\d+(?:\.\d+)?)/)))return +m[1]*60+parseFloat(m[2]);
+  if((m=v.match(/^(\d+)\.(\d{2})\.(\d{1,2})/)))return +m[1]*60+(+m[2])+(+m[3])/100;
+  if((m=v.match(/^(\d+(?:\.\d+)?)/)))return parseFloat(m[1]);
+  return null;
+}
+function skLebihBaik(acara,baru,lama){var a=skNilai(baru),b=skNilai(lama);if(a==null||!a)return false;if(b==null)return true;return skJarak(acara)?a>b:a<b;}
+function skThnKelas(kelas){var k=String(kelas||'').toUpperCase();if(/PRA/.test(k))return '';var m=k.match(/\d/);return m?m[0]:'';}
+function skJantina(kelas){var k=String(kelas||'').toUpperCase();return /\(P\)/.test(k)?'P':/\(L\)/.test(k)?'L':'';}
+function skUrutAcara(a,b){return (+a.urutan||0)-(+b.urutan||0)||a.acara.localeCompare(b.acara)||a.kelas.localeCompare(b.kelas);}
+function skAcara(thn){return dr.sukanacara.filter(function(a){return a.tahun===thn;}).sort(skUrutAcara);}
+function skNamaAcara(a){return a?(a.acara+(a.kelas?' '+a.kelas:'')):'';}
+function skTahunAda(){
+  var t={},y=new Date().getFullYear();t[y]=1;t[y+1]=1;
+  ['sukanacara','sukankej','sukankeputusan'].forEach(function(mk){dr[mk].forEach(function(o){if(/^\d{4}$/.test(o.tahun))t[o.tahun]=1;});});
+  return Object.keys(t).sort().reverse();
+}
+function skKira(thn){
+  var R=skRumah(),s={};R.forEach(function(r){s[r]={awal:0,INDIVIDU:0,KUMPULAN:0,LAIN:0,E:0,P:0,G:0,jum:0};});
+  function p(r){r=skRumahSah(r);if(!s[r])s[r]={awal:0,INDIVIDU:0,KUMPULAN:0,LAIN:0,E:0,P:0,G:0,jum:0};return s[r];}
+  dr.sukanmata.forEach(function(o){if(o.tahun===thn)p(o.rumah).awal+=parseFloat(o.mata)||0;});
+  var A={};skAcara(thn).forEach(function(a){A[a.id]=a;});
+  dr.sukankeputusan.forEach(function(k){if(k.tahun!==thn||!k.rumah)return;var a=A[k.acaraId],j=a?a.jenis:'INDIVIDU',x=p(k.rumah);x[j]=(x[j]||0)+(parseFloat(k.mata)||0);if(j!=='LAIN'){if(k.tempat==='1')x.E++;else if(k.tempat==='2')x.P++;else if(k.tempat==='3')x.G++;}});
+  Object.keys(s).forEach(function(r){var x=s[r];x.kej=x.INDIVIDU+x.KUMPULAN+x.LAIN;x.jum=x.awal+x.kej;});
+  return Object.keys(s).map(function(r){return {r:r,d:s[r]};}).sort(function(a,b){return b.d.jum-a.d.jum||b.d.E-a.d.E;});
+}
+function skKeputusan(acaraId){return dr.sukankeputusan.filter(function(k){return k.acaraId===acaraId;}).sort(function(a,b){return (+a.tempat||9)-(+b.tempat||9);});}
+function skRekodRasmi(){var o={};dr.sukanrekod.forEach(function(r){if(r.status==='LAMA')return;o[skKunci(r.acara,r.kelas)]=r;});return o;}
+function skCalonRekod(thn){
+  var RR=skRekodRasmi(),out=[];
+  skAcara(thn).forEach(function(a){
+    if(a.jenis==='LAIN')return;var w=skKeputusan(a.id).filter(function(k){return k.tempat==='1'&&k.catatan;})[0];if(!w)return;
+    var r=RR[skKunci(a.acara,a.kelas)];
+    if(r&&r.tahun===thn&&sama(r.nama,w.nama))return; // sudah disahkan
+    if(skLebihBaik(a.acara,w.catatan,r?r.catatan:''))out.push({a:a,w:w,r:r});
+  });
+  return out;
+}
+function skPesertaLepas(thn){
+  var lepas=String(+thn-1),m={};
+  dr.sukanpeserta.forEach(function(p){if(p.tahun===lepas&&p.nama)m[p.nama.toUpperCase().trim()]=skRumahSah(p.rumah);});
+  var A={};dr.sukanacara.forEach(function(a){if(a.tahun===lepas)A[a.id]=a;});
+  dr.sukankeputusan.forEach(function(k){if(k.tahun===lepas&&k.nama&&A[k.acaraId]&&A[k.acaraId].jenis==='INDIVIDU')m[k.nama.toUpperCase().trim()]=skRumahSah(k.rumah);});
+  return m;
+}
+function skModalTutup(){var e=document.getElementById('mod-sukan');if(e)e.classList.remove('show');}
+
+// --- simpan / padam (Rekod.gs) ---
+function skPerluRekod(){if(_rekodTiada){alert('Menu Sukan Tahunan perlukan fail Apps Script "Rekod.gs". Sila pasang dahulu.');return true;}return false;}
+function skIsi(mk,o){MODUL[mk].medan.forEach(function(f){if(o[f.k]==null)o[f.k]='';else o[f.k]=String(o[f.k]);});if(!o.id)o.id=idBaru();return o;}
+function skPukal(mk,list,ok){
+  if(!list.length){if(ok)ok();return;}if(skPerluRekod())return;
+  list.forEach(function(o){skIsi(mk,o);});showLoad();
+  google.script.run.withSuccessHandler(function(res){hideLoad();
+    if(!res||!res.success)return alert('Gagal: '+(res&&res.error||'Ralat'));
+    list.forEach(function(o){dr[mk].push(o);});simpanCacheRekod();if(ok)ok();
+  }).withFailureHandler(function(e){hideLoad();alert('Ralat: '+e.message);}).simpanRekodModulPukal(MODUL[mk].sheet,list.map(function(o){return keLabel(mk,o);}));
+}
+function skSiri(kerja,ok){ // kerja: [{mk,o}] simpan, atau [{mk,padam:id}]
+  if(skPerluRekod())return;var i=0;showLoad();
+  (function satu(){
+    if(i>=kerja.length){hideLoad();simpanCacheRekod();if(ok)ok();return;}
+    var k=kerja[i++];
+    if(k.padam){google.script.run.withSuccessHandler(function(res){dr[k.mk]=dr[k.mk].filter(function(x){return x.id!==k.padam;});satu();}).withFailureHandler(function(e){hideLoad();alert('Ralat: '+e.message);}).padamRekodModul(MODUL[k.mk].sheet,k.padam);return;}
+    skIsi(k.mk,k.o);
+    google.script.run.withSuccessHandler(function(res){
+      if(!res||!res.success){hideLoad();return alert('Gagal: '+(res&&res.error||'Ralat'));}
+      var a=dr[k.mk],ada=false;for(var j=0;j<a.length;j++){if(a[j].id===k.o.id){a[j]=k.o;ada=true;break;}}if(!ada)a.push(k.o);satu();
+    }).withFailureHandler(function(e){hideLoad();alert('Ralat: '+e.message);}).simpanRekodModul(MODUL[k.mk].sheet,keLabel(k.mk,k.o));
+  })();
+}
+
+// --- paparan utama ---
+function paparSukan(){
+  var z=document.getElementById('sk-zone');if(!z)return;
+  var T=skTahunAda();if(!_sk.thn||T.indexOf(_sk.thn)<0){var ada=T.filter(function(t){return skAcara(t).length;});_sk.thn=ada.length&&+ada[0]>=new Date().getFullYear()?ada[0]:String(new Date().getFullYear());}
+  var sel=document.getElementById('sk-thn');sel.innerHTML=T.map(function(t){return '<option value="'+t+'"'+(t===_sk.thn?' selected':'')+'>'+t+'</option>';}).join('');
+  var A=skAcara(_sk.thn),kej=dr.sukankej.filter(function(k){return k.tahun===_sk.thn;})[0];
+  var h=_rekodTiada?'<div class="banner"><i class="fa-solid fa-triangle-exclamation me-1"></i>Fail Apps Script "Rekod.gs" belum dipasang. Paparan boleh dibuka, tetapi data belum boleh disimpan.</div>':'';
+  h+='<div class="bx rs-sek" style="margin-bottom:16px;"><div class="bx-h" style="flex-wrap:wrap;gap:8px;"><div><h6 style="margin:0;">'+esc(kej&&kej.nama||'KEJOHANAN OLAHRAGA TAHUNAN '+_sk.thn)+'</h6>'
+   +'<small style="color:var(--sub);font-weight:800;letter-spacing:.06em;">'+esc([kej&&kej.tarikh?fmtTgl(kej.tarikh):'',kej&&kej.tempat||''].filter(Boolean).join(' · ')||'Tarikh & tempat belum diisi')+' · '+A.length+' acara</small></div>'
+   +'<button class="mini" onclick="bukaBorang(\'sukankej\','+(kej?'\''+kej.id+'\'':'null')+',{tahun:\''+_sk.thn+'\'})"><i class="fa-solid fa-pen me-1"></i>Maklumat kejohanan</button></div>'
+   +'<div class="seg" style="flex-wrap:wrap;margin-top:10px;">'+[['mata','Papan mata'],['acara','Acara'],['daftar','Pendaftaran'],['keputusan','Keputusan'],['rekod','Rekod'],['rujukan','Rujukan '+(+_sk.thn-1)]].map(function(x){return '<button type="button" class="'+(_sk.tab===x[0]?'on':'')+'" onclick="_sk.tab=\''+x[0]+'\';paparSukan()">'+x[1]+'</button>';}).join('')+'</div></div>';
+  if(!A.length&&_sk.tab!=='rekod'&&_sk.tab!=='rujukan'){
+    var lepas=skTahunAda().filter(function(t){return t!==_sk.thn&&skAcara(t).length;})[0];
+    h+='<div class="bx kosong-box"><i class="fa-solid fa-flag-checkered"></i>Belum ada acara untuk '+esc(_sk.thn)+'.<div class="pk-row" style="justify-content:center;margin-top:14px;">'
+     +(lepas?'<button class="btn btn-info" onclick="skSalinAcara(\''+lepas+'\')"><i class="fa-solid fa-copy me-1"></i>Salin acara dari '+lepas+'</button>':'')
+     +'<button class="btn btn-secondary" onclick="skSalinAcara(\'\')"><i class="fa-solid fa-list me-1"></i>Guna senarai acara standard ('+SUK_ACARA_STANDARD.length+')</button></div></div>';
+    z.innerHTML=h;return;
+  }
+  h+=({mata:skTabMata,acara:skTabAcara,daftar:skTabDaftar,keputusan:skTabKeputusan,rekod:skTabRekod,rujukan:skTabRujukan}[_sk.tab]||skTabMata)(A,kej);
+  var foc=document.activeElement&&document.activeElement.id==='sk-q';
+  z.innerHTML=h;
+  if(foc){var q=document.getElementById('sk-q');if(q){q.focus();q.setSelectionRange(q.value.length,q.value.length);}}
+}
+function skTabMata(A,kej){
+  var S=skKira(_sk.thn),mx=Math.max.apply(null,S.map(function(x){return x.d.jum;}).concat([1]));
+  var siap=A.filter(function(a){return skKeputusan(a.id).length;}).length,calon=skCalonRekod(_sk.thn);
+  var h='<div class="paj-top" style="grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:16px;"><div><b>'+A.length+'</b><span>Acara</span></div><div><b>'+siap+'</b><span>Keputusan diisi</span></div>'
+   +'<div><b>'+dr.sukanpeserta.filter(function(p){return p.tahun===_sk.thn;}).length+'</b><span>Pendaftaran</span></div><div><b>'+calon.length+'</b><span>Calon rekod baru</span></div></div>';
+  h+='<div class="bx rs-sek"><h6>Kedudukan rumah sukan</h6><div style="display:flex;flex-direction:column;gap:10px;">'
+   +S.map(function(x,i){var w=skWarna(x.r);return '<div style="display:flex;align-items:center;gap:10px;"><b style="width:22px;font-size:18px;">'+(i+1)+'</b><div style="flex:1;min-width:0;"><div style="display:flex;justify-content:space-between;font-weight:900;font-size:12px;letter-spacing:.06em;"><span>'+skTitik(x.r)+esc(x.r)+'</span><span>'+x.d.jum+' MATA</span></div><div style="height:10px;border-radius:6px;background:var(--inp);overflow:hidden;margin-top:4px;"><i style="display:block;height:100%;width:'+Math.round(x.d.jum/mx*100)+'%;background:'+w+';"></i></div></div></div>';}).join('')+'</div>'
+   +'<div style="overflow-x:auto;margin-top:14px;"><table class="rs-tbl" style="min-width:620px;"><thead><tr><th>Rumah</th><th>Mata awal</th><th>Individu</th><th>Kumpulan</th><th>Lain-lain</th><th>Kejohanan</th><th>Jumlah</th><th>🥇</th><th>🥈</th><th>🥉</th></tr></thead><tbody>'
+   +S.map(function(x){var d=x.d;return '<tr><td>'+skTitik(x.r)+esc(x.r)+'</td><td>'+d.awal+'</td><td>'+d.INDIVIDU+'</td><td>'+d.KUMPULAN+'</td><td>'+d.LAIN+'</td><td>'+d.kej+'</td><td><b>'+d.jum+'</b></td><td>'+d.E+'</td><td>'+d.P+'</td><td>'+d.G+'</td></tr>';}).join('')
+   +'</tbody></table></div><p style="margin:8px 0 0;font-size:10.5px;font-weight:800;color:var(--sub);">Mata: individu 5-3-2-1 · kumpulan 10-7-5-3. Pingat dikira untuk acara individu &amp; kumpulan sahaja.</p>'
+   +'<div class="pk-row" style="margin-top:10px;"><button class="mini" onclick="skBorangMataAwal()"><i class="fa-solid fa-plus me-1"></i>Mata awal (merentas desa, sukaneka…)</button><button class="mini" onclick="tukarMenu(\'m-sukanmata\')">Lihat semua mata awal</button></div></div>';
+  if(calon.length)h+='<div class="banner" style="margin-top:16px;"><i class="fa-solid fa-star me-1"></i>'+calon.length+' calon rekod baru menunggu pengesahan. Buka tab <b>Rekod</b>.</div>';
+  if(kej&&kej.anugerah)h+='<div class="bx rs-sek" style="margin-top:16px;"><h6>Anugerah</h6><div style="white-space:pre-line;font-weight:800;font-size:12px;letter-spacing:.04em;">'+esc(kej.anugerah)+'</div></div>';
+  return h;
+}
+function skTabAcara(A){
+  var h='<div class="bx rs-sek"><div class="bx-h"><h6>Senarai acara '+esc(_sk.thn)+' ('+A.length+')</h6><button class="mini" onclick="bukaBorang(\'sukanacara\',null,{tahun:\''+_sk.thn+'\',jenis:\'INDIVIDU\',urutan:\''+(A.length+1)+'\'})"><i class="fa-solid fa-plus me-1"></i>Tambah acara</button></div>'
+   +'<div class="paj-top" style="grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:12px;">'+['INDIVIDU','KUMPULAN','LAIN'].map(function(j){return '<div><b>'+A.filter(function(a){return a.jenis===j;}).length+'</b><span>Acara '+j.toLowerCase()+'</span></div>';}).join('')+'</div>'
+   +'<div style="overflow-x:auto;"><table class="rs-tbl" style="min-width:560px;"><thead><tr><th>Acara</th><th>Kelas</th><th>Jenis</th><th>Peserta</th><th>Keputusan</th><th></th></tr></thead><tbody>'
+   +A.map(function(a){var np=dr.sukanpeserta.filter(function(p){return p.acaraId===a.id;}).length,nk=skKeputusan(a.id).length;
+     return '<tr><td>'+esc(a.acara)+'</td><td>'+esc(a.kelas||'-')+'</td><td><span class="tag">'+esc(a.jenis)+'</span></td><td>'+np+'</td><td>'+(nk?'<span class="tag s-ok">SIAP</span>':'<span class="tag">BELUM</span>')+'</td>'
+      +'<td style="white-space:nowrap;"><button class="mini" onclick="bukaBorang(\'sukanacara\',\''+a.id+'\')" aria-label="Edit"><i class="fa-solid fa-pen"></i></button> <button class="mini" onclick="skPadamAcara(\''+a.id+'\')" aria-label="Padam"><i class="fa-solid fa-trash"></i></button></td></tr>';}).join('')
+   +'</tbody></table></div></div>';
+  return h;
+}
+function skPilihAcara(A){
+  if(!A.some(function(a){return a.id===_sk.acara;}))_sk.acara=A.length?A[0].id:'';
+  return '<select class="form-select" style="flex:1 1 240px;" onchange="_sk.acara=this.value;paparSukan()">'+A.map(function(a){var n=skKeputusan(a.id).length;return '<option value="'+a.id+'"'+(a.id===_sk.acara?' selected':'')+'>'+esc(skNamaAcara(a))+' · '+a.jenis+(n?' ✓':'')+'</option>';}).join('')+'</select>';
+}
+function skCalonMurid(a,rumah){
+  var t=skThnKelas(a.kelas),g=skJantina(a.kelas);
+  return (dc.murid||[]).filter(function(m){return (!t||m.tahun===t)&&(!rumah||skRumahSah(m.rumah)===rumah)&&(!g||jantina(m.nama)===g);})
+   .sort(function(x,y){return x.kelas.localeCompare(y.kelas)||x.nama.localeCompare(y.nama);});
+}
+function skTabDaftar(A){
+  var R=skRumah();if(R.indexOf(_sk.daftarRumah)<0)_sk.daftarRumah=R[0];
+  var h='<div class="bx rs-sek"><h6>Pendaftaran peserta</h6><div class="pk-row" style="align-items:center;">'+skPilihAcara(A)
+   +'<div class="seg">'+R.map(function(r){return '<button type="button" class="'+(r===_sk.daftarRumah?'on':'')+'" onclick="_sk.daftarRumah=\''+esc(r)+'\';paparSukan()">'+skTitik(r)+esc(r)+'</button>';}).join('')+'</div></div>';
+  var a=A.filter(function(x){return x.id===_sk.acara;})[0];if(!a)return h+'</div>';
+  var P=dr.sukanpeserta.filter(function(p){return p.acaraId===a.id;}),lepas=skPesertaLepas(_sk.thn);
+  // ringkasan semua rumah
+  h+='<div class="rs-grid" style="margin-top:12px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));">'+R.map(function(r){var L=P.filter(function(p){return skRumahSah(p.rumah)===r;});
+    return '<div class="bx" style="padding:12px;border-top:4px solid '+skWarna(r)+';"><b style="font-size:11px;letter-spacing:.08em;">'+esc(r)+' ('+L.length+')</b><div style="margin-top:6px;display:flex;flex-direction:column;gap:4px;">'
+     +(L.length?L.map(function(p){return '<div style="display:flex;justify-content:space-between;gap:6px;font-size:11px;font-weight:700;"><span>'+(lepas[p.nama.toUpperCase()]?'⭐ ':'')+esc(p.nama)+(p.kelas?' <small style="color:var(--sub);">'+esc(p.kelas)+'</small>':'')+'</span><button class="mini" style="padding:0 6px;" onclick="skPadamPeserta(\''+p.id+'\')" aria-label="Buang"><i class="fa-solid fa-xmark"></i></button></div>';}).join(''):'<span style="color:var(--sub);font-size:11px;font-weight:700;">Belum ada</span>')+'</div></div>';}).join('')+'</div>';
+  // pilih murid rumah semasa
+  var r=_sk.daftarRumah,sudah={};P.forEach(function(p){sudah[p.nama.toUpperCase()]=1;});
+  var C=skCalonMurid(a,r).filter(function(m){return !sudah[m.nama.toUpperCase()]&&(!_sk.q||m.nama.toLowerCase().indexOf(_sk.q.toLowerCase())>=0);});
+  C.sort(function(x,y){return (lepas[y.nama.toUpperCase()]===r?1:0)-(lepas[x.nama.toUpperCase()]===r?1:0);});
+  h+='<h6 style="margin-top:16px;">Tick murid '+esc(r)+' untuk '+esc(skNamaAcara(a))+'</h6>'
+   +'<p style="margin:0 0 6px;font-size:10.5px;font-weight:800;color:var(--sub);">⭐ = pernah mewakili rumah ini pada '+(+_sk.thn-1)+' (dipaparkan di atas).'+(skThnKelas(a.kelas)?' Hanya murid Tahun '+skThnKelas(a.kelas)+(skJantina(a.kelas)?(skJantina(a.kelas)==='P'?' perempuan':' lelaki'):'')+' dipaparkan.':'')+'</p>'
+   +'<div class="pk-row"><input id="sk-q" type="search" class="form-control" style="flex:1 1 200px;" placeholder="Cari nama…" value="'+esc(_sk.q)+'" oninput="_sk.q=this.value;tunda(\'skq\',paparSukan,250)">'
+   +'<input id="sk-luar" type="text" class="form-control" style="flex:1 1 200px;" placeholder="Atau taip nama / pasukan (cth. murid prasekolah)"></div>'
+   +'<div style="max-height:320px;overflow-y:auto;margin-top:8px;display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:4px;">'
+   +(C.length?C.map(function(m){return '<label class="pk-chip" style="justify-content:flex-start;"><input type="checkbox" class="sk-cb" value="'+esc(m.nama)+'" data-k="'+esc(m.kelas)+'"> '+(lepas[m.nama.toUpperCase()]?'⭐ ':'')+esc(m.nama)+' <small style="color:var(--sub);">'+esc(m.kelas)+'</small></label>';}).join(''):'<span style="color:var(--sub);font-size:11px;font-weight:800;">Tiada murid yang sepadan dalam senarai murid.</span>')+'</div>'
+   +'<div class="pk-row" style="margin-top:10px;"><button class="btn btn-info" onclick="skDaftar()"><i class="fa-solid fa-user-plus me-1"></i>Daftar yang ditanda</button><button class="btn btn-secondary" onclick="skCetakDaftar()"><i class="fa-solid fa-print me-1"></i>Cetak senarai peserta</button></div></div>';
+  return h;
+}
+function skDaftar(){
+  var a=dr.sukanacara.filter(function(x){return x.id===_sk.acara;})[0];if(!a)return;
+  var L=Array.prototype.map.call(document.querySelectorAll('.sk-cb:checked'),function(c){return {nama:c.value,kelas:c.getAttribute('data-k')};});
+  var luar=document.getElementById('sk-luar').value.trim().toUpperCase();if(luar)L.push({nama:luar,kelas:''});
+  if(!L.length)return alert('Tick sekurang-kurangnya seorang murid, atau taip nama.');
+  skPukal('sukanpeserta',L.map(function(m){return {tahun:_sk.thn,acaraId:a.id,acara:skNamaAcara(a),rumah:_sk.daftarRumah,nama:m.nama,kelas:m.kelas};}),function(){toast('✅ '+L.length+' peserta didaftar.','ok');paparSukan();});
+}
+function skPadamPeserta(id){skSiri([{mk:'sukanpeserta',padam:id}],function(){paparSukan();});}
+function skPadamAcara(id){
+  var a=dr.sukanacara.filter(function(x){return x.id===id;})[0];if(!a)return;
+  var P=dr.sukanpeserta.filter(function(p){return p.acaraId===id;}),K=skKeputusan(id);
+  if(!confirm('Padam acara '+skNamaAcara(a)+'?'+(P.length||K.length?' '+P.length+' pendaftaran dan '+K.length+' keputusan acara ini juga akan dipadam.':'')))return;
+  skSiri(P.map(function(p){return {mk:'sukanpeserta',padam:p.id};}).concat(K.map(function(k){return {mk:'sukankeputusan',padam:k.id};})).concat([{mk:'sukanacara',padam:id}]),function(){toast('✅ Acara dipadam.','ok');paparSukan();});
+}
+function skTabKeputusan(A){
+  var h='<div class="bx rs-sek"><h6>Keputusan acara</h6><div class="pk-row">'+skPilihAcara(A)+'</div>';
+  var a=A.filter(function(x){return x.id===_sk.acara;})[0];if(!a)return h+'</div>';
+  var K=skKeputusan(a.id),P=dr.sukanpeserta.filter(function(p){return p.acaraId===a.id;}),R=skRumah(),mata=SUK_MATA[a.jenis]||SUK_MATA.INDIVIDU;
+  var rek=skRekodRasmi()[skKunci(a.acara,a.kelas)];
+  h+='<p style="margin:8px 0;font-size:11px;font-weight:800;color:var(--sub);">'+esc(a.jenis)+' · mata '+mata.join('-')+(rek?' · REKOD: '+esc(rek.catatan)+' ('+esc(rek.nama)+', '+esc(rek.tahun)+')':' · tiada rekod lama')+'</p>'
+   +'<datalist id="dl-skp">'+P.map(function(p){return '<option value="'+esc(p.nama)+'">'+esc(p.rumah)+'</option>';}).join('')+'</datalist>'
+   +'<div style="overflow-x:auto;"><table class="rs-tbl" style="min-width:640px;"><thead><tr><th>Tempat</th><th>Rumah</th><th>'+(a.jenis==='INDIVIDU'?'Nama murid':'Pasukan / nama')+'</th><th>Masa / jarak</th><th>Mata</th></tr></thead><tbody>'
+   +[1,2,3,4].map(function(t){var k=K.filter(function(x){return x.tempat===String(t);})[0]||{};
+     return '<tr><td><b>'+['🥇 1','🥈 2','🥉 3','4'][t-1]+'</b></td><td><select class="form-select sk-kr" data-t="'+t+'"><option value="">—</option>'+opsyen(R,skRumahSah(k.rumah))+'</select></td>'
+      +'<td><input class="form-control sk-kn" data-t="'+t+'" list="dl-skp" value="'+esc(k.nama||'')+'" onchange="skAutoRumah(this)" autocomplete="off"></td>'
+      +'<td><input class="form-control sk-kc" data-t="'+t+'" value="'+esc(k.catatan||'')+'" placeholder="'+(skJarak(a.acara)?'cth. 3.45m':'cth. 13.2s / 1:06.4')+'"></td>'
+      +'<td><input class="form-control sk-km" data-t="'+t+'" type="number" step="any" min="0" style="width:80px;" value="'+esc(k.mata!=null&&k.mata!==''?k.mata:mata[t-1])+'"></td></tr>';}).join('')
+   +'</tbody></table></div><div class="pk-row" style="margin-top:10px;"><button class="btn btn-info" onclick="skSimpanKeputusan()"><i class="fa-solid fa-floppy-disk me-1"></i>Simpan keputusan</button>'
+   +'<button class="btn btn-secondary" onclick="skCetakKeputusan()"><i class="fa-solid fa-print me-1"></i>Cetak keputusan semua acara</button></div></div>';
+  return h;
+}
+function skAutoRumah(inp){
+  var t=inp.getAttribute('data-t'),n=inp.value.trim().toUpperCase(),p=dr.sukanpeserta.filter(function(x){return x.acaraId===_sk.acara&&x.nama.toUpperCase()===n;})[0];
+  if(!p){var m=(dc.murid||[]).filter(function(x){return x.nama.toUpperCase()===n;})[0];if(m)p={rumah:m.rumah};}
+  if(p){var s=document.querySelector('.sk-kr[data-t="'+t+'"]');if(s&&!s.value)s.value=skRumahSah(p.rumah);}
+}
+function skSimpanKeputusan(){
+  var a=dr.sukanacara.filter(function(x){return x.id===_sk.acara;})[0];if(!a)return;
+  var K=skKeputusan(a.id),kerja=[],v=function(c,t){return (document.querySelector('.'+c+'[data-t="'+t+'"]').value||'').trim().toUpperCase();};
+  for(var t=1;t<=4;t++){
+    var lama=K.filter(function(x){return x.tempat===String(t);})[0],r=v('sk-kr',t),n=v('sk-kn',t);
+    if(!r&&!n){if(lama)kerja.push({mk:'sukankeputusan',padam:lama.id});continue;}
+    if(!r)return alert('Pilih rumah untuk tempat '+t+'.');
+    kerja.push({mk:'sukankeputusan',o:{id:lama?lama.id:'',tahun:_sk.thn,acaraId:a.id,acara:skNamaAcara(a),tempat:String(t),rumah:r,nama:n||(a.jenis==='INDIVIDU'?'':r),catatan:v('sk-kc',t).toLowerCase(),mata:v('sk-km',t)}});
+  }
+  if(!kerja.length)return alert('Tiada keputusan diisi.');
+  skSiri(kerja,function(){
+    var c=skCalonRekod(_sk.thn).filter(function(x){return x.a.id===a.id;})[0];
+    toast('✅ Keputusan '+skNamaAcara(a)+' disimpan.','ok');
+    if(c&&confirm('⭐ REKOD BARU? '+c.w.nama+' mencatat '+c.w.catatan+(c.r?' (rekod lama '+c.r.catatan+', '+c.r.tahun+')':' (tiada rekod lama)')+'.\n\nSahkan sebagai rekod rasmi kejohanan sekarang?'))skSahRekod(a.id);
+    else paparSukan();
+  });
+}
+function skSahRekod(acaraId){
+  var c=skCalonRekod(_sk.thn).filter(function(x){return x.a.id===acaraId;})[0];if(!c)return paparSukan();
+  var kerja=[];if(c.r)kerja.push({mk:'sukanrekod',o:Object.assign({},c.r,{status:'LAMA'})});
+  kerja.push({mk:'sukanrekod',o:{acara:c.a.acara,kelas:c.a.kelas,tahun:_sk.thn,nama:c.w.nama,rumah:skRumahSah(c.w.rumah),catatan:c.w.catatan,status:'RASMI'}});
+  skSiri(kerja,function(){toast('⭐ Rekod baru disahkan.','ok');paparSukan();});
+}
+function skTabRekod(){
+  var calon=skCalonRekod(_sk.thn),RS=dr.sukanrekod.slice().sort(function(a,b){return a.acara.localeCompare(b.acara)||skKelas(a.kelas).localeCompare(skKelas(b.kelas))||(b.tahun||'').localeCompare(a.tahun||'');});
+  var h='';
+  if(calon.length)h+='<div class="bx rs-sek" style="margin-bottom:16px;border:2px solid #c9a227;"><h6>⭐ Calon rekod baru '+esc(_sk.thn)+' (perlu disahkan)</h6><div style="overflow-x:auto;"><table class="rs-tbl" style="min-width:620px;"><thead><tr><th>Acara</th><th>Johan</th><th>Catatan</th><th>Rekod lama</th><th></th></tr></thead><tbody>'
+   +calon.map(function(c){return '<tr><td>'+esc(skNamaAcara(c.a))+'</td><td>'+skTitik(skRumahSah(c.w.rumah))+esc(c.w.nama)+'</td><td><b>'+esc(c.w.catatan)+'</b></td><td>'+(c.r?esc(c.r.catatan)+' ('+esc(c.r.tahun)+')':'Tiada')+'</td><td><button class="mini" onclick="skSahRekod(\''+c.a.id+'\')"><i class="fa-solid fa-check me-1"></i>Sahkan</button></td></tr>';}).join('')+'</tbody></table></div>'
+   +'<p style="margin:8px 0 0;font-size:10.5px;font-weight:800;color:var(--sub);">Semak catatan masa/jarak dengan borang rasmi hakim sebelum sahkan.</p></div>';
+  var L=RS.filter(function(r){return r.status!=='LAMA';}),Lm=RS.filter(function(r){return r.status==='LAMA';});
+  h+='<div class="bx rs-sek"><div class="bx-h"><h6>Rekod rasmi kejohanan ('+L.length+')</h6><div class="pk-row"><button class="mini" onclick="bukaBorang(\'sukanrekod\',null,{status:\'RASMI\'})"><i class="fa-solid fa-plus me-1"></i>Tambah rekod</button><button class="mini" onclick="skCetakRekod()"><i class="fa-solid fa-print me-1"></i>Cetak</button></div></div>'
+   +'<div style="overflow-x:auto;"><table class="rs-tbl" style="min-width:680px;"><thead><tr><th>Acara</th><th>Kelas</th><th>Catatan</th><th>Nama</th><th>Rumah</th><th>Tahun</th><th></th></tr></thead><tbody>'
+   +(L.length?L.map(function(r){return '<tr><td>'+esc(r.acara)+'</td><td>'+esc(r.kelas)+'</td><td><b>'+esc(r.catatan)+'</b></td><td>'+esc(r.nama)+'</td><td>'+skTitik(skRumahSah(r.rumah))+esc(r.rumah)+'</td><td>'+esc(r.tahun)+'</td><td><button class="mini" onclick="bukaBorang(\'sukanrekod\',\''+r.id+'\')" aria-label="Edit"><i class="fa-solid fa-pen"></i></button></td></tr>';}).join(''):'<tr><td colspan="7">Belum ada rekod. Gunakan "Import data" atau "Tambah rekod".</td></tr>')
+   +'</tbody></table></div>'+(Lm.length?'<p style="margin:8px 0 0;font-size:10.5px;font-weight:800;color:var(--sub);">'+Lm.length+' rekod lama yang telah dipecahkan disimpan sebagai sejarah (status LAMA).</p>':'')+'</div>';
+  return h;
+}
+function skTabRujukan(){
+  var lepas=String(+_sk.thn-1),M=skPesertaLepas(_sk.thn),R=skRumah(),kini={};
+  (dc.murid||[]).forEach(function(m){kini[m.nama.replace(/\s+/g,' ').toUpperCase().trim()]=m;});
+  var nama=Object.keys(M);
+  var h='<div class="bx rs-sek"><h6>Murid yang mewakili rumah sukan pada '+lepas+' ('+nama.length+')</h6>'
+   +'<p style="margin:0 0 8px;font-size:10.5px;font-weight:800;color:var(--sub);">Rujukan guru rumah sukan untuk pendaftaran '+esc(_sk.thn)+'. Tahun &amp; kelas semasa diambil daripada senarai murid; murid yang tiada lagi dalam senarai (tamat Tahun 6 / pindah) ditanda.</p>';
+  if(!nama.length)return h+'<div class="kosong-box"><i class="fa-solid fa-users-slash"></i>Tiada data peserta '+lepas+'. Import data tahun lepas melalui butang "Import data".</div></div>';
+  h+='<div class="rs-grid" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr));">'+R.map(function(r){
+    var L=nama.filter(function(n){return M[n]===r;}).sort(function(a,b){var x=kini[a],y=kini[b];return (x?0:1)-(y?0:1)||(x&&y?(x.tahun-y.tahun)||x.kelas.localeCompare(y.kelas):0)||a.localeCompare(b);});
+    var aktif=L.filter(function(n){return kini[n];}).length;
+    return '<div class="bx" style="padding:12px;border-top:4px solid '+skWarna(r)+';"><b style="font-size:11px;letter-spacing:.08em;">'+esc(r)+' · '+aktif+' masih bersekolah / '+L.length+'</b><div style="margin-top:6px;display:flex;flex-direction:column;gap:3px;max-height:360px;overflow-y:auto;">'
+     +L.map(function(n){var m=kini[n];return '<div style="font-size:11px;font-weight:700;'+(m?'':'opacity:.55;')+'">'+esc(n)+' <small style="color:var(--sub);">'+(m?esc(m.kelas||('T'+m.tahun)):'tiada dalam senarai')+'</small></div>';}).join('')+'</div></div>';}).join('')+'</div></div>';
+  return h;
+}
+
+// --- acara: salin / standard ---
+function skSalinAcara(dari){
+  var src=dari?skAcara(dari).map(function(a){return [a.acara,a.kelas,a.jenis];}):SUK_ACARA_STANDARD;
+  if(!confirm('Tambah '+src.length+' acara untuk '+_sk.thn+'? Acara boleh diedit atau dipadam kemudian.'))return;
+  skPukal('sukanacara',src.map(function(x,i){return {tahun:_sk.thn,acara:x[0],kelas:x[1],jenis:x[2],urutan:String(i+1)};}),function(){toast('✅ '+src.length+' acara ditambah.','ok');_sk.tab='acara';paparSukan();});
+}
+function skBorangMataAwal(){bukaBorang('sukanmata',null,{tahun:_sk.thn});}
+
+// --- import data (fail JSON yang disediakan) ---
+function skImport(inp){
+  var f=inp.files&&inp.files[0];inp.value='';if(!f)return;
+  var rd=new FileReader();rd.onload=function(){
+    var D;try{D=JSON.parse(rd.result);}catch(e){return alert('Fail tidak sah.');}
+    if(!D||D.jenis!=='KOKOSMART-SUKAN'||!D.tahun)return alert('Fail ini bukan fail import Sukan KokoSmart.');
+    var thn=String(D.tahun);
+    if(skAcara(thn).length&&!confirm('Data acara '+thn+' sudah ada. Import akan MENAMBAH data lagi (mungkin berganda). Teruskan?'))return;
+    var bilK=0;(D.acara||[]).forEach(function(a){bilK+=(a.keputusan||[]).length;});
+    if(!confirm('Import '+thn+': '+(D.acara||[]).length+' acara, '+bilK+' keputusan, '+(D.mataAwal||[]).length+' mata awal, '+(D.rekod||[]).length+' rekod.\nData akan disimpan dalam Google Sheet sekolah. Teruskan?'))return;
+    var acara=[],kep=[],pes=[];
+    (D.acara||[]).forEach(function(a,i){
+      var o=skIsi('sukanacara',{tahun:thn,acara:a.acara,kelas:a.kelas,jenis:a.jenis||'INDIVIDU',urutan:String(i+1)});acara.push(o);
+      (a.keputusan||[]).forEach(function(k){
+        kep.push({tahun:thn,acaraId:o.id,acara:skNamaAcara(o),tempat:String(k.tempat),rumah:skRumahSah(k.rumah),nama:String(k.nama||'').replace(/\s+/g,' ').trim().toUpperCase(),catatan:k.catatan||'',mata:String(k.mata==null?'':k.mata)});
+        if(k.nama)pes.push({tahun:thn,acaraId:o.id,acara:skNamaAcara(o),rumah:skRumahSah(k.rumah),nama:String(k.nama).replace(/\s+/g,' ').trim().toUpperCase(),kelas:''});
+      });
+    });
+    var mata=(D.mataAwal||[]).map(function(m){return {tahun:thn,perkara:m.perkara,rumah:skRumahSah(m.rumah),mata:String(m.mata)};});
+    var ada=skRekodRasmi(),rek=(D.rekod||[]).filter(function(r){return !ada[skKunci(r.acara,r.kelas)];}).map(function(r){return {acara:r.acara,kelas:r.kelas,tahun:String(r.tahun),nama:r.nama,rumah:skRumahSah(r.rumah),catatan:r.catatan,status:'RASMI'};});
+    var kej=D.kejohanan&&!dr.sukankej.some(function(k){return k.tahun===thn;})?[{tahun:thn,nama:D.kejohanan,anugerah:D.anugerah||''}]:[];
+    skPukal('sukanacara',acara,function(){skPukal('sukankeputusan',kep,function(){skPukal('sukanpeserta',pes,function(){skPukal('sukanmata',mata,function(){skPukal('sukanrekod',rek,function(){skPukal('sukankej',kej,function(){
+      _sk.thn=thn;_sk.tab='mata';toast('✅ Data '+thn+' diimport.','ok');paparSukan();});});});});});});
+  };rd.readAsText(f);
+}
+
+// --- cetakan & Excel ---
+function skCetakMata(){
+  var thn=_sk.thn,S=skKira(thn),kej=dr.sukankej.filter(function(k){return k.tahun===thn;})[0],td='border:1px solid #000;padding:5px 7px;font-size:10.5pt;text-align:center;';
+  var h=kepalaKertas((kej&&kej.nama||'KEJOHANAN OLAHRAGA TAHUNAN '+thn).toUpperCase(),'KEPUTUSAN KESELURUHAN RUMAH SUKAN '+thn)
+   +'<table><tr style="background:#d9e2f3;font-weight:bold;">'+['KEDUDUKAN','RUMAH','MATA AWAL','INDIVIDU','KUMPULAN','LAIN-LAIN','JUMLAH','EMAS','PERAK','GANGSA'].map(function(x){return '<th style="'+td+'">'+x+'</th>';}).join('')+'</tr>'
+   +S.map(function(x,i){var d=x.d;return '<tr>'+[i+1,x.r,d.awal,d.INDIVIDU,d.KUMPULAN,d.LAIN,'<b>'+d.jum+'</b>',d.E,d.P,d.G].map(function(v){return '<td style="'+td+'">'+(typeof v==='string'&&v.indexOf('<b>')===0?v:esc(v))+'</td>';}).join('')+'</tr>';}).join('')+'</table>'
+   +(kej&&kej.anugerah?'<h3>ANUGERAH</h3><p style="white-space:pre-line;font-size:10.5pt;">'+esc(kej.anugerah)+'</p>':'');
+  paparKertas([h],'Keputusan keseluruhan '+thn);
+}
+function skCetakKeputusan(){
+  var thn=_sk.thn,td='border:1px solid #000;padding:4px 6px;font-size:10pt;';
+  var h=kepalaKertas('KEPUTUSAN ACARA KEJOHANAN OLAHRAGA '+thn,'')+'<table><thead><tr style="background:#d9e2f3;font-weight:bold;">'+['ACARA','TEMPAT','NAMA / PASUKAN','RUMAH','CATATAN','MATA'].map(function(x){return '<th style="'+td+'">'+x+'</th>';}).join('')+'</tr></thead>'
+   +skAcara(thn).map(function(a){var K=skKeputusan(a.id);if(!K.length)return '<tr><td style="'+td+'">'+esc(skNamaAcara(a))+'</td><td colspan="5" style="'+td+'">Tiada keputusan</td></tr>';
+     return K.map(function(k,i){return '<tr>'+(i===0?'<td rowspan="'+K.length+'" style="'+td+'font-weight:bold;">'+esc(skNamaAcara(a))+'</td>':'')+[k.tempat,k.nama,k.rumah,k.catatan,k.mata].map(function(v){return '<td style="'+td+'">'+esc(v)+'</td>';}).join('')+'</tr>';}).join('');}).join('')+'</table>';
+  paparKertas([h],'Keputusan acara '+thn);
+}
+function skCetakRekod(){
+  var td='border:1px solid #000;padding:4px 6px;font-size:10pt;',L=dr.sukanrekod.filter(function(r){return r.status!=='LAMA';}).sort(function(a,b){return a.acara.localeCompare(b.acara)||skKelas(a.kelas).localeCompare(skKelas(b.kelas));});
+  var h=kepalaKertas('REKOD KEJOHANAN OLAHRAGA','Dikemas kini '+fmtTgl(hariIniIso()))+'<table><thead><tr style="background:#d9e2f3;font-weight:bold;">'+['BIL','ACARA','KELAS','CATATAN','NAMA','RUMAH','TAHUN'].map(function(x){return '<th style="'+td+'">'+x+'</th>';}).join('')+'</tr></thead>'
+   +L.map(function(r,i){return '<tr>'+[i+1,r.acara,r.kelas,r.catatan,r.nama,r.rumah,r.tahun].map(function(v){return '<td style="'+td+'">'+esc(v)+'</td>';}).join('')+'</tr>';}).join('')+'</table>';
+  paparKertas([h],'Rekod kejohanan');
+}
+function skCetakDaftar(){
+  var thn=_sk.thn,R=skRumah(),td='border:1px solid #000;padding:4px 6px;font-size:10pt;';
+  var pages=R.map(function(r){
+    return kepalaKertas('SENARAI PESERTA RUMAH '+r,'KEJOHANAN OLAHRAGA TAHUNAN '+thn)+'<table><thead><tr style="background:#d9e2f3;font-weight:bold;">'+['ACARA','BIL','NAMA PESERTA','KELAS'].map(function(x){return '<th style="'+td+'">'+x+'</th>';}).join('')+'</tr></thead>'
+     +skAcara(thn).map(function(a){var P=dr.sukanpeserta.filter(function(p){return p.acaraId===a.id&&skRumahSah(p.rumah)===r;});if(!P.length)return '';
+       return P.map(function(p,i){return '<tr>'+(i===0?'<td rowspan="'+P.length+'" style="'+td+'font-weight:bold;">'+esc(skNamaAcara(a))+'</td>':'')+'<td style="'+td+'text-align:center;">'+(i+1)+'</td><td style="'+td+'">'+esc(p.nama)+'</td><td style="'+td+'">'+esc(p.kelas)+'</td></tr>';}).join('');}).join('')+'</table>';
+  });
+  paparKertas(pages,'Senarai peserta '+thn);
+}
+function skExcel(){
+  var thn=_sk.thn,x=function(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');};
+  var cel=function(v,st){var n=typeof v==='number';return '<Cell'+(st?' ss:StyleID="'+st+'"':'')+'><Data ss:Type="'+(n?'Number':'String')+'">'+x(v)+'</Data></Cell>';};
+  function ws(nama,H,rows){return '<Worksheet ss:Name="'+x(nama)+'"><Table><Row>'+cel((dc.namaSekolah||_sekolah()).toUpperCase()+' — '+nama+' '+thn,'t')+'</Row><Row/><Row>'+H.map(function(h){return cel(h,'h');}).join('')+'</Row>'+rows.map(function(r){return '<Row>'+r.map(function(v){return cel(v);}).join('')+'</Row>';}).join('')+'</Table></Worksheet>';}
+  var S=skKira(thn),K=[],P=[];
+  skAcara(thn).forEach(function(a){skKeputusan(a.id).forEach(function(k){K.push([skNamaAcara(a),a.jenis,+k.tempat||k.tempat,k.nama,k.rumah,k.catatan,parseFloat(k.mata)||0]);});
+    dr.sukanpeserta.filter(function(p){return p.acaraId===a.id;}).forEach(function(p){P.push([p.rumah,skNamaAcara(a),p.nama,p.kelas]);});});
+  P.sort(function(a,b){return a[0].localeCompare(b[0]);});
+  var xml='<?xml version="1.0" encoding="UTF-8"?><?mso-application progid="Excel.Sheet"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">'
+   +'<Styles><Style ss:ID="h"><Font ss:Bold="1"/><Interior ss:Color="#D9E2F3" ss:Pattern="Solid"/></Style><Style ss:ID="t"><Font ss:Bold="1" ss:Size="13"/></Style></Styles>'
+   +ws('MATA RUMAH',['KEDUDUKAN','RUMAH','MATA AWAL','INDIVIDU','KUMPULAN','LAIN-LAIN','JUMLAH','EMAS','PERAK','GANGSA'],S.map(function(s,i){var d=s.d;return [i+1,s.r,d.awal,d.INDIVIDU,d.KUMPULAN,d.LAIN,d.jum,d.E,d.P,d.G];}))
+   +ws('KEPUTUSAN',['ACARA','JENIS','TEMPAT','NAMA / PASUKAN','RUMAH','CATATAN','MATA'],K)
+   +ws('PESERTA',['RUMAH','ACARA','NAMA','KELAS'],P)
+   +ws('REKOD',['ACARA','KELAS','CATATAN','NAMA','RUMAH','TAHUN','STATUS'],dr.sukanrekod.map(function(r){return [r.acara,r.kelas,r.catatan,r.nama,r.rumah,r.tahun,r.status||'RASMI'];}))
+   +'</Workbook>';
+  var blob=new Blob([xml],{type:'application/vnd.ms-excel'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download='SUKAN_TAHUNAN_'+thn+'.xls';document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(url);},5000);toast('✅ Excel dimuat turun.','ok');
+}
+
 // ---------- SIMPANAN & TAHUN LEPAS (Simpanan.gs) ----------
 var _smList=null,_smData=null,_smQ={thn:'',kls:'',q:'',tab:'murid'};
 function smRalat(e){
@@ -4082,7 +4465,7 @@ function bukaBorang(mk,id,awal){
     });
     if(kurang.length)return alert('Sila isi: '+kurang.join(', '));
     if(mk==='program'&&o.sop!==baru.sop)baru.semak='';
-    simpanRekod(mk,baru,function(){el.classList.remove('show');toast('✅ Disimpan.','ok');if(_viewSemasa==='modul')paparModul();});
+    simpanRekod(mk,baru,function(){el.classList.remove('show');toast('✅ Disimpan.','ok');if(_viewSemasa==='modul')paparModul();else if(_viewSemasa==='sukantahunan')paparSukan();});
   };
 }
 function isiUnitDariRujukan(){
