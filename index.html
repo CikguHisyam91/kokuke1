@@ -345,6 +345,15 @@ body[data-theme="dark"] .sw-tema i{transform:translateX(30px);color:var(--c2);}
 .ktoast{box-shadow:0 8px 24px rgba(0,0,0,.18);}
 
 /* ===== Laman utama Bento ===== */
+.qk-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;}
+@media(max-width:860px){.qk-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+.qk{display:flex;align-items:center;gap:12px;border:1px solid var(--glow);border-radius:16px;padding:12px 14px;background:var(--card);color:var(--txt);text-align:left;cursor:pointer;min-width:0;min-height:64px;}
+.qk:hover,.qk:focus-visible{border-color:var(--c1);}
+.qk>i{flex:0 0 40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:17px;color:#fff;}
+.qk b{display:block;font-size:12px;font-weight:900;letter-spacing:.05em;line-height:1.2;}
+.qk span{display:block;font-size:10px;font-weight:800;letter-spacing:.06em;color:var(--sub);margin-top:2px;}
+@media(max-width:420px){.qk{padding:10px;gap:8px;}.qk>i{flex-basis:34px;height:34px;font-size:15px;}.qk b{font-size:11px;}}
+@media(max-width:600px){.bx{padding:16px;}.tk-d{min-height:40px;font-size:11px;padding:3px 4px;}.tk-cal{gap:3px;}}
 .tk-wrap{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:16px;}
 @media(max-width:860px){.tk-wrap{grid-template-columns:1fr;}}
 .tk-stat{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px;}
@@ -460,6 +469,10 @@ body[data-theme="dark"] .sw-tema i{transform:translateX(30px);color:var(--c2);}
 <!-- HOME: PUSAT SEHENTI KOKURIKULUM (Bento) -->
 <div id="view-home" class="view-section active">
   <div class="bento">
+    <div class="bx bx-12">
+      <div class="bx-h"><h6>Menu pantas pemantauan</h6><span style="font-size:10.5px;font-weight:800;color:var(--sub);letter-spacing:.08em;">Nazir · JPN · PPD</span></div>
+      <div class="qk-grid" id="h-pantas"></div>
+    </div>
     <div class="bx bx-6">
       <div class="bx-h"><h6>Jumlah murid</h6><span style="font-size:10.5px;font-weight:800;color:var(--sub);letter-spacing:.08em;">Ikut tahun</span></div>
       <div class="bx-big" id="h-murid">0</div>
@@ -472,10 +485,6 @@ body[data-theme="dark"] .sw-tema i{transform:translateX(30px);color:var(--c2);}
     <div class="bx bx-12">
       <div class="bx-h"><h6 id="h-tk-tajuk">Takwim bulan ini</h6><div class="pk-row" style="align-items:center;"><button class="mini" onclick="hTkGerak(-1)" aria-label="Bulan sebelum"><i class="fa-solid fa-chevron-left"></i></button><button class="mini" onclick="hTkGerak(0)">Bulan ini</button><button class="mini" onclick="hTkGerak(1)" aria-label="Bulan seterusnya"><i class="fa-solid fa-chevron-right"></i></button><button class="mini" onclick="tukarMenu('m-takwim')">Takwim penuh</button></div></div>
       <div id="h-takwim"></div>
-    </div>
-    <div class="bx bx-12">
-      <div class="bx-h"><h6>Analisis PAJSK keseluruhan</h6><div class="seg" id="h-paj-thn"></div></div>
-      <div id="h-paj"></div>
     </div>
   </div>
   <div class="bento" id="h-menu"></div>
@@ -1197,7 +1206,7 @@ document.addEventListener('DOMContentLoaded',function(){
   if(cache&&cache.success){terapData(cache);hideLoad();muatSemua(true);}
   else muatSemua();
   muatRekod();
-  try{var cp=JSON.parse(localStorage.getItem('kokoPortal')||'null');if(cp&&cp.success&&window.kokoAdaToken&&kokoAdaToken()){_pt=cp;gabungTakwim();}}catch(e){}
+  try{var cp=JSON.parse(localStorage.getItem('kokoPortal')||'null');if(cp&&cp.success&&window.kokoAdaToken&&kokoAdaToken()){['guru','jk','takwim','cuti'].forEach(function(k){cp[k]=cp[k]||[];});_pt=cp;gabungTakwim();}}catch(e){}
   muatPortal();
 });
 
@@ -3702,7 +3711,7 @@ function paparHome(){
   var r=dc.rujukan||{},U=[['rumah','Rumah sukan','fa-house-flag'],['uniform','Unit beruniform','fa-shield-halved'],['kelab','Kelab & persatuan','fa-lightbulb'],['sukan','Sukan & permainan','fa-futbol']],jum=0;
   document.getElementById('hm-unit').innerHTML=U.map(function(u){var n=(r[u[0]]||[]).length;jum+=n;return '<div class="unit-k klik" role="button" tabindex="0" onclick="bukaInfoKat(\''+u[0]+'\')" onkeydown="if(event.key===\'Enter\')bukaInfoKat(\''+u[0]+'\')" title="Lihat info '+esc(u[1])+'"><i class="fa-solid '+u[2]+'"></i><div style="flex:1;"><b>'+n+'</b><span>'+esc(u[1])+'</span></div><i class="fa-solid fa-chevron-right" style="border:none;background:none;width:auto;height:auto;font-size:12px;color:var(--sub);"></i></div>';}).join('');
   document.getElementById('h-unit-jum').textContent=jum+' unit semuanya';
-  pajskHome();hTakwim();
+  hPantas();hTakwim();
   var html='';
   RUANG.forEach(function(g){
     html+='<div class="bx bx-4 menu-bx"><h6 style="font-size:12px;font-weight:900;letter-spacing:.14em;color:var(--sub);">'+esc(g.t)+'</h6><div class="menu-list">'
@@ -3742,9 +3751,10 @@ var KAT={
  kelab:{n:'Kelab & Persatuan',i:'fa-lightbulb',ahli:'ahli',thn:[4,5,6],ket:'Keahlian setiap kelab dan persatuan (Tahun 4–6), kehadiran perjumpaan, mata merit dan guru penasihat.'},
  sukan:{n:'Sukan & Permainan',i:'fa-futbol',ahli:'ahli',thn:[4,5,6],ket:'Keahlian setiap sukan dan permainan (Tahun 4–6), kehadiran perjumpaan, mata merit dan guru penasihat.'}
 };
-var _katSemasa='rumah';
+var _katSemasa='rumah',_rsThn='';
 function warnaRumah(nama,i){
-  var n=String(nama).toUpperCase(),peta={MERAH:'#c0102c',BIRU:'#2f6fb3',HIJAU:'#1f7a45',KUNING:'#c9a227',UNGU:'#6b4fc4',JINGGA:'#d9822b',OREN:'#d9822b',PUTIH:'#9a9a94',HITAM:'#3a3a3a'};
+  var n=String(nama).toUpperCase(),rs={CAMERON:'#2f6fb3',STAINER:'#c0102c',STEVEN:'#1f7a45',FREEMAN:'#c9a227'};for(var q in rs)if(n.indexOf(q)>=0)return rs[q];
+  var peta={MERAH:'#c0102c',BIRU:'#2f6fb3',HIJAU:'#1f7a45',KUNING:'#c9a227',UNGU:'#6b4fc4',JINGGA:'#d9822b',OREN:'#d9822b',PUTIH:'#9a9a94',HITAM:'#3a3a3a'};
   for(var k in peta)if(n.indexOf(k)>=0)return peta[k];
   return ['#c0102c','#2f6fb3','#1f7a45','#c9a227','#6b4fc4','#d9822b','#0f8a8a','#8a5a2b'][i%8];
 }
@@ -3814,12 +3824,21 @@ function paparKat(){
   // 4. Rumah: markah rumah | Unit lain: guru penasihat
   var akhir;
   if(k==='rumah'){
-    var mr={};R.forEach(function(r){mr[r]=0;});
-    dr.markahrumah.forEach(function(o){var r=String(o.rumah).toUpperCase();if(mr[r]!=null)mr[r]+=parseFloat(o.markah)||0;});
-    var um=R.slice().sort(function(a,b){return mr[b]-mr[a];});
-    akhir='<div class="bx bx-12 rs-sek"><h6>Rekod markah rumah sukan</h6>'+(_rekodTiada?'<div class="banner">Markah rumah belum boleh disimpan. Bahagian ini memerlukan fail Apps Script Rekod.gs (menunggu kelulusan cikgu).</div>':'')
-      +'<table class="rs-tbl"><thead><tr><th>Kedudukan</th><th>Rumah</th><th>Jumlah markah</th></tr></thead><tbody>'+um.map(function(r,i){return '<tr><td>'+(i+1)+'</td><td style="text-align:center;">'+esc(r)+'</td><td><b>'+mr[r]+'</b></td></tr>';}).join('')+'</tbody></table>'
-      +'<div class="pk-row"><button class="btn btn-info" onclick="tukarMenu(\'m-markahrumah\');bukaBorang(\'markahrumah\')"><i class="fa-solid fa-plus me-1"></i>Tambah markah</button><button class="btn btn-secondary" onclick="tukarMenu(\'m-markahrumah\')">Lihat semua rekod ('+dr.markahrumah.length+')</button></div></div>';
+    var Tsk=skTahunAda().filter(function(t){return dr.sukankeputusan.some(function(x){return x.tahun===t;})||dr.sukanmata.some(function(x){return x.tahun===t;});});
+    if(!_rsThn||Tsk.indexOf(_rsThn)<0)_rsThn=Tsk[0]||String(new Date().getFullYear());
+    var SK={};skKira(_rsThn).forEach(function(x){SK[x.r]=x.d;});
+    var mr={},rows=R.map(function(r){var rr=skRumahSah(r),d=SK[rr]||{awal:0,kej:0,E:0,P:0,G:0},lain=0;
+      dr.markahrumah.forEach(function(o){if(skRumahSah(o.rumah)===rr&&(!o.tarikh||tahunDari(o.tarikh)===_rsThn))lain+=parseFloat(o.markah)||0;});
+      return {r:r,awal:d.awal||0,kej:d.kej||0,lain:lain,jum:(d.awal||0)+(d.kej||0)+lain,E:d.E||0,P:d.P||0,G:d.G||0};}).sort(function(a,b){return b.jum-a.jum||b.E-a.E;});
+    var mx=Math.max.apply(null,rows.map(function(x){return x.jum;}).concat([1]));
+    akhir='<div class="bx bx-12 rs-sek"><div class="bx-h"><h6>Markah rumah sukan '+esc(_rsThn)+'</h6>'
+      +(Tsk.length>1?'<div class="seg">'+Tsk.map(function(t){return '<button type="button" class="'+(t===_rsThn?'on':'')+'" onclick="_rsThn=\''+t+'\';paparKat()">'+t+'</button>';}).join('')+'</div>':'')+'</div>'
+      +(_rekodTiada?'<div class="banner">Markah rumah belum boleh dibaca. Bahagian ini memerlukan fail Apps Script Rekod.gs.</div>':'')
+      +'<div style="display:flex;flex-direction:column;gap:10px;">'+rows.map(function(x,i){var w=skWarna(x.r);return '<div style="display:flex;align-items:center;gap:10px;"><b style="width:22px;font-size:18px;">'+(i+1)+'</b><div style="flex:1;min-width:0;"><div style="display:flex;justify-content:space-between;gap:8px;font-weight:900;font-size:12px;letter-spacing:.06em;"><span>'+skTitik(x.r)+esc(x.r)+'</span><span>'+x.jum+' MATA · 🥇'+x.E+' 🥈'+x.P+' 🥉'+x.G+'</span></div><div style="height:10px;border-radius:6px;background:var(--inp);overflow:hidden;margin-top:4px;"><i style="display:block;height:100%;width:'+Math.round(x.jum/mx*100)+'%;background:'+w+';"></i></div></div></div>';}).join('')+'</div>'
+      +'<div style="overflow-x:auto;"><table class="rs-tbl" style="min-width:480px;"><thead><tr><th>Rumah</th><th>Mata awal</th><th>Kejohanan</th><th>Markah lain</th><th>Jumlah</th></tr></thead><tbody>'
+      +rows.map(function(x){return '<tr><td>'+skTitik(x.r)+esc(x.r)+'</td><td>'+x.awal+'</td><td>'+x.kej+'</td><td>'+x.lain+'</td><td><b>'+x.jum+'</b></td></tr>';}).join('')+'</tbody></table></div>'
+      +'<p style="margin:0;font-size:10.5px;font-weight:800;color:var(--sub);">Mata awal &amp; kejohanan daripada menu Sukan Tahunan. Markah lain = pertandingan antara rumah yang direkod dalam Markah Rumah Sukan.</p>'
+      +'<div class="pk-row"><button class="btn btn-info" onclick="_sk.thn=\''+_rsThn+'\';tukarMenu(\'sukantahunan\')"><i class="fa-solid fa-medal me-1"></i>Buka Sukan Tahunan</button><button class="btn btn-secondary" onclick="tukarMenu(\'m-markahrumah\');bukaBorang(\'markahrumah\')"><i class="fa-solid fa-plus me-1"></i>Markah lain</button><button class="btn btn-secondary" onclick="tukarMenu(\'m-markahrumah\')">Rekod markah lain ('+dr.markahrumah.length+')</button></div></div>';
   } else {
     var namaKat={uniform:'UNIT BERUNIFORM',kelab:'KELAB & PERSATUAN',sukan:'SUKAN & PERMAINAN'}[k];
     var en={};dr.entiti.forEach(function(o){if(o.kategori===namaKat)en[String(o.unit).toUpperCase().trim()]=o;});
@@ -3978,6 +3997,26 @@ function eksportTransisi(){
 
 
 
+
+// ---------- MENU PANTAS PEMANTAUAN (laman utama) ----------
+function hPantas(){
+  var z=document.getElementById('h-pantas');if(!z)return;
+  var d=new Date(),L=takwimBulan(d.getFullYear(),d.getMonth()),kh=dc.kehadiran||[],hd=kh.filter(function(l){return /^hadir$/i.test(l.status);}).length;
+  var lap={};kh.forEach(function(l){lap[l.tarikh+'|'+l.namaUnit+'|'+l.perjumpaanKe]=1;});
+  var pc={};(dc.pencapaian||[]).forEach(function(p){pc[p.tarikh+'|'+p.pertandingan+'|'+p.pencapaian]=1;});
+  var Q=[
+   ['m-takwim','Takwim Kokurikulum','fa-calendar-days','#2f6fb3',L.length+' aktiviti '+BULAN_MY[d.getMonth()].toLowerCase()],
+   ['jkguru','Carta Organisasi JK','fa-people-roof','#7c3aed',_pt?(_pt.jk||[]).length+' JK · '+(_pt.guru||[]).length+' guru':'Dari Portal'],
+   ['datamurid','Keahlian Murid','fa-users','#1f9d55',(dc.murid||[]).length+' murid · senarai unit'],
+   ['statushadir','Kehadiran Perjumpaan','fa-clipboard-check','#0f8a8a',kh.length?Math.round(hd/kh.length*100)+'% hadir':'Belum ada rekod'],
+   ['koleksiopr','Laporan Aktiviti (OPR)','fa-folder-open','#d9822b',Object.keys(lap).length+' laporan'],
+   ['pencapaian','Pencapaian Murid','fa-trophy','#c9a227',Object.keys(pc).length+' pencapaian'],
+   ['utama','Analisis PAJSK','fa-chart-pie','#c0102c','Gred & ranking murid'],
+   ['laporan','Laporan Tahunan','fa-book','#475569','Jana & cetak']
+  ];
+  z.innerHTML=Q.map(function(q){return '<button type="button" class="qk" onclick="tukarMenu(\''+q[0]+'\')"><i class="fa-solid '+q[2]+'" style="background:'+q[3]+';"></i><div style="min-width:0;"><b>'+esc(q[1])+'</b><span>'+esc(q[4])+'</span></div></button>';}).join('');
+}
+
 // ---------- TAKWIM BULAN SEMASA (laman utama) ----------
 var _hTk={y:0,m:0,hari:''},BULAN_MY=['JANUARI','FEBRUARI','MAC','APRIL','MEI','JUN','JULAI','OGOS','SEPTEMBER','OKTOBER','NOVEMBER','DISEMBER'],HARI_MY=['AHD','ISN','SEL','RAB','KHA','JUM','SAB'];
 function hTkGerak(n){var d=new Date();if(!n||!_hTk.y){_hTk.y=d.getFullYear();_hTk.m=d.getMonth();}if(n){_hTk.m+=n;if(_hTk.m<0){_hTk.m=11;_hTk.y--;}if(_hTk.m>11){_hTk.m=0;_hTk.y++;}}_hTk.hari='';hTakwim();}
@@ -4043,9 +4082,9 @@ function muatPortal(paksa){
   google.script.run.withSuccessHandler(function(res){
     if(paksa)hideLoad();
     if(!res||!res.success){_ptRalat=res&&res.error||'Gagal membaca Portal';if(paksa)alert('Portal: '+_ptRalat+'\n\nPastikan Sheet Portal dikongsi dengan email PKKo sebagai Editor.');if(_viewSemasa==='jkguru')paparJkGuru();return;}
-    _pt=res;_ptTiada=false;_ptRalat='';try{localStorage.setItem('kokoPortal',JSON.stringify(res));}catch(e){}
+    ['guru','jk','takwim','cuti'].forEach(function(k){res[k]=res[k]||[];});_pt=res;_ptTiada=false;_ptRalat='';try{localStorage.setItem('kokoPortal',JSON.stringify(res));}catch(e){}
     gabungTakwim();isiDatalist();if(paksa)toast('✅ Data Portal dikemas kini.','ok');
-    if(_viewSemasa==='jkguru')paparJkGuru();else if(_viewSemasa==='modul'&&_modSemasa==='takwim')paparModul();else if(_viewSemasa==='home')hTakwim();
+    if(_viewSemasa==='jkguru')paparJkGuru();else if(_viewSemasa==='modul'&&_modSemasa==='takwim')paparModul();else if(_viewSemasa==='home'){hTakwim();hPantas();}
   }).withFailureHandler(function(e){
     if(paksa)hideLoad();var m=e&&e.message||String(e||'');
     if(/tidak dibenarkan|tidak dijumpai/i.test(m)){_ptTiada=true;_ptRalat='fail Apps Script Portal.gs belum dipasang';}else _ptRalat=m;
