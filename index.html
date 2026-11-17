@@ -3606,6 +3606,13 @@ var MODUL={
   tajukK:'acara',statusK:'status',tapisK:'status',tarikhK:'',
   medan:[{k:'acara',l:'ACARA',t:'text',wajib:1},{k:'kelas',l:'KELAS / KATEGORI',t:'text'},{k:'catatan',l:'CATATAN MASA / JARAK',t:'text',wajib:1},{k:'nama',l:'NAMA PEMEGANG REKOD',t:'text',wajib:1,full:1},
    {k:'rumah',l:'RUMAH',t:'rumah'},{k:'tahun',l:'TAHUN',t:'text',wajib:1},{k:'status',l:'STATUS',t:'select',o:['RASMI','LAMA']}]},
+ hadirsemua:{sheet:'HADIR SEMUA',nama:'Perjumpaan Dianggap Hadir',ikon:'fa-user-check',ket:'Perjumpaan yang diganti dengan acara sekolah (Hari Sukan, Perkhemahan, Hari Keusahawanan). Semua ahli dianggap hadir — disahkan PK Kokurikulum.',
+  tajukK:'aktiviti',statusK:'status',tapisK:'kategori',tarikhK:'tarikh',
+  medan:[{k:'tahun',l:'TAHUN',t:'text',wajib:1},{k:'kategori',l:'KATEGORI',t:'select',wajib:1,o:['UNIT BERUNIFORM','KELAB & PERSATUAN','SUKAN & PERMAINAN']},{k:'siri',l:'PERJUMPAAN KE-',t:'number',wajib:1},
+   {k:'tarikh',l:'TARIKH',t:'date',wajib:1},{k:'aktiviti',l:'ACARA / AKTIVITI',t:'text',wajib:1,full:1},{k:'bilUnit',l:'BIL. UNIT',t:'number'},{k:'bilMurid',l:'BIL. MURID',t:'number'},
+   {k:'status',l:'STATUS',t:'select',o:['DILAKSANA']},{k:'oleh',l:'DISAHKAN OLEH',t:'text'},{k:'catatan',l:'CATATAN',t:'textarea',full:1}]},
+ tetapanpk:{sheet:'TETAPAN PK',nama:'Tetapan PK Kokurikulum',ikon:'fa-lock',ket:'Tetapan khas PK Kokurikulum.',tajukK:'kunci',statusK:'',tapisK:'',tarikhK:'',
+  medan:[{k:'kunci',l:'KUNCI',t:'text',wajib:1},{k:'nilai',l:'NILAI',t:'text'}]},
  taglaporan:{sheet:'TAG LAPORAN',nama:'Tagging Laporan Lain-lain',ikon:'fa-tags',ket:'Laporan kategori Lain-lain yang telah disemak PKKo / SU Koku dan ditag kepada unit kokurikulum sekolah.',
   tajukK:'program',statusK:'',tapisK:'kategori',tarikhK:'',
   medan:[{k:'kunci',l:'KUNCI',t:'hidden'},{k:'tarikh',l:'TARIKH LAPORAN',t:'text'},{k:'program',l:'PROGRAM ASAL',t:'text',wajib:1,full:1},
@@ -4042,6 +4049,7 @@ function jadualPerjumpaan(kat,thn){
     var m=String(t.aktiviti||'').match(/(?:kali\s*(?:ke-?)?\s*)?(\d{1,2})\s*$/i);if(!m||!c.re.test(t.aktiviti||''))return;
     var n=+m[1];if(n>=1&&n<=OPR_WAJIB&&!o[n]){o[n]=tg;JNAMA[kat+'|'+n]=t.aktiviti;}
   });
+  hsPelan(kat,thn).forEach(function(p){if(p.tarikh&&(!o[p.siri]||p.dilaksana)){o[p.siri]=p.tarikh;JNAMA[kat+'|'+p.siri]=p.aktiviti;}});
   return o;
 }
 function oprUnit(unit,thn){
@@ -4075,8 +4083,109 @@ function koprStatus(){
           +(a?'<div style="font-size:9.5px;font-weight:800;color:var(--sub);">'+Object.keys(a.t).sort().map(function(t){return 'T'+t;}).join(' ')+'</div>':'')+'</div>';}
        h2+='</div>';}
      return h2+'</div>';}).join('')+'</div>'
+   +hsPanel(kat,thn)
    +'<p style="margin:8px 0 0;font-size:10.5px;font-weight:800;color:var(--sub);">Lengkap = '+OPR_WAJIB+' perjumpaan berbeza (ikut "Siri Ke-") ada OPR. Tertunggak = tarikh perjumpaan dalam takwim sudah lepas tetapi tiada OPR. Tekan nama unit untuk butiran P1–P'+OPR_WAJIB+'.</p></div>';
   z.innerHTML=h;_kpRows={kat:kat,thn:thn,J:J,rows:rows};
+}
+
+
+// ---------- PERJUMPAAN DIANGGAP HADIR (PK Kokurikulum sahaja) ----------
+var HS_KAT={uniform:'UNIT BERUNIFORM',kelab:'KELAB & PERSATUAN',sukan:'SUKAN & PERMAINAN'};
+var HS_ACARA={sukan:{re:/kejohanan olahraga|hari sukan(?! negara)|sukan tahunan/i,nama:'Hari Sukan / Kejohanan Olahraga'},uniform:{re:/perkhemahan/i,nama:'Perkhemahan'},kelab:{re:/keusahawanan|usahawan/i,nama:'Hari Keusahawanan'}};
+// Pelan: rekod yang sudah dilaksana + cadangan automatik daripada takwim (perjumpaan ke-12)
+function hsPelan(kat,thn){
+  var out=[],ada={};
+  (dr.hadirsemua||[]).forEach(function(o){if(o.tahun===thn&&o.kategori===HS_KAT[kat]){ada[o.siri]=1;out.push({siri:+o.siri,tarikh:tglIso(o.tarikh),aktiviti:o.aktiviti,dilaksana:true,rek:o});}});
+  var A=HS_ACARA[kat];
+  if(A&&!ada[OPR_WAJIB]){var t=(dr.takwim||[]).filter(function(x){var g=tglIso(x.tarikh);return g&&g.slice(0,4)===thn&&A.re.test(x.aktiviti||'')&&!/raptai/i.test(x.aktiviti||'');}).sort(function(a,b){return tglIso(a.tarikh)<tglIso(b.tarikh)?-1:1;})[0];
+    out.push({siri:OPR_WAJIB,tarikh:t?tglIso(t.tarikh):'',aktiviti:t?t.aktiviti:A.nama,auto:true});}
+  return out.sort(function(a,b){return a.siri-b.siri;});
+}
+function hsGuruUnit(kat,u){
+  var e=(dr.entiti||[]).filter(function(o){return o.kategori===H_KAT_NAMA[kat]&&sama(o.unit,u)&&o.penasihat;})[0];if(e)return e.penasihat;
+  var p=ptUnitJk().filter(function(x){return x.kat===kat&&sama(x.unit,u)&&x.ketua;})[0];return p?p.ketua:'-';
+}
+function hsBukaPk(){try{return +sessionStorage.getItem('kokoPkHingga')>Date.now();}catch(e){return false;}}
+function hsPanel(kat,thn){
+  if(!hsBukaPk())return '<div style="margin-top:10px;text-align:right;"><button class="mini" onclick="hsSahPk(function(){koprStatus();})" title="PK Kokurikulum sahaja"><i class="fa-solid fa-lock"></i> PK</button></div>';
+  var P=hsPelan(kat,thn);
+  return '<div style="margin-top:12px;border:2px dashed var(--glow);border-radius:14px;padding:12px;"><div class="bx-h" style="margin-bottom:6px;"><b style="font-size:11px;letter-spacing:.1em;"><i class="fa-solid fa-lock me-1"></i>PERJUMPAAN DIANGGAP HADIR · PK KOKURIKULUM SAHAJA</b>'
+   +'<button class="mini" onclick="hsBorang(\''+kat+'\')"><i class="fa-solid fa-plus me-1"></i>Tambah perjumpaan</button></div>'
+   +'<p style="margin:0 0 8px;font-size:10.5px;font-weight:800;color:var(--sub);">Acara sekolah yang menggantikan perjumpaan unit. Bila dilaksanakan, rekod kehadiran <b>HADIR</b> dimasukkan untuk semua ahli setiap unit '+esc(HS_KAT[kat].toLowerCase())+' (Tahun 4–6).</p>'
+   +P.map(function(p,i){return '<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center;border-top:1px solid var(--glow);padding:8px 0;">'
+     +'<div><b style="font-size:12px;">P'+p.siri+' · '+esc(p.aktiviti)+'</b><div style="font-size:10.5px;font-weight:800;color:var(--sub);">'+(p.tarikh?esc(kpHari(p.tarikh)):'<span style="color:#dc2626;">Tiada dalam takwim — tetapkan tarikh</span>')
+     +(p.dilaksana?' · '+esc(p.rek.bilMurid||'')+' murid · disahkan '+esc(p.rek.oleh||'PK')+' ('+esc(p.rek._kemaskini||'')+')':'')+'</div></div>'
+     +(p.dilaksana?'<span class="tag s-ok">✓ DILAKSANA</span>':'<button class="btn btn-danger" onclick="hsLaksana(\''+kat+'\','+p.siri+',\''+(p.tarikh||'')+'\',\''+esc(p.aktiviti).replace(/'/g,"\\'")+'\')"><i class="fa-solid fa-user-check me-1"></i>Anggap semua hadir</button>')+'</div>';}).join('')+'</div>';
+}
+function hsBorang(kat){
+  var el=pastiModal('mod-hs');el.firstChild.style.width='min(520px,100%)';
+  el.firstChild.innerHTML='<h5 style="margin:0 0 12px;">Tambah perjumpaan dianggap hadir</h5><div class="fgrid">'
+   +'<div><label>KATEGORI</label><select id="hs-kat" class="form-select">'+Object.keys(HS_KAT).map(function(k){return '<option value="'+k+'"'+(k===kat?' selected':'')+'>'+HS_KAT[k]+'</option>';}).join('')+'</select></div>'
+   +'<div><label>PERJUMPAAN KE-</label><select id="hs-siri" class="form-select">'+[1,2,3,4,5,6,7,8,9,10,11,12].map(function(n){return '<option'+(n===12?' selected':'')+'>'+n+'</option>';}).join('')+'</select></div>'
+   +'<div><label>TARIKH</label><input id="hs-tg" type="date" class="form-control"></div>'
+   +'<div class="full"><label>ACARA / AKTIVITI</label><input id="hs-akt" type="text" class="form-control" placeholder="Cth. HARI KEUSAHAWANAN"></div></div>'
+   +'<div class="pk-row" style="margin-top:14px;"><button class="btn btn-danger" id="hs-ok"><i class="fa-solid fa-user-check me-1"></i>Teruskan</button><button class="btn btn-secondary" onclick="document.getElementById(\'mod-hs\').classList.remove(\'show\')">Batal</button></div>';
+  el.classList.add('show');
+  document.getElementById('hs-ok').onclick=function(){
+    var k=document.getElementById('hs-kat').value,n=+document.getElementById('hs-siri').value,tg=document.getElementById('hs-tg').value,a=document.getElementById('hs-akt').value.trim().toUpperCase();
+    if(!tg||!a)return alert('Isi tarikh dan nama acara.');el.classList.remove('show');hsLaksana(k,n,tg,a);
+  };
+}
+// PIN PK: disimpan sebagai cincangan SHA-256 dalam sheet KOKO - TETAPAN PK
+function hsCincang(t){return crypto.subtle.digest('SHA-256',new TextEncoder().encode('kokosmart|pk|'+t)).then(function(b){return Array.prototype.map.call(new Uint8Array(b),function(x){return ('0'+x.toString(16)).slice(-2);}).join('');});}
+function hsRekodPin(){return (dr.tetapanpk||[]).filter(function(o){return o.kunci==='PIN_PK';})[0];}
+function hsSahPk(ok){
+  try{if(+sessionStorage.getItem('kokoPkHingga')>Date.now())return ok();}catch(e){}
+  if(_rekodTiada)return alert('Fungsi ini memerlukan Rekod.gs.');
+  var r=hsRekodPin(),el=pastiModal('mod-pk');el.firstChild.style.width='min(420px,100%)';
+  el.firstChild.innerHTML='<h5 style="margin:0 0 6px;"><i class="fa-solid fa-lock me-1"></i>'+(r?'PIN PK Kokurikulum':'Tetapkan PIN PK Kokurikulum')+'</h5>'
+   +'<p style="font-size:11px;font-weight:800;color:var(--sub);margin:0 0 12px;">'+(r?'Masukkan PIN untuk meneruskan.':'Kali pertama: masukkan kata laluan sistem dan cipta PIN baharu (sekurang-kurangnya 4 aksara). Hanya PK Kokurikulum yang patut tahu PIN ini.')+'</p>'
+   +(r?'':'<label style="font-size:11px;font-weight:800;">KATA LALUAN SISTEM</label><input id="pk-sys" type="password" class="form-control" style="margin-bottom:8px;">')
+   +'<label style="font-size:11px;font-weight:800;">PIN</label><input id="pk-pin" type="password" class="form-control" inputmode="numeric" autocomplete="off">'
+   +(r?'':'<label style="font-size:11px;font-weight:800;margin-top:8px;">ULANG PIN</label><input id="pk-pin2" type="password" class="form-control" autocomplete="off">')
+   +'<div id="pk-msg" style="color:var(--c4);font-size:11px;font-weight:800;min-height:16px;margin-top:6px;"></div>'
+   +'<div class="pk-row" style="margin-top:10px;"><button class="btn btn-danger" id="pk-ok">Sahkan</button><button class="btn btn-secondary" onclick="document.getElementById(\'mod-pk\').classList.remove(\'show\')">Batal</button></div>';
+  el.classList.add('show');var msg=document.getElementById('pk-msg');
+  setTimeout(function(){var x=document.getElementById(r?'pk-pin':'pk-sys');if(x)x.focus();},80);
+  function lulus(){try{sessionStorage.setItem('kokoPkHingga',String(Date.now()+15*60*1000));}catch(e){}el.classList.remove('show');ok();}
+  document.getElementById('pk-ok').onclick=function(){
+    var pin=document.getElementById('pk-pin').value;
+    if(r){hsCincang(pin).then(function(h){if(h===r.nilai)lulus();else msg.textContent='PIN salah.';});return;}
+    var sys=document.getElementById('pk-sys').value,pin2=document.getElementById('pk-pin2').value;
+    if(pin.length<4)return msg.textContent='PIN sekurang-kurangnya 4 aksara.';if(pin!==pin2)return msg.textContent='PIN tidak sama.';
+    msg.textContent='Menyemak…';
+    fetch(KOKO_API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn:'semakLogin',args:[],token:sys})}).then(function(x){return x.json();}).then(function(res){
+      if(!res||res.result!==true)return msg.textContent='Kata laluan sistem salah.';
+      hsCincang(pin).then(function(h){simpanRekod('tetapanpk',{id:idBaru(),kunci:'PIN_PK',nilai:h},function(){toast('✅ PIN PK ditetapkan.','ok');lulus();});});
+    }).catch(function(){msg.textContent='Gagal sambung ke pelayan.';});
+  };
+}
+function hsLaksana(kat,siri,tarikh,aktiviti){
+  if(!tarikh)return alert('Tarikh acara belum ada dalam takwim. Tekan "Tambah perjumpaan" dan isi tarikh.');
+  hsSahPk(function(){
+    var U=hUnitSekolah(kat),kerja=[],bil=0,langkau=0;
+    U.forEach(function(u){['4','5','6'].forEach(function(t){
+      var M=(dc.murid||[]).filter(function(m){return sama(m[kat],u)&&m.tahun===t;});if(!M.length)return;
+      if((dc.kehadiran||[]).some(function(l){return sama(l.namaUnit,u)&&String(l.perjumpaanKe)===String(siri)&&String(l.tahunAliran)===t&&(tahunDari(l.tarikh)||tglIso(l.tarikh).slice(0,4))===tarikh.slice(0,4);})){langkau++;return;}
+      kerja.push({u:u,t:t,M:M});bil+=M.length;});});
+    if(!kerja.length)return alert('Tiada rekod baharu untuk dimasukkan'+(langkau?' — semua unit sudah ada rekod perjumpaan ke-'+siri+'.':'.'));
+    if(!confirm('Anggap SEMUA murid hadir?\n\n'+HS_KAT[kat]+' · Perjumpaan ke-'+siri+'\n'+aktiviti+' · '+kpHari(tarikh)+'\n\n'+kerja.length+' laporan ('+new Set(kerja.map(function(k){return k.u;})).size+' unit, '+bil+' murid) akan dimasukkan ke rekod kehadiran.'+(langkau?'\n'+langkau+' laporan dilangkau kerana sudah ada.':'')))return;
+    var tp=tarikh.split('-'),tMs=tarikhMs(new Date(+tp[0],+tp[1]-1,+tp[2])),i=0,gagal='';showLoad();
+    (function satu(){
+      if(i>=kerja.length){
+        simpanRekod('hadirsemua',{id:idBaru(),tahun:tarikh.slice(0,4),kategori:HS_KAT[kat],siri:String(siri),tarikh:tarikh,aktiviti:aktiviti,bilUnit:String(new Set(kerja.map(function(k){return k.u;})).size),bilMurid:String(bil),status:'DILAKSANA',oleh:'PK KOKURIKULUM',catatan:''},function(){
+          hideLoad();toast('✅ '+bil+' murid direkod hadir untuk perjumpaan ke-'+siri+'.','ok');muatSemua(true);koprStatus();});
+        return;
+      }
+      var k=kerja[i++];toast('Menyimpan '+i+'/'+kerja.length+': '+k.u+' T'+k.t+'…','info');
+      var dAm={tarikh:tMs,kategori:kat,namaUnit:k.u,perjumpaanKe:String(siri),tahunAliran:k.t,keterangan:String(aktiviti).toUpperCase(),namaGuru:hsGuruUnit(kat,k.u)};
+      google.script.run.withSuccessHandler(function(res){
+        if(!res||!res.success){hideLoad();return alert('Gagal pada '+k.u+' T'+k.t+': '+(res&&res.error||'Ralat')+'\n'+(i-1)+' laporan sudah disimpan.');}
+        k.M.forEach(function(m){dc.kehadiran.push({tarikh:tMs,kategori:kat,namaUnit:k.u,perjumpaanKe:String(siri),namaMurid:m.nama,status:'Hadir',tahunAliran:k.t});});satu();
+      }).withFailureHandler(function(e){hideLoad();alert('Ralat pada '+k.u+' T'+k.t+': '+e.message+'\n'+(i-1)+' laporan sudah disimpan.');})
+        .simpanKehadiranDanLaporanPukal(dAm,k.M.map(function(m){return {nama:m.nama,status:'Hadir'};}),['','','','']);
+    })();
+  });
 }
 
 var _kpRows=null,HARI_PENUH=['Ahad','Isnin','Selasa','Rabu','Khamis','Jumaat','Sabtu'];
