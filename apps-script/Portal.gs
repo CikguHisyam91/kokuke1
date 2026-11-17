@@ -1,7 +1,8 @@
 // ============================================================
 // KOKOSMART PRO — Portal.gs
 // Sambungan terus ke Google Sheet "Portal Pengurusan Sekolah" (Portal Tugas Guru).
-//  - GURU, JAWATANKUASA, AHLI_JK  : dibaca sahaja (kemas kini dibuat di Portal)
+//  - GURU                       : dibaca sahaja
+//  - JAWATANKUASA, AHLI_JK (unit Kokurikulum): dibaca DAN ditulis (simpanJkPortal)
 //  - TAKWIM (kategori Kokurikulum): dibaca DAN ditulis — edit di KokoSmart terus masuk ke Portal,
 //    edit di Portal terus nampak di KokoSmart.
 // Tab TETAPAN (kata laluan admin Portal) TIDAK dibaca.
@@ -128,6 +129,76 @@ function padamTakwimPortal(id) {
       return { success: true };
     }
     return { success: true, tiada: true };
+  } catch (e) { return { success: false, error: e.toString() };
+  } finally { try { lock.releaseLock(); } catch (x) {} }
+}
+
+
+// Tambah / kemas kini satu jawatankuasa Kokurikulum dan senarai ahlinya dalam Portal.
+// jk: { id (kosong = JK baharu), kategori, nama, tugas, catatan, ahli: [{ jawatan, nama }] }
+function simpanJkPortal(jk) {
+  var lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(20000);
+    jk = jk || {};
+    if (!_ptS(jk.nama)) return { success: false, error: 'Nama jawatankuasa wajib diisi.' };
+    var ss = _ptSS(), tz = ss.getSpreadsheetTimeZone() || 'Asia/Kuala_Lumpur', hariIni = Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd');
+    var J = _ptJadual(ss, 'JAWATANKUASA'), A = _ptJadual(ss, 'AHLI_JK'), G = _ptJadual(ss, 'GURU');
+    if (!J.sh || !A.sh) return { success: false, error: 'Tab JAWATANKUASA / AHLI_JK tiada dalam Portal.' };
+    var hJ = J.h.length ? J.h : J.sh.getRange(1, 1, 1, J.sh.getLastColumn()).getValues()[0].map(function (x) { return _ptS(x).toUpperCase(); });
+    var hA = A.h.length ? A.h : A.sh.getRange(1, 1, 1, A.sh.getLastColumn()).getValues()[0].map(function (x) { return _ptS(x).toUpperCase(); });
+    var cJ = function (k) { return hJ.indexOf(k); }, cA = function (k) { return hA.indexOf(k); };
+
+    // 1) Baris JAWATANKUASA
+    var id = _ptS(jk.id), baris = -1, maks = 0;
+    J.rows.forEach(function (r, i) {
+      var x = _ptS(r[cJ('ID')]), m = x.match(/^JK(\d+)$/i);
+      if (m) maks = Math.max(maks, parseInt(m[1], 10));
+      if (id && x === id) baris = i + 2;
+    });
+    if (id && baris < 0) return { success: false, error: 'Jawatankuasa ' + id + ' tidak dijumpai dalam Portal.' };
+    if (baris > 0 && _ptS(J.rows[baris - 2][cJ('UNIT')]).toLowerCase() !== PORTAL_KAT_TAKWIM.toLowerCase())
+      return { success: false, error: 'Jawatankuasa ini bukan unit Kokurikulum — tidak boleh diubah dari KokoSmart.' };
+    var baru = baris < 0;
+    if (baru) { id = 'JK' + ('00' + (maks + 1)).slice(-3); baris = J.sh.getLastRow() + 1; }
+    var nilai = {};
+    nilai.ID = id; nilai.NAMA = _ptS(jk.nama);
+    if (jk.tugas != null) nilai.SENARAI_TUGAS = _ptS(jk.tugas);
+    if (jk.catatan != null) nilai.CATATAN = _ptS(jk.catatan);
+    nilai.KEMASKINI = hariIni;
+    if (baru) { nilai.UNIT = PORTAL_KAT_TAKWIM; nilai.KATEGORI = _ptS(jk.kategori) || 'Jawatankuasa'; nilai.STATUS = 'Aktif'; nilai.TAHUN = hariIni.slice(0, 4); }
+    Object.keys(nilai).forEach(function (k) {
+      var c = cJ(k); if (c < 0) return;
+      var sel = J.sh.getRange(baris, c + 1); sel.setNumberFormat('@'); sel.setValue(nilai[k]);
+    });
+
+    // 2) Ahli: ganti semua baris AHLI_JK bagi JK ini (kedudukan asal dikekalkan)
+    var idGuru = {};
+    G.rows.forEach(function (r) { var n = _ptS(r[G.h.indexOf('NAMA')]).toUpperCase(); if (n) idGuru[n] = _ptS(r[G.h.indexOf('ID')]); });
+    var lebar = hA.length, tiadaId = [];
+    var ahliBaru = (jk.ahli || []).filter(function (a) { return _ptS(a.nama); }).map(function (a) {
+      var nm = _ptS(a.nama).toUpperCase(), row = [];
+      for (var i = 0; i < lebar; i++) row.push('');
+      if (!idGuru[nm]) tiadaId.push(nm);
+      if (cA('ID_JK') >= 0) row[cA('ID_JK')] = id;
+      if (cA('NAMA_JK') >= 0) row[cA('NAMA_JK')] = _ptS(jk.nama);
+      if (cA('JAWATAN') >= 0) row[cA('JAWATAN')] = _ptS(a.jawatan) || 'AJK';
+      if (cA('ID_GURU') >= 0) row[cA('ID_GURU')] = idGuru[nm] || '';
+      if (cA('NAMA_GURU') >= 0) row[cA('NAMA_GURU')] = nm;
+      return row;
+    });
+    var lama = A.rows.map(function (r) { r = r.slice(0, lebar); while (r.length < lebar) r.push(''); return r.map(function (v) { return v instanceof Date ? Utilities.formatDate(v, tz, 'yyyy-MM-dd') : v; }); });
+    var hasil = [], dimasuk = false;
+    lama.forEach(function (r) {
+      if (_ptS(r[cA('ID_JK')]) === id) { if (!dimasuk) { hasil = hasil.concat(ahliBaru); dimasuk = true; } return; }
+      hasil.push(r);
+    });
+    if (!dimasuk) hasil = hasil.concat(ahliBaru);
+    var nLama = lama.length, nBaru = hasil.length;
+    if (nBaru) { var rg = A.sh.getRange(2, 1, nBaru, lebar); rg.setNumberFormat('@'); rg.setValues(hasil); }
+    if (nBaru < nLama) A.sh.deleteRows(2 + nBaru, nLama - nBaru);
+
+    return { success: true, id: id, baru: baru, ahli: ahliBaru.length, tiadaDalamGuru: tiadaId };
   } catch (e) { return { success: false, error: e.toString() };
   } finally { try { lock.releaseLock(); } catch (x) {} }
 }

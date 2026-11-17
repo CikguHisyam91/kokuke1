@@ -1050,8 +1050,8 @@ body[data-theme="dark"] .sw-tema i{transform:translateX(30px);color:var(--c2);}
 <!-- JK KOKURIKULUM GURU (Portal) -->
 <div id="view-jkguru" class="view-section">
   <div class="mod-head"><div><h3><i class="fa-solid fa-people-roof me-2" style="color:var(--c1);"></i>JK Kokurikulum Guru</h3>
-  <p>Jawatankuasa guru unit Kokurikulum, dibaca terus dari Portal Pengurusan Sekolah. Kemas kini dibuat di Portal; KokoSmart ikut serta-merta.</p></div>
-  <div class="pk-row"><button class="btn btn-secondary" onclick="muatPortal(true)"><i class="fa-solid fa-rotate me-1"></i>Muat semula</button><button class="btn btn-danger" onclick="cetakCarta()"><i class="fa-solid fa-sitemap me-1"></i>Cetak semua carta</button><button class="btn btn-secondary" onclick="cetakJkGuru()"><i class="fa-solid fa-table me-1"></i>Cetak senarai</button></div></div>
+  <p>Jawatankuasa guru unit Kokurikulum, disambung terus dengan Portal Pengurusan Sekolah. Edit di sini (PK Kokurikulum) = berubah di Portal juga, dan sebaliknya.</p></div>
+  <div class="pk-row"><button class="btn btn-info" onclick="hsSahPk(function(){jkEdit('');})"><i class="fa-solid fa-plus me-1"></i>JK baharu</button><button class="btn btn-secondary" onclick="muatPortal(true)"><i class="fa-solid fa-rotate me-1"></i>Muat semula</button><button class="btn btn-danger" onclick="cetakCarta()"><i class="fa-solid fa-sitemap me-1"></i>Cetak semua carta</button><button class="btn btn-secondary" onclick="cetakJkGuru()"><i class="fa-solid fa-table me-1"></i>Cetak senarai</button></div></div>
   <div id="jk-zone" style="margin-top:16px;"></div>
 </div>
 
@@ -4451,7 +4451,7 @@ function paparJkGuru(){
      +'<div style="margin-top:8px;display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:700;">'
      +(ord.length?ord.map(function(k){return '<div><span style="color:var(--sub);">'+esc(k)+':</span> '+grp[k].map(function(n){return '<span'+(q&&n.indexOf(q)>=0?' style="background:var(--p4);border-radius:4px;padding:0 3px;"':'')+'>'+esc(n)+'</span>';}).join(', ')+'</div>';}).join(''):'<span style="color:var(--sub);">Tiada ahli direkod</span>')
      +(j.catatan?'<div style="color:var(--sub);">'+esc(j.catatan)+'</div>':'')+'</div>'
-     +'<div class="pk-row" style="margin-top:8px;"><button class="mini utama" onclick="bukaCarta(\''+j.id+'\')"><i class="fa-solid fa-sitemap me-1"></i>Carta</button><button class="mini" onclick="cetakCarta(\''+j.id+'\')"><i class="fa-solid fa-print me-1"></i>Cetak carta</button><button class="mini" onclick="cetakJkGuru(\''+j.id+'\')"><i class="fa-solid fa-table me-1"></i>Senarai</button></div></div>';}).join('')+'</div>';
+     +'<div class="pk-row" style="margin-top:8px;"><button class="mini utama" onclick="bukaCarta(\''+j.id+'\')"><i class="fa-solid fa-sitemap me-1"></i>Carta</button><button class="mini" onclick="hsSahPk(function(){jkEdit(\''+j.id+'\');})"><i class="fa-solid fa-pen me-1"></i>Edit</button><button class="mini" onclick="cetakCarta(\''+j.id+'\')"><i class="fa-solid fa-print me-1"></i>Cetak carta</button><button class="mini" onclick="cetakJkGuru(\''+j.id+'\')"><i class="fa-solid fa-table me-1"></i>Senarai</button></div></div>';}).join('')+'</div>';
   var foc=document.activeElement&&document.activeElement.id==='jk-q';z.innerHTML=h;
   if(foc){var e=document.getElementById('jk-q');e.focus();e.setSelectionRange(e.value.length,e.value.length);}
 }
@@ -4503,6 +4503,56 @@ function cetakCarta(id){
   var hal=J.map(function(j){return '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><style>@page{size:A4 landscape;margin:8mm;}.hal{max-width:none!important;}'+css+'.oc-n{border-left-color:#bdb5ae;border-right-color:#bdb5ae;border-bottom-color:#bdb5ae;background:#fff;}*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}</style>'
     +kepalaKertas('CARTA ORGANISASI '+j.nama.toUpperCase(),j.kategori+' · Sumber: Portal Pengurusan Sekolah')+'<div style="display:flex;justify-content:center;">'+ocHtml(j)+'</div>';});
   paparKertas(hal,id?'Carta '+J[0].nama:'Carta Organisasi JK');
+}
+
+
+// ---------- EDIT JK KOKURIKULUM (dua hala dengan Portal) ----------
+var _jkE=null;
+function jkEdit(id){
+  if(!_pt)return alert('Data Portal belum dimuatkan.');
+  var j=id?ptJk(id):null;if(id&&!j)return;
+  _jkE={id:id,kategori:j?j.kategori:'Jawatankuasa',nama:j?j.nama:'',tugas:j?j.tugas||'':'',catatan:j?j.catatan||'':'',ahli:j?j.ahli.map(function(a){return {jawatan:a.jawatan,nama:a.nama};}):[{jawatan:'Pengerusi',nama:''},{jawatan:'Setiausaha',nama:''}]};
+  var el=pastiModal('mod-jke');el.firstChild.style.width='min(760px,100%)';
+  var jw={};(_pt.jk||[]).forEach(function(x){x.ahli.forEach(function(a){jw[a.jawatan]=1;});});
+  var dl='<datalist id="dl-jkjw">'+Object.keys(jw).sort().map(function(k){return '<option value="'+esc(k)+'">';}).join('')+'</datalist><datalist id="dl-ptguru">'+(_pt.guru||[]).map(function(g){return '<option value="'+esc(g.nama)+'">';}).join('')+'</datalist>';
+  var K=['Jawatankuasa','Unit Beruniform','Kelab & Persatuan','Sukan & Permainan','Rumah Sukan','Pentaksiran (PAJSK)','Pasukan Elit'];
+  el.firstChild.innerHTML=dl+'<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;"><h5 style="margin:0;">'+(id?'Edit '+esc(id):'JK Kokurikulum baharu')+'</h5><button class="ib" style="width:38px;height:38px;" onclick="document.getElementById(\'mod-jke\').classList.remove(\'show\')" aria-label="Tutup"><i class="fa-solid fa-xmark"></i></button></div>'
+   +'<div class="fgrid"><div class="full"><label>NAMA JAWATANKUASA *</label><input id="jke-nama" class="form-control" value="'+esc(_jkE.nama)+'"></div>'
+   +'<div><label>KATEGORI</label><select id="jke-kat" class="form-select"'+(id?' disabled':'')+'>'+K.map(function(k){return '<option'+(k===_jkE.kategori?' selected':'')+'>'+k+'</option>';}).join('')+'</select></div>'
+   +'<div><label>CATATAN</label><input id="jke-cat" class="form-control" value="'+esc(_jkE.catatan)+'"></div>'
+   +'<div class="full"><label>SENARAI TUGAS</label><textarea id="jke-tug" class="form-control" rows="2">'+esc(_jkE.tugas)+'</textarea></div></div>'
+   +'<div class="bx-h" style="margin:14px 0 6px;"><b style="font-size:11px;letter-spacing:.1em;">AHLI JAWATANKUASA</b><button class="mini" onclick="jkBaris(-1)"><i class="fa-solid fa-plus me-1"></i>Tambah ahli</button></div>'
+   +'<div id="jke-ahli" style="display:flex;flex-direction:column;gap:6px;max-height:42vh;overflow-y:auto;"></div>'
+   +'<p style="margin:8px 0 0;font-size:10.5px;font-weight:800;color:var(--sub);">Pilih nama daripada senarai guru Portal. Nama merah = tiada dalam senarai GURU Portal.</p>'
+   +'<div class="pk-row" style="margin-top:14px;"><button class="btn btn-danger" onclick="jkSimpan()"><i class="fa-solid fa-floppy-disk me-1"></i>Simpan ke Portal</button><button class="btn btn-secondary" onclick="document.getElementById(\'mod-jke\').classList.remove(\'show\')">Batal</button></div>';
+  el.classList.add('show');jkLukis();
+}
+function jkAmbil(){var b=document.querySelectorAll('#jke-ahli .jke-r');_jkE.ahli=[].map.call(b,function(r){return {jawatan:r.querySelector('.jke-j').value.trim(),nama:r.querySelector('.jke-n').value.trim().toUpperCase()};});}
+function jkLukis(){
+  var G={};(_pt.guru||[]).forEach(function(g){G[g.nama]=1;});
+  document.getElementById('jke-ahli').innerHTML=_jkE.ahli.map(function(a,i){var luar=a.nama&&!G[a.nama];
+    return '<div class="jke-r" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;"><input class="form-control jke-j" list="dl-jkjw" placeholder="Jawatan" value="'+esc(a.jawatan)+'" style="flex:1 1 150px;">'
+     +'<input class="form-control jke-n" list="dl-ptguru" placeholder="Nama guru" value="'+esc(a.nama)+'" style="flex:2 1 220px;'+(luar?'border-color:#dc2626;color:#dc2626;':'')+'" onchange="jkAmbil();jkLukis()">'
+     +'<button class="mini" onclick="jkGerak('+i+',-1)" aria-label="Naik"><i class="fa-solid fa-arrow-up"></i></button><button class="mini" onclick="jkGerak('+i+',1)" aria-label="Turun"><i class="fa-solid fa-arrow-down"></i></button><button class="mini mer" onclick="jkBaris('+i+')" aria-label="Buang"><i class="fa-solid fa-xmark"></i></button></div>';}).join('')
+   ||'<div style="color:var(--sub);font-size:11px;font-weight:800;">Tiada ahli. Tekan "Tambah ahli".</div>';
+}
+function jkBaris(i){jkAmbil();if(i<0)_jkE.ahli.push({jawatan:'AJK',nama:''});else _jkE.ahli.splice(i,1);jkLukis();}
+function jkGerak(i,d){jkAmbil();var j=i+d;if(j<0||j>=_jkE.ahli.length)return;var t=_jkE.ahli[i];_jkE.ahli[i]=_jkE.ahli[j];_jkE.ahli[j]=t;jkLukis();}
+function jkSimpan(){
+  jkAmbil();var nama=document.getElementById('jke-nama').value.trim();if(!nama)return alert('Isi nama jawatankuasa.');
+  var ahli=_jkE.ahli.filter(function(a){return a.nama;});
+  var o={id:_jkE.id,kategori:document.getElementById('jke-kat').value,nama:nama,tugas:document.getElementById('jke-tug').value.trim(),catatan:document.getElementById('jke-cat').value.trim(),ahli:ahli};
+  showLoad();
+  google.script.run.withSuccessHandler(function(res){hideLoad();
+    if(!res||!res.success)return alert('Gagal simpan ke Portal: '+(res&&res.error||'Ralat'));
+    var G={};(_pt.guru||[]).forEach(function(g){G[g.nama]=g.id;});
+    var baru={id:res.id,kategori:o.kategori,nama:o.nama,tugas:o.tugas,catatan:o.catatan,status:'Aktif',ahli:ahli.map(function(a){return {jawatan:a.jawatan||'AJK',nama:a.nama,idGuru:G[a.nama]||''};})};
+    var L=_pt.jk,i=L.map(function(x){return x.id;}).indexOf(res.id);if(i>=0){baru.rujukan=L[i].rujukan;baru.tahun=L[i].tahun;L[i]=baru;}else L.push(baru);
+    try{localStorage.setItem('kokoPortal',JSON.stringify(_pt));}catch(e){}
+    document.getElementById('mod-jke').classList.remove('show');
+    toast('✅ '+o.nama+' disimpan ke Portal.'+(res.tiadaDalamGuru&&res.tiadaDalamGuru.length?' Nama tiada dalam GURU Portal: '+res.tiadaDalamGuru.join(', '):''),res.tiadaDalamGuru&&res.tiadaDalamGuru.length?'info':'ok');
+    paparJkGuru();
+  }).withFailureHandler(function(e){hideLoad();var m=e&&e.message||'';alert(/tidak dibenarkan|tidak dijumpai/i.test(m)?'Fungsi simpanJkPortal belum dipasang. Tampal Portal.gs terkini dan tambah baris dalam senaraiApi().':'Ralat: '+m);}).simpanJkPortal(o);
 }
 
 function cetakJkGuru(id){
