@@ -965,6 +965,14 @@ body[data-theme="dark"] .sw-tema i{transform:translateX(30px);color:var(--c2);}
   <div id="kat-zone" style="margin-top:16px;"></div>
 </div>
 
+<!-- TRANSISI TAHUN BAHARU (SIMULASI) -->
+<div id="view-transisi" class="view-section">
+  <div class="mod-head"><div><h3><i class="fa-solid fa-forward me-2" style="color:var(--c1);"></i>Transisi Tahun Baharu <span id="tr-thn"></span></h3>
+  <p>Simulasi sahaja: tiada data diubah. Semak hasil di bawah sebelum transisi sebenar dijalankan.</p></div>
+  <button class="btn btn-success" onclick="eksportTransisi()"><i class="fa-solid fa-file-excel me-1"></i>Muat turun senarai simulasi</button></div>
+  <div id="tr-zone" style="margin-top:16px;"></div>
+</div>
+
 <!-- RUJUKAN: PROSES KERJA (SOP) & SENARAI TUGAS -->
 <div id="view-sop" class="view-section">
   <div class="mod-head"><div><h3><i class="fa-solid fa-route me-2" style="color:var(--c1);"></i>Proses Kerja PK Kokurikulum</h3>
@@ -1078,10 +1086,10 @@ function tukarMenu(id){
   document.querySelectorAll('.view-section').forEach(function(s){s.classList.remove('active');});
   document.getElementById('view-'+v).classList.add('active');
   document.querySelectorAll('.modal-overlay.show').forEach(function(m){m.classList.remove('show');});
-  if(mod||id==='home'||id==='sop'||id==='tugas'||id==='laporan'||id==='kat'){
+  if(mod||id==='home'||id==='sop'||id==='tugas'||id==='laporan'||id==='kat'||id==='transisi'){
     document.getElementById('btn-back').classList[v==='home'?'add':'remove']('d-none');
     window.scrollTo(0,0);_viewSemasa=v;
-    if(mod)bukaModul(mod);else if(id==='home')paparHome();else if(id==='sop')paparSop();else if(id==='tugas')paparTugas();else if(id==='kat')paparKat();else sediaLaporan();
+    if(mod)bukaModul(mod);else if(id==='home')paparHome();else if(id==='sop')paparSop();else if(id==='tugas')paparTugas();else if(id==='kat')paparKat();else if(id==='transisi')paparTransisi();else sediaLaporan();
     return;
   }
   if(id==='pencapaian'){if(!window._penModDibuka){window._penModDibuka=true;penMode('kelas');}else penLukisSenarai();}
@@ -1166,6 +1174,7 @@ function paparSemula(){
   if(v==='modul'){paparSenaraiModul();return;}
   if(v==='laporan'){pratontonLaporan();return;}
   if(v==='kat'){paparKat();return;}
+  if(v==='transisi'){paparTransisi();return;}
   if(v==='utama'){kiraStats();kiraRank(kiraRank._thn||'1');paparPeringkat();muatPajskRank();paparUnitHadir();kiraAlert();kiraAchievements();}
   else if(v==='murid'){muFilter();}
   else if(v==='datamurid'){filterData();pkUnit(true);}
@@ -3446,6 +3455,7 @@ var JUBIN={
  'm-kewangan':{n:'Kewangan & Tuntutan',k:'Peruntukan & MSSD',i:'fa-sack-dollar',c:'kewangan tuntutan bajet peruntukan belanja mssd'},
  'm-entiti':{n:'Unit & Guru Penasihat',k:'Organisasi setiap unit',i:'fa-sitemap',c:'unit entiti guru penasihat organisasi jurulatih'},
  'rumah':{n:'Rumah Sukan',k:'Taburan, kehadiran, markah',i:'fa-house-flag',c:'rumah sukan taburan markah'},
+ 'transisi':{n:'Transisi Tahun Baharu',k:'Simulasi naik darjah',i:'fa-forward',c:'transisi naik darjah tahun baharu 2027 pusingan sukan simulasi'},
  'murid':{n:'Pengurusan Murid',k:'Daftar & edit koko',i:'fa-users',c:'murid daftar pengurusan'},
  'datamurid':{n:'Data & Cetakan',k:'Senarai & muat turun',i:'fa-print',c:'data cetak senarai excel pdf muat turun'},
  'jawatankuasa':{n:'Jawatankuasa & PAJSK',k:'AJK murid & profil',i:'fa-id-card',c:'jawatankuasa ajk pajsk profil'},
@@ -3468,7 +3478,7 @@ var JUBIN={
 };
 var RUANG=[
  {t:'Perancangan & Pentadbiran',k:'Takwim, mesyuarat, surat dan kewangan berjalan bersama',w:'--p2',j:['m-takwim','m-mesyuarat','m-surat','m-kewangan']},
- {t:'Unit & Murid',k:'Organisasi unit, keahlian dan jawatankuasa murid',w:'--p3',j:['m-entiti','rumah','murid','datamurid','jawatankuasa','semak','arkib']},
+ {t:'Unit & Murid',k:'Organisasi unit, keahlian dan jawatankuasa murid',w:'--p3',j:['m-entiti','rumah','murid','datamurid','jawatankuasa','semak','arkib','transisi']},
  {t:'Program & Pelaksanaan',k:'Kertas cadangan, JK, senarai semak, kehadiran dan OPR',w:'--p4',j:['m-program','statushadir','koleksiopr','kehadiran']},
  {t:'Pencapaian & Penilaian',k:'Pencapaian murid, PAJSK dan laporan',w:'--p1',j:['pencapaian','utama','laporan']},
  {t:'Sumber Manusia & Aset',k:'Guru, kursus dan peralatan',w:'--p6',j:['guru','m-kursus','m-aset']},
@@ -3688,6 +3698,87 @@ function paparKat(){
     +'<div class="bx bx-6 rs-sek"><h6>Mata merit pencapaian ahli</h6><div style="overflow-x:auto;">'+mt+'</div></div>'
     +akhir+'</div>';
   z.innerHTML=h;
+}
+
+// ---------- TRANSISI TAHUN BAHARU (simulasi, tiada data diubah) ----------
+// Peraturan pemilik: (1) simpan salinan data tahun semasa, (2) naik darjah, Tahun 6 -> arkib graduan,
+// (3) rumah sukan, uniform & kelab kekal sama, (4) sukan & permainan dipusing ikut urutan di bawah.
+var SUKAN_PUSINGAN=['BOLA SEPAK','CATUR','RAGBI','HOKI','BADMINTON','BOLA BALING'];
+function sukanSeterusnya(sk){
+  var u=String(sk||'').toUpperCase().trim(),i=SUKAN_PUSINGAN.indexOf(u);
+  return i<0?u:SUKAN_PUSINGAN[(i+1)%SUKAN_PUSINGAN.length];
+}
+function simulasiTransisi(){
+  var lama=new Date().getFullYear(),baru=lama+1,rows=[];
+  (dc.murid||[]).forEach(function(m){
+    var t=parseInt(m.tahun,10),sk=String(m.sukan||'').toUpperCase().trim();
+    if(t===6){rows.push({m:m,status:'GRADUAN',thnBaru:'-',sukanBaru:sk});return;}
+    if(!(t>=1&&t<=5)){rows.push({m:m,status:'TAHUN TIDAK SAH',thnBaru:m.tahun,sukanBaru:sk});return;}
+    var nb=(sk&&sk!=='-')?sukanSeterusnya(sk):sk;
+    rows.push({m:m,status:'NAIK',thnBaru:String(t+1),sukanBaru:nb});
+  });
+  return {lama:lama,baru:baru,rows:rows};
+}
+function paparTransisi(){
+  var z=document.getElementById('tr-zone');if(!z)return;
+  var S=simulasiTransisi(),R=S.rows;
+  document.getElementById('tr-thn').textContent=S.lama+' → '+S.baru;
+  var naik=R.filter(function(r){return r.status==='NAIK';}),grad=R.filter(function(r){return r.status==='GRADUAN';}),salah=R.filter(function(r){return r.status==='TAHUN TIDAK SAH';});
+  var kosongUnit=function(v){v=String(v||'').trim();return !v||v==='-';};
+  var t4Baru=naik.filter(function(r){return r.thnBaru==='4';});
+  var t4Kosong=t4Baru.filter(function(r){return kosongUnit(r.m.uniform)||kosongUnit(r.m.kelab)||kosongUnit(r.m.sukan);});
+  var luarSenarai={};naik.forEach(function(r){var sk=String(r.m.sukan||'').toUpperCase().trim();if(sk&&sk!=='-'&&SUKAN_PUSINGAN.indexOf(sk)<0)luarSenarai[sk]=(luarSenarai[sk]||0)+1;});
+  function bx(c,h){return '<div class="bx '+c+' rs-sek">'+h+'</div>';}
+  // Ringkasan
+  var h='<div class="banner" style="background:var(--p2);"><i class="fa-solid fa-flask me-1"></i>Ini <b>simulasi</b>. Tiada data dalam Google Sheet diubah. Transisi sebenar hanya dijalankan selepas cikgu setuju.</div>'
+   +'<div class="paj-top" style="grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:16px;"><div><b>'+R.length+'</b><span>Murid '+S.lama+'</span></div><div><b>'+naik.length+'</b><span>Naik darjah</span></div><div><b>'+grad.length+'</b><span>Graduan Thn 6 → arkib</span></div><div><b>'+(t4Kosong.length+salah.length+Object.keys(luarSenarai).reduce(function(a,k){return a+luarSenarai[k];},0))+'</b><span>Perlu perhatian</span></div></div>';
+  // 1. Langkah
+  var langkah='<h6>Apa yang akan berlaku (ikut urutan)</h6><ol class="sop-steps" style="margin:0;">'
+   +'<li><span><em>LANGKAH 1</em>Salinan penuh data '+S.lama+' disimpan sebagai sheet baharu "SIMPANAN '+S.lama+' - MASTER" sebelum apa-apa diubah.</span></li>'
+   +'<li><span><em>LANGKAH 2</em>Murid Tahun 1–5 naik satu darjah. '+grad.length+' murid Tahun 6 dipindah ke Arkib sebagai graduan '+S.lama+'.</span></li>'
+   +'<li><span><em>LANGKAH 3</em>Rumah sukan, unit beruniform dan kelab &amp; persatuan <b>kekal sama</b> untuk setiap murid.</span></li>'
+   +'<li><span><em>LANGKAH 4</em>Sukan &amp; permainan dipusing satu langkah mengikut urutan pusingan.</span></li></ol>';
+  // 2. Naik darjah
+  var tb='<h6>Pindah darjah</h6><table class="rs-tbl"><thead><tr><th>'+S.lama+'</th><th>Bil. murid</th><th>'+S.baru+'</th></tr></thead><tbody>'
+   +[1,2,3,4,5,6].map(function(t){var n=R.filter(function(r){return r.m.tahun===String(t);}).length;return '<tr><td>Tahun '+t+'</td><td>'+n+'</td><td>'+(t===6?'Arkib (graduan)':'Tahun '+(t+1))+'</td></tr>';}).join('')
+   +'<tr class="jum"><td>Tahun 1 baharu</td><td>–</td><td>Perlu didaftar (murid baharu '+S.baru+')</td></tr></tbody></table>';
+  // 3. Pusingan sukan
+  var rantai='<div class="pk-row" style="align-items:center;">'+SUKAN_PUSINGAN.map(function(x,i){return '<span class="tag s-baru" style="font-size:11px;">'+esc(x)+'</span>'+(i<SUKAN_PUSINGAN.length-1?'<i class="fa-solid fa-arrow-right" style="color:var(--sub);"></i>':'<i class="fa-solid fa-rotate-left" style="color:var(--sub);" title="Kembali ke mula"></i>');}).join('')+'</div>';
+  var kiraLama={},kiraBaru={};
+  naik.forEach(function(r){var a=String(r.m.sukan||'').toUpperCase().trim()||'-',b=r.sukanBaru||'-';if(r.m.tahun==='4'||r.m.tahun==='5'){kiraLama[a]=(kiraLama[a]||0)+1;}if(r.thnBaru==='5'||r.thnBaru==='6'){kiraBaru[b]=(kiraBaru[b]||0)+1;}});
+  var semuaSk=SUKAN_PUSINGAN.concat(Object.keys(kiraLama).concat(Object.keys(kiraBaru)).filter(function(k,i,a){return SUKAN_PUSINGAN.indexOf(k)<0&&a.indexOf(k)===i;}));
+  var ps='<h6>Pusingan sukan &amp; permainan</h6>'+rantai
+   +'<table class="rs-tbl"><thead><tr><th>Sukan '+S.lama+'</th><th>Ahli (Thn 4–5 '+S.lama+')</th><th>Pindah ke '+S.baru+'</th><th>Ahli sukan ini '+S.baru+' (Thn 5–6)</th></tr></thead><tbody>'
+   +semuaSk.map(function(k){var dalam=SUKAN_PUSINGAN.indexOf(k)>=0;return '<tr><td>'+esc(k)+'</td><td>'+(kiraLama[k]||0)+'</td><td>'+(k==='-'?'– (tiada sukan)':dalam?esc(sukanSeterusnya(k)):'Kekal (luar senarai pusingan)')+'</td><td><b>'+(kiraBaru[k]||0)+'</b></td></tr>';}).join('')
+   +'</tbody></table><p style="margin:0;font-size:10.5px;font-weight:700;color:var(--sub);">Murid Tahun 6 '+S.lama+' tidak dikira kerana mereka graduan. Ahli Tahun 4 '+S.baru+' (dari Tahun 3) belum ada sukan.</p>';
+  // 4. Perlu perhatian
+  var ph='<h6>Perlu perhatian</h6><div class="ss-list">'
+   +'<div class="ss-item" style="cursor:default;"><i class="fa-solid fa-triangle-exclamation" style="color:var(--c5);margin-top:3px;"></i><span><b>'+t4Kosong.length+'</b> murid Tahun 3 akan masuk Tahun 4 tanpa unit beruniform, kelab atau sukan.<span class="who">Mereka perlu diagih unit selepas transisi (Pengurusan Murid).</span></span></div>'
+   +(Object.keys(luarSenarai).length?'<div class="ss-item" style="cursor:default;"><i class="fa-solid fa-circle-info" style="color:var(--c2);margin-top:3px;"></i><span>Sukan di luar senarai pusingan (kekal sama): '+Object.keys(luarSenarai).map(function(k){return '<b>'+esc(k)+'</b> ('+luarSenarai[k]+')';}).join(', ')+'<span class="who">Beritahu saya jika sukan ini patut masuk dalam urutan pusingan.</span></span></div>':'')
+   +(salah.length?'<div class="ss-item" style="cursor:default;"><i class="fa-solid fa-circle-xmark" style="color:var(--c4);margin-top:3px;"></i><span><b>'+salah.length+'</b> murid tiada tahun yang sah (kekal tidak berubah): '+salah.slice(0,5).map(function(r){return esc(r.m.nama);}).join(', ')+(salah.length>5?'…':'')+'</span></div>':'')
+   +'</div>';
+  // 5. Contoh murid
+  var contoh=naik.filter(function(r){return r.m.tahun==='4'||r.m.tahun==='5';}).slice(0,8).concat(grad.slice(0,2)).concat(t4Baru.slice(0,2));
+  var ct='<h6>Contoh murid (sebelum → selepas)</h6><div style="overflow-x:auto;"><table class="rs-tbl" style="min-width:760px;"><thead><tr><th>Nama</th><th>Tahun</th><th>Rumah</th><th>Uniform</th><th>Kelab</th><th>Sukan</th></tr></thead><tbody>'
+   +contoh.map(function(r){var m=r.m;return '<tr><td>'+esc(m.nama)+'</td><td>'+esc(m.tahun)+' → '+(r.status==='GRADUAN'?'<b>ARKIB</b>':esc(r.thnBaru))+'</td><td>'+esc(m.rumah)+'</td><td>'+esc(m.uniform)+'</td><td>'+esc(m.kelab)+'</td><td>'+esc(m.sukan||'-')+(r.status==='NAIK'&&r.sukanBaru!==String(m.sukan||'').toUpperCase().trim()?' → <b>'+esc(r.sukanBaru)+'</b>':'')+'</td></tr>';}).join('')
+   +'</tbody></table></div><p style="margin:0;font-size:10.5px;font-weight:700;color:var(--sub);">Senarai lengkap semua murid: tekan "Muat turun senarai simulasi".</p>';
+  z.innerHTML=h+'<div class="bento">'+bx('bx-6',langkah)+bx('bx-6',tb)+bx('bx-12',ps)+bx('bx-12',ph)+bx('bx-12',ct)+'</div>';
+}
+function eksportTransisi(){
+  var S=simulasiTransisi();if(!S.rows.length)return alert('Tiada data murid.');
+  var x=function(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');};
+  var cel=function(v,st){return '<Cell'+(st?' ss:StyleID="'+st+'"':'')+'><Data ss:Type="String">'+x(v)+'</Data></Cell>';};
+  var H=['BIL','NAMA','KELAS','TAHUN '+S.lama,'TAHUN '+S.baru,'STATUS','RUMAH','UNIFORM','KELAB','SUKAN '+S.lama,'SUKAN '+S.baru];
+  var rows=S.rows.slice().sort(function(a,b){return (a.m.tahun-b.m.tahun)||a.m.kelas.localeCompare(b.m.kelas)||a.m.nama.localeCompare(b.m.nama);});
+  var xml='<?xml version="1.0" encoding="UTF-8"?><?mso-application progid="Excel.Sheet"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">'
+   +'<Styles><Style ss:ID="h"><Font ss:Bold="1"/><Interior ss:Color="#D9E2F3" ss:Pattern="Solid"/></Style><Style ss:ID="t"><Font ss:Bold="1" ss:Size="13"/></Style></Styles>'
+   +'<Worksheet ss:Name="SIMULASI '+S.baru+'"><Table><Row>'+cel('SIMULASI TRANSISI '+S.lama+' → '+S.baru+' — '+(dc.namaSekolah||'').toUpperCase(),'t')+'</Row><Row/>'
+   +'<Row>'+H.map(function(h){return cel(h,'h');}).join('')+'</Row>'
+   +rows.map(function(r,i){var m=r.m;return '<Row>'+[i+1,m.nama,m.kelas,m.tahun,r.status==='GRADUAN'?'ARKIB':r.thnBaru,r.status,m.rumah,m.uniform,m.kelab,m.sukan||'-',r.status==='GRADUAN'?'-':(r.sukanBaru||'-')].map(function(v){return cel(v);}).join('')+'</Row>';}).join('')
+   +'</Table></Worksheet></Workbook>';
+  var blob=new Blob([xml],{type:'application/vnd.ms-excel'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download='SIMULASI_TRANSISI_'+S.baru+'.xls';document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(url);},5000);toast('✅ Senarai simulasi dimuat turun.','ok');
 }
 
 // ---------- PAPARAN MODUL GENERIK ----------
