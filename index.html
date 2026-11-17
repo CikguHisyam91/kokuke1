@@ -370,6 +370,10 @@ body[data-theme="dark"] .sw-tema i{transform:translateX(30px);color:var(--c2);}
 .oc-n.t1{min-width:200px;}.oc-n.t1 .nm{font-size:12px;}
 .oc-n.kump{background:transparent;border-style:dashed;border-top-style:solid;}
 @media(max-width:700px){.oc{width:auto;}.oc-grid{max-width:100%;padding:4px 6px 10px;}.oc ul{flex-direction:column;align-items:center;}.oc li{padding:16px 0 0;}.oc li::before,.oc li::after{display:none;}.oc ul ul::before{display:none;}.oc li+li{border-top:0;}.oc-n{min-width:220px;}}
+.tk-sl{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
+.tk-sl button{border:1px solid var(--glow);border-radius:999px;padding:9px 14px;background:var(--card);color:var(--txt);font-size:11px;font-weight:900;letter-spacing:.06em;cursor:pointer;}
+.tk-sl button.on{background:var(--txt);color:var(--bg);border-color:var(--txt);}
+@media(max-width:600px){.tk-sl{display:grid;grid-template-columns:1fr 1fr;}.tk-sl button{border-radius:14px;text-align:left;}.tk-sl button:last-child{grid-column:span 2;}}
 .qk-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;}
 @media(max-width:860px){.qk-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
 .qk{display:flex;align-items:center;gap:12px;border:1px solid var(--glow);border-radius:16px;padding:12px 14px;background:var(--card);color:var(--txt);text-align:left;cursor:pointer;min-width:0;min-height:64px;}
@@ -4102,6 +4106,36 @@ function hSiriTakwim(){
   var J=jadualPerjumpaan(kat,tg.slice(0,4));for(var n in J)if(J[n]===tg){document.getElementById('h-siri').value=String(n);toast('Perjumpaan ke-'+n+' (ikut takwim)','info');return;}
 }
 
+
+// ---------- TAKWIM: SENARAI PENDEK & PAPARAN RINGKAS ----------
+var TK_SL=[['koko','Takwim Aktiviti Kokurikulum','fa-people-group'],['sukan','Sukan Sekolah','fa-medal'],['kem','Perkhemahan Sekolah','fa-campground'],['hsn','Hari Sukan Negara','fa-person-running'],['penuh','Takwim Penuh','fa-calendar-days']];
+function tkSenarai(o,k){
+  var t=String(o.aktiviti||'')+' '+String(o.kategori||''),sa=String(o.sasaran||'');
+  if(k==='hsn')return /JK089\b/.test(sa)||/hari sukan negara|\bhsn\b|merentas desa|jogathon/i.test(t);
+  if(k==='kem')return /JK088\b/.test(sa)||/perkhemahan|\bkem\b|pemakaian pangkat|kenaikan pangkat|camporee/i.test(t);
+  if(k==='sukan')return !tkSenarai(o,'hsn')&&(/JK063\b|#Rumah Sukan|JK07[4-9]\b|JK08[0-2]\b/.test(sa)||/sukan sekolah|olahraga|\bkot\b|kejohanan|acara (akhir )?padang|rumah sukan|sukantara|mssd|majlis sukan/i.test(t));
+  if(k==='koko')return /^(unit (beruniform|uniform)|kelab( (&|dan))? persatuan|sukan( (&|dan))? permainan|aktiviti koku)\b/i.test(String(o.aktiviti||'').trim())||/perhimpunan kokurikulum|mesyuarat kokurikulum|semakan fail/i.test(t);
+  return true;
+}
+function tkKira(k){
+  var L=(dr.takwim||[]).concat((dr.program||[]).map(function(p){return {aktiviti:p.nama,kategori:p.kategori,sasaran:''};}));
+  return k==='penuh'?L.length:L.filter(function(o){return tkSenarai(o,k);}).length;
+}
+function paparTakwimRingkas(el,list){
+  var hi=hariIniIso(),bul={},ord=[];
+  list.forEach(function(o){var i=tglIso(o.tarikh),k=i?i.slice(0,7):'—';if(!bul[k]){bul[k]=[];ord.push(k);}bul[k].push(o);});
+  var akanDtg=list.filter(function(o){return (tglIso(o.tarikhAkhir)||tglIso(o.tarikh))>=hi;})[0];
+  el.innerHTML=(akanDtg?'<div class="banner" style="background:var(--p2);"><i class="fa-solid fa-forward me-1"></i>Seterusnya: <b>'+esc(akanDtg.aktiviti)+'</b> · '+esc(kpHari(tglIso(akanDtg.tarikh)))+'</div>':'')
+   +ord.map(function(k){var p=k.split('-'),nm=p.length===2?BULAN_MY[+p[1]-1]+' '+p[0]:'TIADA TARIKH';
+    return '<div class="bx" style="margin-bottom:12px;gap:8px;"><div class="bx-h"><h6>'+esc(nm)+'</h6><span class="tag">'+bul[k].length+' aktiviti</span></div><div class="tk-list" style="max-height:none;">'
+     +bul[k].map(function(o){var a=tglIso(o.tarikh),b=tglIso(o.tarikhAkhir)||a,d=a?new Date(a+'T00:00:00'):null,now=a&&a<=hi&&b>=hi,kk=o._prog?'program':tkKat(o.sasaran);
+       var meta=[b!==a&&b?'hingga '+fmtTgl(b):'',o.sasaran?ptNamaSasaran(o.sasaran):'',o.lokasi,o.peringkat,o.penyelaras].filter(Boolean).map(esc).join(' · ');
+       var act=o._prog?'<button class="mini" onclick="tukarMenu(\'m-program\')">Program</button>':'<button class="mini" onclick="bukaBorang(\'takwim\',\''+o.id+'\')" aria-label="Edit"><i class="fa-solid fa-pen"></i></button><button class="mini mer" onclick="padamRekod(\'takwim\',\''+o.id+'\')" aria-label="Padam"><i class="fa-solid fa-trash"></i></button>';
+       return '<div class="tk-i'+(b&&b<hi?' lepas':'')+(now?' ini':'')+'" style="border-left-color:'+TK_WARNA[kk]+';align-items:center;"><div class="tk-tg"><b>'+(d?d.getDate():'–')+'</b><small>'+(d?HARI_MY[d.getDay()]:'')+'</small></div>'
+        +'<div style="min-width:0;flex:1;"><div class="t">'+esc(o.aktiviti)+(now?' <span class="tag s-ok">HARI INI</span>':'')+(o.status?' <span class="tag '+kelasStatus(o.status)+'">'+esc(o.status)+'</span>':'')+(o._prog?' <span class="tag s-proses">PROGRAM</span>':'')+'</div>'+(meta?'<div class="m">'+meta+'</div>':'')+'</div>'
+        +'<div class="pk-row" style="flex:0 0 auto;gap:4px;">'+act+'</div></div>';}).join('')+'</div></div>';}).join('');
+}
+
 // ---------- MENU PANTAS (laman utama) ----------
 function hPantas(){
   var z=document.getElementById('h-pantas');if(!z)return;
@@ -4872,6 +4906,7 @@ function senaraiModul(mk){
     dr.program.forEach(function(p){list.push({id:'P:'+p.id,_prog:p.id,tarikh:p.tarikh,tarikhAkhir:p.tarikhAkhir,aktiviti:p.nama,peringkat:p.peringkat,kategori:p.kategori,penyelaras:p.penyelaras,lokasi:p.lokasi,status:p.status,catatan:''});});
   }
   list=list.filter(function(o){
+    if(mk==='takwim'&&st.sl&&st.sl!=='penuh'&&!tkSenarai(o,st.sl))return false;
     if(st.f&&!sama(o[m.tapisK],st.f))return false;
     if(st.st&&!sama(o[m.statusK],st.st))return false;
     if(q){var t=m.medan.map(function(f){return o[f.k]||'';}).join(' ').toLowerCase();if(t.indexOf(q)<0)return false;}
@@ -4916,6 +4951,7 @@ function paparModul(){
   if(mk==='takwim')h+=_pt?'<div class="banner" style="background:var(--p3);"><i class="fa-solid fa-link me-1"></i>Disambung terus dengan <b>Portal Pengurusan Sekolah</b> ('+_pt.takwim.length+' aktiviti Kokurikulum). Tambah, edit atau padam di sini = berubah di Portal juga, dan sebaliknya.</div>'
     :'<div class="banner"><i class="fa-solid fa-link-slash me-1"></i>Belum disambung dengan Portal Pengurusan Sekolah'+(_ptRalat?': '+esc(_ptRalat):'')+'</div>';
   h+=ringkasanModul(mk);
+  if(mk==='takwim'){if(!st.sl)st.sl='koko';h+='<div class="tk-sl">'+TK_SL.map(function(x){return '<button type="button" class="'+(st.sl===x[0]?'on':'')+'" onclick="_modState.takwim.sl=\''+x[0]+'\';paparModul()"><i class="fa-solid '+x[2]+' me-1"></i>'+x[1]+' <span style="opacity:.7;">'+tkKira(x[0])+'</span></button>';}).join('')+'</div>';}
   h+='<div class="mod-tools"><div class="sunk cari"><i class="fa-solid fa-magnifying-glass" style="color:var(--sub);"></i><input id="mod-cari" type="search" placeholder="Cari…" value="'+esc(st.q)+'" oninput="_modState[_modSemasa].q=this.value;tunda(\'mod\',paparSenaraiModul,150)"></div>'
    +(fF&&fF.o?'<select class="form-select" onchange="_modState[_modSemasa].f=this.value;paparSenaraiModul()"><option value="">Semua '+esc(fF.l.toLowerCase())+'</option>'+opsyen(fF.o,st.f)+'</select>':'')
    +(fS&&fS.o?'<select class="form-select" onchange="_modState[_modSemasa].st=this.value;paparSenaraiModul()"><option value="">Semua '+esc(fS.l.toLowerCase())+'</option>'+opsyen(fS.o,st.st)+'</select>':'')
@@ -4925,6 +4961,7 @@ function paparModul(){
 function paparSenaraiModul(){
   var mk=_modSemasa,m=MODUL[mk],el=document.getElementById('mod-senarai');if(!el)return;
   var list=senaraiModul(mk);
+  if(mk==='takwim'&&list.length)return paparTakwimRingkas(el,list);
   if(!list.length){el.innerHTML='<div class="clay kosong-box"><i class="fa-solid '+m.ikon+'"></i>'+(dr[mk].length?'Tiada rekod sepadan dengan carian.':'Belum ada rekod. Tekan "Tambah" untuk mula.')+'</div>';return;}
   el.innerHTML='<div class="rek-grid">'+list.map(function(o){
     var tj=o[m.tajukK]||'(tanpa tajuk)';if(mk==='mesyuarat'&&o.bil)tj+=' · BIL. '+o.bil;
