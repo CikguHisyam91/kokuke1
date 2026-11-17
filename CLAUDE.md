@@ -24,6 +24,7 @@ dan beri arahan langkah demi langkah (gaya "padam semua & tampal semula").
   setiap modul = satu sheet "KOKO - <SHEET>" melalui `Rekod.gs`. Tajuk lajur = label medan, jadi jangan tukar label sesuka hati.
 - Transisi tahun baharu: logik dalam `simulasiTransisi()` (index.html); `jalankanTransisi()` menghantar pelan yang SAMA ke `laksanaTransisiTahun` (Transisi.gs). Sukan dipusing ikut `SUKAN_PUSINGAN`; Tahun 3→4 diagih seimbang; murid bukan Islam (tiada BIN/BINTI) tidak ke unit berunsur Islam.
 - Simpanan: salinan penuh fail data ke folder Drive "KOKOSMART SIMPANAN" (`Simpanan.gs`); menu Simpanan & Tahun Lepas untuk lihat (baca sahaja) dan pulihkan MASTER+ARKIB (simpan "SEBELUM PULIH" dahulu).
+- Sukan Tahunan (menu `sukantahunan`, fungsi `sk*`): 6 sheet melalui Rekod.gs (SUKAN KEJOHANAN/ACARA/PESERTA/KEPUTUSAN/MATA AWAL/REKOD). Mata individu 5-3-2-1, kumpulan 10-7-5-3; pingat tidak kira acara LAIN; rekod baru dikesan automatik (lompat/lontar = lebih jauh lebih baik). Data murid tahun lepas diimport melalui fail JSON (`KOKOSMART-SUKAN`) — nama murid TIDAK disimpan dalam repo.
 - `SOP` = 13 proses kerja daripada Fail Meja PK Kokurikulum (tcer.my); "Mulakan program" menjadikannya senarai semak program.
 
 ## Kebenaran pemilik
