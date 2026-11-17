@@ -60,7 +60,14 @@ function dapatkanPortal() {
           aktiviti: _ptS(r[_ptCol(iT, 'AKTIVITI')]), pautan: _ptS(r[_ptCol(iT, 'PAUTAN')]), catatan: _ptS(r[_ptCol(iT, 'CATATAN')]) };
       });
 
-    return { success: true, nama: ss.getName(), guru: guru, jk: jk, takwim: takwim, masa: new Date().getTime() };
+    // Cuti umum & cuti sekolah (baca sahaja) untuk warna kalendar
+    var cuti = T.rows.filter(function (r) { return _ptS(r[_ptCol(iT, 'ID')]) && /cuti/i.test(_ptS(r[_ptCol(iT, 'KATEGORI')])); })
+      .map(function (r) {
+        return { mula: _ptTgl(r[_ptCol(iT, 'TARIKH_MULA')], tz), tamat: _ptTgl(r[_ptCol(iT, 'TARIKH_TAMAT')], tz) || _ptTgl(r[_ptCol(iT, 'TARIKH_MULA')], tz),
+          nama: _ptS(r[_ptCol(iT, 'AKTIVITI')]), jenis: /sekolah/i.test(_ptS(r[_ptCol(iT, 'KATEGORI')])) ? 'SEKOLAH' : 'UMUM' };
+      });
+
+    return { success: true, nama: ss.getName(), guru: guru, jk: jk, takwim: takwim, cuti: cuti, masa: new Date().getTime() };
   } catch (e) { return { success: false, error: e.toString() }; }
 }
 

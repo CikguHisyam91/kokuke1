@@ -347,15 +347,28 @@ body[data-theme="dark"] .sw-tema i{transform:translateX(30px);color:var(--c2);}
 /* ===== Laman utama Bento ===== */
 .tk-wrap{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:16px;}
 @media(max-width:860px){.tk-wrap{grid-template-columns:1fr;}}
+.tk-stat{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px;}
+@media(max-width:600px){.tk-stat{grid-template-columns:repeat(2,minmax(0,1fr));}}
+.tk-stat div{border:1px solid var(--glow);border-radius:14px;padding:10px 12px;border-left-width:5px;}
+.tk-stat b{display:block;font-size:24px;font-weight:900;line-height:1;}.tk-stat span{font-size:9.5px;font-weight:900;letter-spacing:.1em;color:var(--sub);}
 .tk-cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;}
-.tk-cal span{font-size:9.5px;font-weight:900;letter-spacing:.08em;color:var(--sub);text-align:center;padding:2px 0;}
-.tk-d{position:relative;border:1px solid var(--glow);border-radius:10px;min-height:42px;padding:4px 6px;font-size:12px;font-weight:900;background:var(--card);color:var(--txt);text-align:left;cursor:pointer;}
-.tk-d.kosong{visibility:hidden;}.tk-d.lepas{opacity:.55;}.tk-d.hujung{background:var(--inp);}
-.tk-d.ini{outline:2px solid var(--c1);}.tk-d.pilih{background:var(--txt);color:var(--bg);}
-.tk-d i{position:absolute;right:5px;bottom:5px;min-width:16px;height:16px;border-radius:8px;background:var(--c1);color:#fff;font-style:normal;font-size:9.5px;line-height:16px;text-align:center;padding:0 3px;}
-.tk-list{display:flex;flex-direction:column;gap:6px;max-height:330px;overflow-y:auto;}
-.tk-i{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--glow);border-radius:12px;padding:8px 10px;}
-.tk-i.lepas{opacity:.55;}.tk-i.ini{border-color:var(--c1);border-width:2px;}
+.tk-cal>span{font-size:9.5px;font-weight:900;letter-spacing:.08em;color:var(--sub);text-align:center;padding:2px 0;}
+.tk-cal>span.hm{color:#64748b;}
+.tk-d{position:relative;border:1px solid var(--glow);border-radius:10px;min-height:46px;padding:4px 6px;font-size:12px;font-weight:900;background:var(--card);color:var(--txt);text-align:left;cursor:pointer;overflow:hidden;}
+.tk-d.kosong{visibility:hidden;}.tk-d.lepas{opacity:.62;}
+.tk-d.hujung{background:rgba(100,116,139,.16);color:#64748b;}
+.tk-d.csek{background:rgba(234,179,8,.28);border-color:#eab308;}
+.tk-d.cumum{background:rgba(220,38,38,.2);border-color:#dc2626;color:#dc2626;}
+.tk-d.ini{outline:3px solid var(--c1);outline-offset:-1px;}.tk-d.pilih{background:var(--txt)!important;color:var(--bg)!important;}
+.tk-dots{position:absolute;left:6px;right:6px;bottom:5px;display:flex;gap:3px;align-items:center;}
+.tk-dots em{width:7px;height:7px;border-radius:50%;display:inline-block;}
+.tk-dots small{font-size:9px;font-weight:900;margin-left:auto;}
+.tk-leg{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:10px;font-size:9.5px;font-weight:900;letter-spacing:.06em;color:var(--sub);}
+.tk-leg i{display:inline-block;width:12px;height:12px;border-radius:4px;margin-right:4px;vertical-align:-2px;border:1px solid var(--glow);}
+.tk-list{display:flex;flex-direction:column;gap:6px;max-height:360px;overflow-y:auto;}
+.tk-i{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--glow);border-left:5px solid var(--glow);border-radius:12px;padding:8px 10px;}
+.tk-i.lepas{opacity:.55;}.tk-i.ini{box-shadow:0 0 0 2px var(--c1) inset;}
+.tk-i.cuti{background:rgba(234,179,8,.14);}.tk-i.cuti.umum{background:rgba(220,38,38,.1);}
 .tk-tg{flex:0 0 46px;text-align:center;border-radius:8px;background:var(--inp);padding:4px 0;font-weight:900;line-height:1.1;}
 .tk-tg b{display:block;font-size:17px;}.tk-tg small{font-size:9px;letter-spacing:.08em;color:var(--sub);}
 .tk-i .t{font-size:12px;font-weight:800;letter-spacing:.03em;}.tk-i .m{font-size:10.5px;font-weight:700;color:var(--sub);margin-top:2px;}
@@ -3968,34 +3981,60 @@ function eksportTransisi(){
 // ---------- TAKWIM BULAN SEMASA (laman utama) ----------
 var _hTk={y:0,m:0,hari:''},BULAN_MY=['JANUARI','FEBRUARI','MAC','APRIL','MEI','JUN','JULAI','OGOS','SEPTEMBER','OKTOBER','NOVEMBER','DISEMBER'],HARI_MY=['AHD','ISN','SEL','RAB','KHA','JUM','SAB'];
 function hTkGerak(n){var d=new Date();if(!n||!_hTk.y){_hTk.y=d.getFullYear();_hTk.m=d.getMonth();}if(n){_hTk.m+=n;if(_hTk.m<0){_hTk.m=11;_hTk.y--;}if(_hTk.m>11){_hTk.m=0;_hTk.y++;}}_hTk.hari='';hTakwim();}
+var TK_WARNA={uniform:'#2f6fb3',kelab:'#1f9d55',sukan:'#d9822b',rumah:'#c0102c',semua:'#7c3aed',program:'#0f8a8a',lain:'#64748b'};
+var TK_LABEL={uniform:'Unit beruniform',kelab:'Kelab & persatuan',sukan:'Sukan & permainan',rumah:'Rumah sukan',semua:'Semua guru / JK',program:'Program',lain:'Lain-lain'};
+function tkKat(sasaran){
+  var K=[],ada=false;String(sasaran||'').split(';').forEach(function(x){x=x.trim();if(!x)return;ada=true;var k='';
+    if(x.charAt(0)==='#')k=PT_KAT[x.slice(1)]||'semua';else if(x.charAt(0)==='*')k='semua';else{var j=ptJk(x);k=j?(PT_KAT[j.kategori]||'semua'):'lain';}
+    if(K.indexOf(k)<0)K.push(k);});
+  return !ada?'lain':K.length===1?K[0]:'semua';
+}
 function takwimBulan(y,m){
   var a=y+'-'+('0'+(m+1)).slice(-2)+'-01',b=y+'-'+('0'+(m+1)).slice(-2)+'-31',out=[];
-  (dr.takwim||[]).forEach(function(o){var p=tglIso(o.tarikh),q=tglIso(o.tarikhAkhir)||p;if(p&&p<=b&&q>=a)out.push({mula:p,tamat:q,t:o.aktiviti,s:o.sasaran?ptNamaSasaran(o.sasaran):'',l:o.lokasi||'',st:o.status||''});});
-  (dr.program||[]).forEach(function(o){var p=tglIso(o.tarikh),q=tglIso(o.tarikhAkhir)||p;if(p&&p<=b&&q>=a)out.push({mula:p,tamat:q,t:o.nama,s:'Program',l:o.lokasi||'',st:o.status||'',prog:1});});
+  (dr.takwim||[]).forEach(function(o){var p=tglIso(o.tarikh),q=tglIso(o.tarikhAkhir)||p;if(p&&p<=b&&q>=a)out.push({mula:p,tamat:q,t:o.aktiviti,s:o.sasaran?ptNamaSasaran(o.sasaran):'',l:o.lokasi||'',st:o.status||'',k:tkKat(o.sasaran)});});
+  (dr.program||[]).forEach(function(o){var p=tglIso(o.tarikh),q=tglIso(o.tarikhAkhir)||p;if(p&&p<=b&&q>=a)out.push({mula:p,tamat:q,t:o.nama,s:'Program',l:o.lokasi||'',st:o.status||'',prog:1,k:'program'});});
   return out.sort(function(x,z){return x.mula<z.mula?-1:x.mula>z.mula?1:x.t.localeCompare(z.t);});
+}
+function cutiBulan(y,m){
+  var a=y+'-'+('0'+(m+1)).slice(-2)+'-01',b=y+'-'+('0'+(m+1)).slice(-2)+'-31';
+  return (_pt&&_pt.cuti||[]).filter(function(c){return c.mula&&c.mula<=b&&(c.tamat||c.mula)>=a;});
 }
 function hTakwim(){
   var z=document.getElementById('h-takwim');if(!z)return;
   if(!_hTk.y){var d0=new Date();_hTk.y=d0.getFullYear();_hTk.m=d0.getMonth();}
-  var y=_hTk.y,m=_hTk.m,L=takwimBulan(y,m),hi=hariIniIso(),pad=function(n){return ('0'+n).slice(-2);};
+  var y=_hTk.y,m=_hTk.m,L=takwimBulan(y,m),C=cutiBulan(y,m),hi=hariIniIso(),pad=function(n){return ('0'+n).slice(-2);};
   document.getElementById('h-tk-tajuk').textContent='Takwim '+BULAN_MY[m]+' '+y;
-  var kira={};L.forEach(function(x){var d=new Date(x.mula+'T00:00:00'),e=new Date(x.tamat+'T00:00:00');for(var k=0;d<=e&&k<62;k++){var s=d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());kira[s]=(kira[s]||0)+1;d.setDate(d.getDate()+1);}});
-  var mula=(new Date(y,m,1).getDay()+6)%7,bil=new Date(y,m+1,0).getDate(),cal='';
-  ['ISN','SEL','RAB','KHA','JUM','SAB','AHD'].forEach(function(h){cal+='<span>'+h+'</span>';});
+  function hariDalam(mula,tamat,fn){var d=new Date(mula+'T00:00:00'),e=new Date((tamat||mula)+'T00:00:00');for(var k=0;d<=e&&k<400;k++){fn(d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()));d.setDate(d.getDate()+1);}}
+  var hari={},cuti={};
+  L.forEach(function(x){hariDalam(x.mula,x.tamat,function(s){(hari[s]=hari[s]||[]).push(x.k);});});
+  C.forEach(function(c){hariDalam(c.mula,c.tamat,function(s){var o=cuti[s];if(!o||c.jenis==='UMUM')cuti[s]={jenis:c.jenis,nama:c.nama};});});
+  var mula=(new Date(y,m,1).getDay()+6)%7,bil=new Date(y,m+1,0).getDate(),cal='',sekolah=0,hUmum=0,hSek=0;
+  ['ISN','SEL','RAB','KHA','JUM','SAB','AHD'].forEach(function(h,i){cal+='<span'+(i>4?' class="hm"':'')+'>'+h+'</span>';});
   for(var i=0;i<mula;i++)cal+='<div class="tk-d kosong"></div>';
-  for(var dd=1;dd<=bil;dd++){var iso=y+'-'+pad(m+1)+'-'+pad(dd),w=new Date(y,m,dd).getDay();
-    cal+='<button type="button" class="tk-d'+(iso<hi?' lepas':'')+(iso===hi?' ini':'')+(w===0||w===6?' hujung':'')+(_hTk.hari===iso?' pilih':'')+'" onclick="_hTk.hari=_hTk.hari===\''+iso+'\'?\'\':\''+iso+'\';hTakwim()" aria-label="'+dd+' '+BULAN_MY[m]+(kira[iso]?', '+kira[iso]+' aktiviti':'')+'">'+dd+(kira[iso]?'<i>'+kira[iso]+'</i>':'')+'</button>';}
-  var Lp=_hTk.hari?L.filter(function(x){return x.mula<=_hTk.hari&&x.tamat>=_hTk.hari;}):L;
+  for(var dd=1;dd<=bil;dd++){
+    var iso=y+'-'+pad(m+1)+'-'+pad(dd),w=new Date(y,m,dd).getDay(),hm=(w===0||w===6),c=cuti[iso],K=hari[iso]||[];
+    if(c&&c.jenis==='UMUM')hUmum++;else if(c)hSek++;if(!hm&&!c)sekolah++;
+    var dots='';if(K.length){var u=[];K.forEach(function(k){if(u.indexOf(k)<0)u.push(k);});dots='<div class="tk-dots">'+u.slice(0,4).map(function(k){return '<em style="background:'+TK_WARNA[k]+';"></em>';}).join('')+'<small>'+K.length+'</small></div>';}
+    var tip=dd+' '+BULAN_MY[m]+(c?' — '+c.nama:'')+(hm?' (hujung minggu)':'')+(K.length?', '+K.length+' aktiviti':'');
+    cal+='<button type="button" title="'+esc(tip)+'" aria-label="'+esc(tip)+'" class="tk-d'+(iso<hi?' lepas':'')+(iso===hi?' ini':'')+(c?(c.jenis==='UMUM'?' cumum':' csek'):(hm?' hujung':''))+(_hTk.hari===iso?' pilih':'')+'" onclick="_hTk.hari=_hTk.hari===\''+iso+'\'?\'\':\''+iso+'\';hTakwim()">'+dd+dots+'</button>';
+  }
   var seterus=L.filter(function(x){return x.tamat>=hi;})[0];
-  var ring='<p style="margin:0 0 8px;font-size:11px;font-weight:800;color:var(--sub);letter-spacing:.05em;">'+L.length+' aktiviti'+(_hTk.hari?' · '+Lp.length+' pada '+fmtTgl(_hTk.hari)+' (tekan tarikh sekali lagi untuk semua)':'')
-   +(!_hTk.hari&&seterus?' · seterusnya: '+esc(seterus.t)+' ('+fmtTgl(seterus.mula)+')':'')+(_pt?' · <i class="fa-solid fa-link"></i> Portal':'')+'</p>';
-  var list=Lp.length?Lp.map(function(x){var d=new Date(x.mula+'T00:00:00'),now=x.mula<=hi&&x.tamat>=hi;
-    return '<div class="tk-i'+(x.tamat<hi?' lepas':'')+(now?' ini':'')+'"><div class="tk-tg"><b>'+d.getDate()+'</b><small>'+HARI_MY[d.getDay()]+'</small></div><div style="min-width:0;"><div class="t">'+esc(x.t)+(now?' <span class="tag s-ok">HARI INI</span>':'')+(x.prog?' <span class="tag s-proses">PROGRAM</span>':'')+'</div>'
-     +'<div class="m">'+[x.tamat!==x.mula?'hingga '+fmtTgl(x.tamat):'',x.s,x.l,x.st].filter(Boolean).map(esc).join(' · ')+'</div></div></div>';}).join('')
+  var stat='<div class="tk-stat"><div style="border-left-color:var(--c1);"><b>'+L.length+'</b><span>AKTIVITI KOKO</span></div>'
+   +'<div style="border-left-color:#1f9d55;"><b>'+sekolah+'</b><span>HARI PERSEKOLAHAN</span></div>'
+   +'<div style="border-left-color:#dc2626;"><b>'+hUmum+'</b><span>HARI CUTI UMUM</span></div>'
+   +'<div style="border-left-color:#eab308;"><b>'+hSek+'</b><span>HARI CUTI SEKOLAH</span></div></div>';
+  var Lp=_hTk.hari?L.filter(function(x){return x.mula<=_hTk.hari&&x.tamat>=_hTk.hari;}):L;
+  var Cp=_hTk.hari?C.filter(function(c){return c.mula<=_hTk.hari&&(c.tamat||c.mula)>=_hTk.hari;}):C;
+  var item=Cp.map(function(c){return {mula:c.mula,tamat:c.tamat||c.mula,t:c.nama,cuti:c.jenis};}).concat(Lp).sort(function(a,b){return a.mula<b.mula?-1:a.mula>b.mula?1:(a.cuti?-1:1);});
+  var ring='<p style="margin:0 0 8px;font-size:11px;font-weight:800;color:var(--sub);letter-spacing:.05em;">'+(_hTk.hari?fmtTgl(_hTk.hari)+': '+Lp.length+' aktiviti · <a href="#" onclick="_hTk.hari=\'\';hTakwim();return false;">papar semua</a>':(seterus?'Seterusnya: <b style="color:var(--txt);">'+esc(seterus.t)+'</b> ('+fmtTgl(seterus.mula)+')':'Tiada aktiviti akan datang bulan ini'))+(_pt?' · <i class="fa-solid fa-link"></i> Portal':'')+'</p>';
+  var list=item.length?item.map(function(x){var d=new Date(x.mula+'T00:00:00'),now=x.mula<=hi&&x.tamat>=hi,warna=x.cuti?(x.cuti==='UMUM'?'#dc2626':'#eab308'):TK_WARNA[x.k];
+    return '<div class="tk-i'+(x.tamat<hi?' lepas':'')+(now?' ini':'')+(x.cuti?' cuti'+(x.cuti==='UMUM'?' umum':''):'')+'" style="border-left-color:'+warna+';"><div class="tk-tg"><b>'+d.getDate()+'</b><small>'+HARI_MY[d.getDay()]+'</small></div><div style="min-width:0;"><div class="t">'+esc(x.t)+(now?' <span class="tag s-ok">HARI INI</span>':'')+(x.cuti?' <span class="tag" style="background:'+warna+';color:#fff;">'+(x.cuti==='UMUM'?'CUTI UMUM':'CUTI SEKOLAH')+'</span>':'')+'</div>'
+     +'<div class="m">'+[x.tamat!==x.mula?'hingga '+fmtTgl(x.tamat):'',x.cuti?'':TK_LABEL[x.k],x.s&&x.s!=='Program'?x.s:'',x.l,x.st].filter(Boolean).map(esc).join(' · ')+'</div></div></div>';}).join('')
    :'<div class="kosong-box" style="padding:20px;"><i class="fa-regular fa-calendar"></i>Tiada aktiviti'+(_hTk.hari?' pada tarikh ini':' bulan ini')+'.</div>';
-  z.innerHTML='<div class="tk-wrap"><div class="tk-cal">'+cal+'</div><div>'+ring+'<div class="tk-list">'+list+'</div></div></div>';
+  var leg='<div class="tk-leg"><span><i style="background:rgba(100,116,139,.16);"></i>Hujung minggu</span><span><i style="background:rgba(234,179,8,.28);border-color:#eab308;"></i>Cuti sekolah</span><span><i style="background:rgba(220,38,38,.2);border-color:#dc2626;"></i>Cuti umum</span><span><i style="outline:2px solid var(--c1);"></i>Hari ini</span>'
+   +['uniform','kelab','sukan','rumah','semua','program'].map(function(k){return '<span><i style="background:'+TK_WARNA[k]+';border-radius:50%;width:9px;height:9px;"></i>'+TK_LABEL[k]+'</span>';}).join('')+'</div>';
+  z.innerHTML=stat+'<div class="tk-wrap"><div><div class="tk-cal">'+cal+'</div>'+leg+'</div><div>'+ring+'<div class="tk-list">'+list+'</div></div></div>';
 }
-
 // ---------- PORTAL PENGURUSAN SEKOLAH (Portal.gs) ----------
 var _pt=null,_ptTiada=false,_ptRalat='',_takwimKoko=[],_jkQ={q:'',k:''};
 var PT_KAT={'Unit Beruniform':'uniform','Kelab & Persatuan':'kelab','Sukan & Permainan':'sukan','Rumah Sukan':'rumah'};
