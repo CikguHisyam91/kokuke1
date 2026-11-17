@@ -384,6 +384,7 @@ body[data-theme="dark"] .sw-tema i{transform:translateX(30px);color:var(--c2);}
 .tk-sl button{border:1px solid var(--glow);border-radius:999px;padding:9px 14px;background:var(--card);color:var(--txt);font-size:11px;font-weight:900;letter-spacing:.06em;cursor:pointer;}
 .tk-sl button.on{background:var(--txt);color:var(--bg);border-color:var(--txt);}
 @media(max-width:600px){.tk-sl{display:grid;grid-template-columns:1fr 1fr;}.tk-sl button{border-radius:14px;text-align:left;}.tk-sl button:last-child{grid-column:span 2;}}
+@media(max-width:860px){.ob-ed{grid-template-columns:1fr!important;}}
 .qk-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;}
 @media(max-width:860px){.qk-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
 .qk{display:flex;align-items:center;gap:12px;border:1px solid var(--glow);border-radius:16px;padding:12px 14px;background:var(--card);color:var(--txt);text-align:left;cursor:pointer;min-width:0;min-height:64px;}
@@ -784,11 +785,11 @@ body[data-theme="dark"] .sw-tema i{transform:translateX(30px);color:var(--c2);}
     <div id="kopr-f-hadir" class="row g-2">
       <div class="col-6 col-md-4"><label class="small mb-1">Kategori</label><select id="kopr-kat" class="form-select" onchange="koprKategori()"><option value="uniform">🛡️ Uniform</option><option value="kelab">🧠 Kelab</option><option value="sukan">⚽ Sukan</option></select></div>
       <div class="col-6 col-md-4"><label class="small mb-1">Nama Unit</label><select id="kopr-unit" class="form-select" onchange="koprLoad()"></select></div>
-      <div class="col-12 col-md-4 d-flex align-items-end"><button class="btn w-100 fw-bold" onclick="window.print()" style="background:var(--c1);color:var(--acct);border:none;"><i class="fa-solid fa-print me-1"></i>Cetak Pukal</button></div>
+      <div class="col-12 col-md-4 d-flex align-items-end"><button class="btn w-100 fw-bold" onclick="obCetakSemua()" style="background:var(--c1);color:var(--acct);border:none;"><i class="fa-solid fa-print me-1"></i>Cetak Pukal</button></div>
     </div>
     <div id="kopr-f-pen" class="d-none row g-2">
       <div class="col-md-8"><label class="small mb-1">Peringkat</label><select id="kopr-pkt" class="form-select" onchange="koprPenLoad()"><option value="">Semua</option><option>Sekolah</option><option>Zon</option><option>Daerah</option><option>Negeri</option><option>Kebangsaan</option><option>Antarabangsa</option></select></div>
-      <div class="col-md-4 d-flex align-items-end"><button class="btn w-100 fw-bold" onclick="window.print()" style="background:var(--c5);color:#000;border:none;"><i class="fa-solid fa-print me-1"></i>Cetak Pukal</button></div>
+      <div class="col-md-4 d-flex align-items-end"><button class="btn w-100 fw-bold" onclick="obCetakSemua()" style="background:var(--c5);color:#000;border:none;"><i class="fa-solid fa-print me-1"></i>Cetak Pukal</button></div>
     </div>
   </div>
   <div id="kopr-status" class="no-print"></div>
@@ -2389,7 +2390,7 @@ function koprLoad(){
   });
   zone.innerHTML=_oprGrp.map(function(o,gi){
     var tot=o.rows.length;var h=o.rows.filter(function(r){return r.status==='Hadir';}).length;
-    return _oprCard({tarikh:o.tarikh,kat:o.kat,unit:o.unit,siri:o.siri,thn:o.thn,ket:o.ket,linkGambar:o.linkGambar,guru:o.guru,ahli:tot,hadir:h,abs:tot-h,pct:tot?Math.round(h/tot*100):0},gi);
+    return obKad(obDataH(o,gi));
   }).join('');
 }
 
@@ -2400,11 +2401,143 @@ function koprPenLoad(){
   if(!logs.length){zone.innerHTML='<div class="card-g text-center text-muted py-4">Tiada OPR Pencapaian.</div>';return;}
   var grp={},urutan=[];
   logs.forEach(function(r){var k=r.tarikh+'_'+r.pertandingan+'_'+r.pencapaian;if(!grp[k]){grp[k]={tarikh:r.tarikh,kat:r.kategori,unit:r.pertandingan,linkGambar:r.linkGambar||'',guru:r.namaGuru||'-',capaian:r.pencapaian,pkt:r.peringkat,rows:[]};urutan.push(grp[k]);}grp[k].rows.push(r.nama);});
-  zone.innerHTML=urutan.map(function(o){
-    var listHtml=o.rows.map(function(n){return'<li>'+esc(n)+'</li>';}).join('');
-    var imgs=_imgsHtml(o.linkGambar,110);
-    return '<div class="opr-paper shadow mb-3"><div style="background:linear-gradient(135deg,#b45309,#78350f);color:#fff;padding:10px;border-radius:6px;text-align:center;margin-bottom:8px;"><img src="'+LOGO_SEKOLAH+'" style="height:38px;display:block;margin:0 auto 4px;"><strong>LAPORAN PENCAPAIAN</strong></div><div class="row g-1 mb-2" style="font-size:12px;"><div class="col-6"><strong>'+esc(o.kat)+'</strong></div><div class="col-6 text-end">'+esc(o.tarikh)+'</div><div class="col-12 fw-bold">'+esc(o.unit.toUpperCase())+' · '+esc(o.pkt)+'</div></div><div class="text-center mb-2"><span style="background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);border-radius:8px;padding:5px 14px;font-weight:700;color:#b45309;font-size:12px;">'+esc(o.capaian)+'</span></div><ol style="font-size:12px;margin:0 0 8px;padding-left:20px;">'+listHtml+'</ol>'+(imgs?'<div style="display:flex;flex-wrap:wrap;margin-bottom:8px;">'+imgs+'</div>':'')+'<div style="font-size:11px;border-top:1px solid #e2e8f0;padding-top:6px;"><strong>Guru:</strong> <span style="color:#1d4ed8;font-weight:700;">'+esc(o.guru)+'</span></div><div class="text-end mt-2 no-print"><button onclick="cetakSatuOpr(this)" style="background:#d97706;color:#fff;border:none;border-radius:6px;padding:5px 12px;font-weight:700;font-size:11px;cursor:pointer;">🖨️ Cetak</button></div></div>';
-  }).join('');
+  _obPen=urutan;zone.innerHTML=urutan.map(function(o,i){return obKad(obDataP(o,i));}).join('');
+}
+
+
+// ---------- OPR GAYA B (Bento): data, cadangan refleksi, kad, edit & cetak ----------
+var _obPen=[],_obSemasa=null;
+function obEdit(k){return (dr.opredit||[]).filter(function(o){return o.kunci===k;})[0]||null;}
+function obGambarAsal(link){return String(link||'').split(' | ').map(gambarUrl).filter(Boolean).slice(0,4);}
+function obModul(unit,siri){return (dr.modulunit||[]).filter(function(m){return sama(m.unit,unit)&&String(m.perjumpaan)===String(siri);})[0]||null;}
+function obCadang(d){
+  var c={kekuatan:[],kelemahan:[],penambahbaikan:[]},m=d.jenis==='H'?obModul(d.unit,d.siri):null;
+  if(m){if(m.kekuatan)c.kekuatan.push(m.kekuatan);if(m.kelemahan)c.kelemahan.push(m.kelemahan);if(m.penambahbaikan)c.penambahbaikan.push(m.penambahbaikan);}
+  if(d.jenis==='H'){
+    var p=d.pct,K={uniform:'Ahli menunjukkan disiplin dan kepatuhan yang baik sepanjang aktiviti.',kelab:'Ahli memberi kerjasama yang baik dalam aktiviti berkumpulan.',sukan:'Ahli bersemangat menjalani latihan kemahiran asas.'}[_katNorm(d.kat)||d.kat]||'Aktiviti berjalan lancar mengikut perancangan.';
+    if(!m){c.kekuatan.push(K);}
+    if(p>=90)c.kekuatan.push('Kehadiran ahli sangat memberangsangkan ('+p+'%).');else if(p>=75)c.kekuatan.push('Kehadiran ahli baik ('+p+'%).');
+    if(p<75)c.kelemahan.push('Kehadiran ahli rendah ('+p+'%) — '+d.abs+' murid tidak hadir.');
+    if(!m&&!c.kelemahan.length)c.kelemahan.push('Masa perjumpaan terhad untuk latihan yang lebih menyeluruh.');
+    if(p<75)c.penambahbaikan.push('Guru penasihat dan guru kelas memantau murid yang kerap tidak hadir.');
+    if(!m)c.penambahbaikan.push('Mengadakan aktiviti pengukuhan pada perjumpaan berikutnya.');
+  }else{
+    var t=String(d.capaian||''),j=/johan/i.test(t)&&!/naib/i.test(t);
+    c.kekuatan.push(/johan|naib|ketiga|emas|perak|gangsa|tempat/i.test(t)?'Murid berjaya meraih '+t.toLowerCase()+' di peringkat '+String(d.pkt||'').toLowerCase()+'.':'Murid mendapat pendedahan bertanding di peringkat '+String(d.pkt||'').toLowerCase()+'.');
+    c.kekuatan.push('Komitmen dan semangat kerjasama peserta yang tinggi.');
+    c.kelemahan.push(j?'Persaingan peringkat seterusnya lebih mencabar.':'Masih ada ruang untuk mencapai kedudukan yang lebih baik.');
+    c.penambahbaikan.push('Latihan intensif dan pemilihan peserta lebih awal untuk kejohanan akan datang.');
+  }
+  return {kekuatan:c.kekuatan.join(' '),kelemahan:c.kelemahan.join(' '),penambahbaikan:c.penambahbaikan.join(' ')};
+}
+function obIsi(d){
+  var e=obEdit(d.kunci),c=obCadang(d);
+  d.tajukDef=d.tajuk;d.cadang=c;
+  ['tajuk','tarikh','tempat','rumusan'].forEach(function(k){if(e&&e[k])d[k]=e[k];});
+  ['kekuatan','kelemahan','penambahbaikan'].forEach(function(k){d[k]=e&&e[k]?e[k]:c[k];d[k+'Auto']=!(e&&e[k]);});
+  d.gambar=[1,2,3,4].map(function(i){return e&&e['g'+i]?e['g'+i]:(d.gambarAsal[i-1]||'');});
+  d.ada=e;return d;
+}
+function obDataH(o,gi){
+  var tot=o.rows.length,h=o.rows.filter(function(r){return r.status==='Hadir';}).length,pct=tot?Math.round(h/tot*100):0,m=obModul(o.unit,o.siri);
+  return obIsi({jenis:'H',gi:gi,kunci:'H|'+o.tarikh+'|'+o.unit+'|'+o.siri+'|'+o.thn,unit:o.unit,kat:o.kat,siri:o.siri,thn:o.thn,guru:o.guru,
+    tajuk:String(o.unit).toUpperCase()+' · PERJUMPAAN KE-'+o.siri,tarikh:o.tarikh,tempat:'',rumusan:o.ket&&o.ket!=='-'?o.ket:(m?m.aktiviti:''),
+    lencana:pct+'%',lencanaK:'KEHADIRAN',lencanaS:'TAHUN '+o.thn,ahli:tot,hadir:h,abs:tot-h,pct:pct,
+    peserta:o.rows.filter(function(r){return r.status==='Hadir';}).map(function(r){return r.namaMurid;}),gambarAsal:obGambarAsal(o.linkGambar),
+    chip:[['TARIKH',o.tarikh],['KATEGORI',String(({uniform:'Unit Beruniform',kelab:'Kelab & Persatuan',sukan:'Sukan & Permainan'})[_katNorm(o.kat)||o.kat]||o.kat).toUpperCase()],['HADIR',h+' / '+tot],['TAHUN',o.thn]]});
+}
+function obDataP(o,i){
+  var med=/naib/i.test(o.capaian)?'🥈':/johan|emas/i.test(o.capaian)?'🥇':/ketiga|gangsa/i.test(o.capaian)?'🥉':'🏅';
+  return obIsi({jenis:'P',gi:i,kunci:'P|'+o.tarikh+'|'+o.unit+'|'+o.capaian,unit:o.unit,kat:o.kat,guru:o.guru,capaian:o.capaian,pkt:o.pkt,
+    tajuk:String(o.unit).toUpperCase(),tarikh:o.tarikh,tempat:'',rumusan:'',lencana:med,lencanaK:String(o.capaian).toUpperCase(),lencanaS:String(o.pkt||'').toUpperCase(),
+    peserta:o.rows,gambarAsal:obGambarAsal(o.linkGambar),chip:[['TARIKH',o.tarikh],['PERINGKAT',String(o.pkt||'-').toUpperCase()],['KATEGORI',String(o.kat||'-').toUpperCase()],['PESERTA',o.rows.length+' MURID']]});
+}
+var OB_CSS='.ob{font-family:Urbanist,Arial,sans-serif;color:#141414;background:#fff;padding:18px;box-sizing:border-box;position:relative;text-transform:uppercase;letter-spacing:.02em}'
+ +'.ob *{box-sizing:border-box}.ob .bh{display:flex;gap:12px;align-items:center;border-bottom:2px solid #141414;padding-bottom:10px}.ob .bh img{height:54px}.ob .bh small{display:block;font-weight:800;color:#c0102c;letter-spacing:.1em;font-size:9px}'
+ +'.ob .bh h2{margin:2px 0 0;font-size:17px;font-weight:900;line-height:1.15}.ob .bd{margin-left:auto;text-align:center;border:2px solid #c9a227;border-radius:14px;padding:6px 10px;min-width:78px;font-size:20px;font-weight:900}.ob .bd b{display:block;font-size:10px}.ob .bd small{display:block;font-size:8px;color:#666}'
+ +'.ob .gg{display:grid;grid-template-columns:2fr 1fr 1fr;grid-template-rows:96px 96px;gap:7px;margin:12px 0}.ob .gg div{border-radius:14px;background:#efece8 center/cover no-repeat;display:flex;align-items:center;justify-content:center;color:#aaa;font-size:9px;font-weight:800}.ob .gg div:first-child{grid-row:span 2}.ob .gg div:nth-child(4){grid-column:span 2}'
+ +'.ob .ch{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.ob .ch div{border:1px solid #ddd;border-radius:12px;padding:6px 8px;font-weight:900;font-size:10px}.ob .ch small{display:block;color:#888;font-size:7.5px;letter-spacing:.12em}'
+ +'.ob .bb{display:grid;grid-template-columns:1fr 1.15fr;gap:9px;margin-top:9px}.ob .cd{border:1px solid #ddd;border-radius:14px;padding:10px}.ob h4{margin:0 0 4px;font-size:9px;letter-spacing:.14em;color:#c0102c;font-weight:900}'
+ +'.ob ol{margin:0;padding-left:16px;font-size:9.5px;font-weight:700;line-height:1.5;columns:1}.ob ol.dua{columns:2;column-gap:14px}.ob p{margin:0 0 7px;font-size:9.5px;line-height:1.45;font-weight:600;text-transform:none}.ob .rf p b{display:inline-block;width:14px;color:#c0102c}'
+ +'.ob .bf{display:flex;justify-content:space-between;font-weight:900;font-size:9px;border-top:1px solid #ddd;padding-top:7px;margin-top:10px}';
+function obHtml(d){
+  var g=d.gambar,P=d.peserta||[];
+  return '<div class="ob"><div class="bh"><img src="'+LOGO_SEKOLAH+'"><div><small>'+esc((dc.namaSekolah||_sekolah()).toUpperCase())+' · LAPORAN SATU MUKA</small><h2>'+esc(d.tajuk)+'</h2></div><div class="bd">'+esc(d.lencana)+'<b>'+esc(d.lencanaK)+'</b><small>'+esc(d.lencanaS)+'</small></div></div>'
+   +'<div class="gg">'+[0,1,2,3].map(function(i){return g[i]?'<div style="background-image:url(\''+String(g[i]).replace(/'/g,'%27')+'\')"></div>':'<div>GAMBAR '+(i+1)+'</div>';}).join('')+'</div>'
+   +'<div class="ch">'+d.chip.map(function(c){return '<div><small>'+esc(c[0])+'</small>'+esc(c[1])+'</div>';}).join('')+'</div>'
+   +'<div class="bb"><div class="cd"><h4>'+(d.jenis==='H'?'MURID HADIR ('+P.length+')':'PESERTA')+'</h4><ol class="'+(P.length>12?'dua':'')+'">'+P.slice(0,40).map(function(n){return '<li>'+esc(n)+'</li>';}).join('')+'</ol>'+(P.length>40?'<p>… dan '+(P.length-40)+' lagi</p>':'')+'</div>'
+   +'<div class="cd rf">'+(d.tempat?'<h4>TEMPAT</h4><p>'+esc(d.tempat)+'</p>':'')+'<h4>RUMUSAN</h4><p>'+esc(d.rumusan||'-')+'</p><h4>REFLEKSI</h4><p><b>+</b>'+esc(d.kekuatan)+'</p><p><b>−</b>'+esc(d.kelemahan)+'</p><p><b>→</b>'+esc(d.penambahbaikan)+'</p></div></div>'
+   +'<div class="bf"><span>DISEDIAKAN: '+esc(String(d.guru||'GURU PENASIHAT').toUpperCase())+'</span><span>DISAHKAN: PK KOKURIKULUM</span></div></div>';
+}
+function obKad(d){
+  (window._obKad=window._obKad||{})[d.kunci]=d;
+  var k=esc(d.kunci).replace(/'/g,"\\'");
+  return '<div class="opr-paper mb-3" data-ob="'+esc(d.kunci)+'" style="padding:0;overflow:hidden;border-radius:18px;"><style>'+OB_CSS+'</style>'+obHtml(d)
+   +'<div class="pk-row no-print" style="padding:0 18px 16px;">'+(d.cadang&&(d.kekuatanAuto||d.kelemahanAuto)?'<span class="tag s-baru" title="Refleksi dicadang automatik — boleh diedit">✨ REFLEKSI AUTO</span>':'')
+   +'<button class="mini utama" onclick="obBuka(\''+k+'\')"><i class="fa-solid fa-pen me-1"></i>Edit &amp; gambar</button>'
+   +(d.jenis==='H'?'<button class="mini" onclick="editStatusKehadiran(this,'+d.gi+')"><i class="fa-solid fa-user-check me-1"></i>Status hadir</button>':'')
+   +'<button class="mini" onclick="obCetak([\''+k+'\'])"><i class="fa-solid fa-print me-1"></i>Cetak</button></div></div>';
+}
+function obCetak(kunci){
+  var D=kunci.map(function(k){return window._obKad[k];}).filter(Boolean);if(!D.length)return;
+  paparKertas(D.map(function(d){return '<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@600;700;800;900&display=swap" rel="stylesheet"><style>'+OB_CSS+'@page{size:A4;margin:8mm;}.ob{padding:4mm 2mm}.ob .gg{grid-template-rows:62mm 62mm!important}*{-webkit-print-color-adjust:exact;print-color-adjust:exact;}</style>'+obHtml(d);}),D.length>1?'OPR':'OPR '+D[0].tajuk);
+}
+function obCetakSemua(){var k=[].map.call(document.querySelectorAll('#kopr-zone [data-ob]'),function(e){return e.getAttribute('data-ob');});if(!k.length)return alert('Tiada OPR.');obCetak(k);}
+// Kecilkan gambar supaya muat dalam satu sel Google Sheet (< 45,000 aksara)
+function obKecil(blob,cb){
+  var rd=new FileReader();rd.onload=function(){var img=new Image();img.onload=function(){
+    var cuba=[[720,.6],[600,.55],[500,.5],[420,.45],[340,.4]],i=0;
+    (function satu(){var c=cuba[i++],sk=Math.min(1,c[0]/Math.max(img.width,img.height)),cv=document.createElement('canvas');cv.width=Math.round(img.width*sk);cv.height=Math.round(img.height*sk);
+      var x=cv.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,cv.width,cv.height);x.drawImage(img,0,0,cv.width,cv.height);var u=cv.toDataURL('image/jpeg',c[1]);
+      if(u.length<45000||i>=cuba.length)cb(u);else satu();})();
+  };img.onerror=function(){cb('');};img.src=rd.result;};rd.readAsDataURL(blob);
+}
+function obBuka(kunci){
+  var d=window._obKad[kunci];if(!d)return;_obSemasa=JSON.parse(JSON.stringify(d));var o=_obSemasa;
+  var el=pastiModal('mod-ob');el._kunci=true;el.firstChild.style.width='min(1100px,100%)';
+  el.firstChild.innerHTML='<style>'+OB_CSS+'</style><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;"><h5 style="margin:0;">Edit OPR</h5><button class="ib" style="width:38px;height:38px;" onclick="obTutup()" aria-label="Tutup"><i class="fa-solid fa-xmark"></i></button></div>'
+   +'<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:16px;" class="ob-ed">'
+   +'<div style="display:flex;flex-direction:column;gap:8px;">'
+   +'<label style="font-size:10.5px;font-weight:900;">TAJUK</label><input class="form-control ob-f" data-k="tajuk" value="'+esc(o.tajuk)+'">'
+   +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"><div><label style="font-size:10.5px;font-weight:900;">TARIKH</label><input class="form-control ob-f" data-k="tarikh" value="'+esc(o.tarikh)+'"></div><div><label style="font-size:10.5px;font-weight:900;">TEMPAT</label><input class="form-control ob-f" data-k="tempat" value="'+esc(o.tempat||'')+'"></div></div>'
+   +'<label style="font-size:10.5px;font-weight:900;">RUMUSAN / AKTIVITI</label><textarea class="form-control ob-f" data-k="rumusan" rows="2">'+esc(o.rumusan||'')+'</textarea>'
+   +'<div class="bx-h"><label style="font-size:10.5px;font-weight:900;">REFLEKSI</label><button class="mini" onclick="obCadangSemula()"><i class="fa-solid fa-wand-magic-sparkles me-1"></i>Cadang semula</button></div>'
+   +'<textarea class="form-control ob-f" data-k="kekuatan" rows="2" placeholder="+ Kekuatan">'+esc(o.kekuatan)+'</textarea>'
+   +'<textarea class="form-control ob-f" data-k="kelemahan" rows="2" placeholder="− Kelemahan">'+esc(o.kelemahan)+'</textarea>'
+   +'<textarea class="form-control ob-f" data-k="penambahbaikan" rows="2" placeholder="→ Penambahbaikan">'+esc(o.penambahbaikan)+'</textarea>'
+   +'<label style="font-size:10.5px;font-weight:900;">GAMBAR (TEKAN PETAK, KEMUDIAN TAMPAL / PILIH)</label><div id="ob-g" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;"></div>'
+   +'<div class="pk-row"><button class="mini" onclick="obTampal()"><i class="fa-solid fa-paste me-1"></i>Tampal gambar</button><label class="mini" style="margin:0;cursor:pointer;"><i class="fa-solid fa-image me-1"></i>Pilih fail<input type="file" accept="image/*" multiple style="display:none;" onchange="obFail(this)"></label></div>'
+   +'<p style="font-size:10px;font-weight:800;color:var(--sub);margin:0;">Salin gambar dari AppSheet / Telegram, kemudian tekan "Tampal gambar" atau Ctrl+V. Gambar masuk ke petak yang dipilih (bingkai merah).</p></div>'
+   +'<div id="ob-pra" style="border:1px solid var(--glow);border-radius:14px;overflow:hidden;max-height:70vh;overflow-y:auto;background:#fff;"></div></div>'
+   +'<div class="pk-row" style="margin-top:12px;"><button class="btn btn-danger" onclick="obSimpan()"><i class="fa-solid fa-floppy-disk me-1"></i>Simpan</button><button class="btn btn-secondary" onclick="obSimpan(true)"><i class="fa-solid fa-print me-1"></i>Simpan &amp; cetak</button><button class="btn btn-secondary" onclick="obTutup()">Batal</button></div>';
+  el.classList.add('show');o._slot=o.gambar.indexOf('');if(o._slot<0)o._slot=0;
+  el.querySelectorAll('.ob-f').forEach(function(f){f.oninput=function(){o[f.getAttribute('data-k')]=f.value;obPra();};});
+  obPra();
+}
+function obTutup(){var e=document.getElementById('mod-ob');e._kunci=false;e.classList.remove('show');_obSemasa=null;}
+function obPra(){
+  var o=_obSemasa;if(!o)return;document.getElementById('ob-pra').innerHTML=obHtml(o);
+  document.getElementById('ob-g').innerHTML=o.gambar.map(function(g,i){return '<div onclick="_obSemasa._slot='+i+';obPra()" style="position:relative;aspect-ratio:1;border-radius:10px;cursor:pointer;background:#efece8 center/cover no-repeat'+(g?' url(\''+String(g).replace(/'/g,'%27')+'\')':'')+';border:3px solid '+(o._slot===i?'#c0102c':'transparent')+';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;color:#999;">'+(g?'':(i+1))+(g?'<button class="mini mer" style="position:absolute;top:2px;right:2px;padding:0 6px;" onclick="event.stopPropagation();_obSemasa.gambar['+i+']=\'\';obPra()">✕</button>':'')+'</div>';}).join('');
+}
+function obMasuk(blobs){
+  var o=_obSemasa;if(!o||!blobs.length)return;var n=0;
+  blobs.forEach(function(b){obKecil(b,function(u){if(!u)return;var s=o._slot;o.gambar[s]=u;var kos=o.gambar.indexOf('');o._slot=kos>=0?kos:Math.min(3,s+1);n++;obPra();});});
+}
+function obTampal(){bacaKlipGambar(function(b){obMasuk(b);});}
+function obFail(inp){obMasuk([].slice.call(inp.files||[]).slice(0,4));inp.value='';}
+document.addEventListener('paste',function(e){
+  var m=document.getElementById('mod-ob');if(!m||!m.classList.contains('show'))return;var t=e.target;if(t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA'))return;
+  var f=[].filter.call((e.clipboardData&&e.clipboardData.files)||[],function(x){return /^image\//.test(x.type);});if(f.length){e.preventDefault();e.stopImmediatePropagation();obMasuk(f);}
+},true);
+function obCadangSemula(){var o=_obSemasa,c=obCadang(o);['kekuatan','kelemahan','penambahbaikan'].forEach(function(k){o[k]=c[k];var f=document.querySelector('#mod-ob .ob-f[data-k="'+k+'"]');if(f)f.value=c[k];});obPra();}
+function obSimpan(cetak){
+  var o=_obSemasa;if(!o)return;var e=o.ada||{},c=o.cadang||{};
+  var rek={id:e.id||idBaru(),kunci:o.kunci,tajuk:o.tajuk!==o.tajukDef?o.tajuk:'',tarikh:o.tarikh,tempat:o.tempat||'',rumusan:o.rumusan||'',
+    kekuatan:o.kekuatan!==c.kekuatan?o.kekuatan:'',kelemahan:o.kelemahan!==c.kelemahan?o.kelemahan:'',penambahbaikan:o.penambahbaikan!==c.penambahbaikan?o.penambahbaikan:''};
+  [1,2,3,4].forEach(function(i){var g=o.gambar[i-1]||'';rek['g'+i]=/^data:/.test(g)?g:(g&&g!==o.gambarAsal[i-1]?g:'');});
+  simpanRekod('opredit',rek,function(){var k=o.kunci;obTutup();toast('✅ OPR disimpan.','ok');
+    if(document.getElementById('kopr-f-pen')&&!document.getElementById('kopr-f-pen').classList.contains('d-none'))koprPenLoad();else koprLoad();
+    if(cetak)setTimeout(function(){obCetak([k]);},200);});
 }
 
 function editStatusKehadiran(btn,gi){
@@ -3711,6 +3844,14 @@ var MODUL={
    {k:'status',l:'STATUS',t:'select',o:['DILAKSANA']},{k:'oleh',l:'DISAHKAN OLEH',t:'text'},{k:'catatan',l:'CATATAN',t:'textarea',full:1}]},
  tetapanpk:{sheet:'TETAPAN PK',nama:'Tetapan PK Kokurikulum',ikon:'fa-lock',ket:'Tetapan khas PK Kokurikulum.',tajukK:'kunci',statusK:'',tapisK:'',tarikhK:'',
   medan:[{k:'kunci',l:'KUNCI',t:'text',wajib:1},{k:'nilai',l:'NILAI',t:'text'}]},
+ opredit:{sheet:'OPR EDIT',nama:'Suntingan OPR',ikon:'fa-file-pen',ket:'Suntingan OPR (tajuk, rumusan, refleksi, gambar).',tajukK:'tajuk',statusK:'',tapisK:'',tarikhK:'',
+  medan:[{k:'kunci',l:'KUNCI',t:'hidden'},{k:'tajuk',l:'TAJUK',t:'text'},{k:'tarikh',l:'TARIKH',t:'text'},{k:'tempat',l:'TEMPAT',t:'text'},{k:'rumusan',l:'RUMUSAN',t:'textarea'},
+   {k:'kekuatan',l:'KEKUATAN',t:'textarea'},{k:'kelemahan',l:'KELEMAHAN',t:'textarea'},{k:'penambahbaikan',l:'PENAMBAHBAIKAN',t:'textarea'},
+   {k:'g1',l:'GAMBAR 1',t:'hidden'},{k:'g2',l:'GAMBAR 2',t:'hidden'},{k:'g3',l:'GAMBAR 3',t:'hidden'},{k:'g4',l:'GAMBAR 4',t:'hidden'}]},
+ modulunit:{sheet:'MODUL UNIT',nama:'Modul 12 Perjumpaan Unit',ikon:'fa-book-open',ket:'Aktiviti 12 perjumpaan setiap unit beserta cadangan refleksi. Digunakan untuk cadangan automatik dalam OPR.',
+  tajukK:'aktiviti',statusK:'',tapisK:'unit',tarikhK:'',
+  medan:[{k:'kategori',l:'KATEGORI',t:'select',wajib:1,o:['UNIT BERUNIFORM','KELAB & PERSATUAN','SUKAN & PERMAINAN']},{k:'unit',l:'UNIT',t:'unit',wajib:1},{k:'perjumpaan',l:'PERJUMPAAN KE-',t:'number',wajib:1},
+   {k:'aktiviti',l:'AKTIVITI',t:'text',wajib:1,full:1},{k:'objektif',l:'OBJEKTIF',t:'textarea',full:1},{k:'kekuatan',l:'CADANGAN KEKUATAN',t:'textarea',full:1},{k:'kelemahan',l:'CADANGAN KELEMAHAN',t:'textarea',full:1},{k:'penambahbaikan',l:'CADANGAN PENAMBAHBAIKAN',t:'textarea',full:1}]},
  taglaporan:{sheet:'TAG LAPORAN',nama:'Tagging Laporan Lain-lain',ikon:'fa-tags',ket:'Laporan kategori Lain-lain yang telah disemak PKKo / SU Koku dan ditag kepada unit kokurikulum sekolah.',
   tajukK:'program',statusK:'',tapisK:'kategori',tarikhK:'',
   medan:[{k:'kunci',l:'KUNCI',t:'hidden'},{k:'tarikh',l:'TARIKH LAPORAN',t:'text'},{k:'program',l:'PROGRAM ASAL',t:'text',wajib:1,full:1},
@@ -3750,13 +3891,14 @@ var JUBIN={
  'sop':{n:'Proses Kerja (SOP)',k:'13 aliran kerja',i:'fa-route',c:'sop proses kerja carta aliran senarai semak'},
  'tugas':{n:'Senarai Tugas PK',k:'Fail meja',i:'fa-list-check',c:'tugas fail meja pk'},
  'simpanan':{n:'Simpanan & Tahun Lepas',k:'Lihat & pulihkan data',i:'fa-clock-rotate-left',c:'simpanan backup tahun lepas pulih data drive'},
+ 'm-modulunit':{n:'Modul 12 Perjumpaan',k:'Aktiviti & refleksi unit',i:'fa-book-open',c:'modul perjumpaan aktiviti refleksi unit kekuatan kelemahan'},
  'm-rujukan':{n:'Dokumen & Pautan',k:'Pekeliling, borang',i:'fa-book-bookmark',c:'rujukan dokumen borang pekeliling panduan pautan'},
  'tetapan':{n:'Tetapan',k:'Sekolah & kata laluan',i:'fa-sliders',c:'tetapan kata laluan sekolah'}
 };
 var RUANG=[
  {t:'Perancangan & Pentadbiran',k:'Takwim, mesyuarat, surat dan kewangan berjalan bersama',w:'--p2',j:['m-takwim','m-mesyuarat','m-surat','m-kewangan']},
  {t:'Unit & Murid',k:'Organisasi unit, keahlian dan jawatankuasa murid',w:'--p3',j:['m-entiti','rumah','murid','datamurid','jawatankuasa','semak','arkib','transisi']},
- {t:'Program & Pelaksanaan',k:'Kertas cadangan, JK, senarai semak, kehadiran dan OPR',w:'--p4',j:['m-program','sukantahunan','statushadir','koleksiopr','kehadiran']},
+ {t:'Program & Pelaksanaan',k:'Kertas cadangan, JK, senarai semak, kehadiran dan OPR',w:'--p4',j:['m-program','sukantahunan','statushadir','koleksiopr','kehadiran','m-modulunit']},
  {t:'Pencapaian & Penilaian',k:'Pencapaian murid, PAJSK dan laporan',w:'--p1',j:['pencapaian','utama','laporan']},
  {t:'Sumber Manusia & Aset',k:'Guru, kursus dan peralatan',w:'--p6',j:['guru','jkguru','m-kursus','m-aset']},
  {t:'Rujukan & Tetapan',k:'Proses kerja, tugas PK dan dokumen rasmi',w:'--p5',j:['sop','tugas','m-rujukan','simpanan','tetapan']}
