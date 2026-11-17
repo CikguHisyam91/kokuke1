@@ -946,8 +946,10 @@ body[data-theme="dark"] .sw-tema i{transform:translateX(30px);color:var(--c2);}
       <div class="col-md-10"><label class="small fw-bold mb-1">Nama Penuh Guru</label><input type="text" id="guru-nama" class="form-control" placeholder="Contoh: CIKGU AHMAD BIN ALI — huruf besar"></div>
       <div class="col-md-2 d-flex align-items-end"><button class="btn w-100 fw-bold py-2" onclick="tambahGuru()" style="background:var(--c5);color:#000;border:none;border-radius:10px;"><i class="fa-solid fa-plus me-1"></i>Tambah</button></div>
     </div>
+    <div id="guru-sync"></div>
+    <div class="row g-2 mb-2"><div class="col-12"><input type="search" id="guru-q" class="form-control" placeholder="Cari nama guru…" oninput="tunda('gq',paparGuru,200)"></div></div>
     <div class="table-responsive"><table class="table align-middle" style="font-size:13px;">
-      <thead><tr><th style="width:40px;">#</th><th>Nama Guru</th><th class="no-print" style="width:80px;">Buang</th></tr></thead>
+      <thead><tr><th style="width:40px;">#</th><th>Nama Guru</th><th>Sumber</th><th>Tugasan JK Koko</th><th class="no-print" style="width:150px;"></th></tr></thead>
       <tbody id="tbody-guru"></tbody>
     </table></div>
   </div>
@@ -1968,34 +1970,97 @@ function suggestGuru(val,boxId,inputId){
     box.appendChild(d);
   });
 }
+// Senarai guru = guru KokoSmart (sheet GURU) + guru Portal; tambah / tukar nama / buang diselaraskan ke kedua-duanya
+function senaraiGuruGabung(){
+  var o={},L=[];function n(x){return String(x||'').replace(/\s+/g,' ').trim().toUpperCase();}
+  (dc.guru||[]).forEach(function(g){var k=n(g.nama);if(!k)return;if(!o[k]){o[k]={nama:k,koko:true,portal:false,aktif:true};L.push(o[k]);}else o[k].koko=true;});
+  if(_pt)(_pt.guru||[]).forEach(function(g){var k=n(g.nama);if(!k)return;var aktif=!/tidak|bersara|pindah/i.test(g.status||'');if(!o[k]){o[k]={nama:k,koko:false,portal:true,aktif:aktif,id:g.id};L.push(o[k]);}else{o[k].portal=true;o[k].aktif=aktif;o[k].id=g.id;}});
+  var T={};if(_pt)(_pt.jk||[]).forEach(function(j){j.ahli.forEach(function(a){(T[a.nama]=T[a.nama]||[]).push(a.jawatan+' '+j.nama);});});
+  L.forEach(function(g){g.tugas=T[g.nama]||[];});
+  return L.filter(function(g){return g.aktif;}).sort(function(a,b){return a.nama.localeCompare(b.nama);});
+}
 function paparGuru(){
   var tbody=document.getElementById('tbody-guru');if(!tbody)return;
-  var list=dc.guru||[];
-  if(!list.length){tbody.innerHTML='<tr><td colspan="3" class="text-center py-3 text-muted">Belum ada guru. Tambah di atas atau taip nama terus dalam sheet DATA MASTER - GURU.</td></tr>';return;}
-  var dk=isDark();var tc=dk?'#e2e8f0':'#1e293b';var sc=dk?'#94a3b8':'#64748b';
-  tbody.innerHTML=list.map(function(g,i){
-    return '<tr><td class="text-center" style="color:'+sc+';">'+(i+1)+'</td><td class="fw-bold" style="color:'+tc+';">'+esc(g.nama)+'</td><td class="text-center no-print"><button data-i="'+i+'" style="background:rgba(244,63,94,.1);border:1px solid rgba(244,63,94,.2);color:var(--c4);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">Buang</button></td></tr>';
+  var L=senaraiGuruGabung(),q=(document.getElementById('guru-q')||{}).value||'';q=q.trim().toUpperCase();
+  var hanyaK=L.filter(function(g){return g.koko&&!g.portal;}),hanyaP=L.filter(function(g){return g.portal&&!g.koko;});
+  var sy=document.getElementById('guru-sync');
+  if(sy)sy.innerHTML=_pt&&(hanyaK.length||hanyaP.length)?'<div class="banner" style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;"><span><i class="fa-solid fa-arrows-rotate me-1"></i>'+(hanyaK.length?hanyaK.length+' guru hanya dalam KokoSmart':'')+(hanyaK.length&&hanyaP.length?' · ':'')+(hanyaP.length?hanyaP.length+' guru hanya dalam Portal':'')+'.</span><button class="mini" onclick="selarasGuru()">Selaraskan sekarang</button></div>'
+    :(_pt?'<div class="banner" style="background:var(--p3);"><i class="fa-solid fa-link me-1"></i>'+L.length+' guru · senarai KokoSmart &amp; Portal Pengurusan Sekolah sudah selaras.</div>':'');
+  var V=L.filter(function(g){return !q||g.nama.indexOf(q)>=0;});
+  if(!V.length){tbody.innerHTML='<tr><td colspan="5" class="text-center py-3 text-muted">'+(L.length?'Tiada padanan.':'Belum ada guru. Tambah di atas.')+'</td></tr>';return;}
+  tbody.innerHTML=V.map(function(g,i){
+    return '<tr><td class="text-center" style="color:var(--sub);">'+(i+1)+'</td><td class="fw-bold">'+esc(g.nama)+'</td>'
+     +'<td>'+(g.koko?'<span class="tag s-ok">KOKOSMART</span> ':'')+(g.portal?'<span class="tag s-baru">PORTAL</span>':'')+'</td>'
+     +'<td title="'+esc(g.tugas.join('\n'))+'"><b>'+g.tugas.length+'</b> <small style="color:var(--sub);">'+esc(g.tugas.slice(0,2).join(' · '))+(g.tugas.length>2?' …':'')+'</small></td>'
+     +'<td class="no-print" style="white-space:nowrap;"><button class="mini" data-e="'+esc(g.nama)+'"><i class="fa-solid fa-pen"></i> Nama</button> <button class="mini mer" data-b="'+esc(g.nama)+'"><i class="fa-solid fa-trash"></i></button></td></tr>';
   }).join('');
-  tbody.onclick=function(e){var b=e.target.closest('button[data-i]');if(!b)return;var g=list[parseInt(b.getAttribute('data-i'),10)];if(g)buangGuru(g.nama);};
+  tbody.onclick=function(e){var b=e.target.closest('button');if(!b)return;if(b.getAttribute('data-e'))tukarNamaGuru(b.getAttribute('data-e'));else if(b.getAttribute('data-b'))buangGuru(b.getAttribute('data-b'));};
+}
+function guruPortal(o,ok){
+  if(!_pt||_ptTiada){if(ok)ok({});return;}
+  google.script.run.withSuccessHandler(function(res){
+    if(res&&res.success){
+      var G=_pt.guru,lama=String(o.namaLama||o.nama).toUpperCase(),nama=String(o.nama).toUpperCase(),g=G.filter(function(x){return x.nama===lama;})[0]||G.filter(function(x){return x.nama===nama;})[0];
+      if(!res.tiada){if(g){g.nama=nama;if(o.status)g.status=o.status;}else G.push({id:res.id,nama:nama,jawatan:'Guru',kategori:'Guru',status:o.status||'Aktif'});}
+      if(o.namaLama&&lama!==nama)(_pt.jk||[]).forEach(function(j){j.ahli.forEach(function(a){if(a.nama===lama)a.nama=nama;});});
+      try{localStorage.setItem('kokoPortal',JSON.stringify(_pt));}catch(e){}
+    }
+    if(ok)ok(res||{});
+  }).withFailureHandler(function(e){var m=e&&e.message||'';if(ok)ok({success:false,error:/tidak dibenarkan|tidak dijumpai/i.test(m)?'Portal.gs terkini (simpanGuruPortal) belum dipasang':m});}).simpanGuruPortal(o);
 }
 function tambahGuru(){
   var nama=document.getElementById('guru-nama').value.trim().toUpperCase().replace(/\s+/g,' ');
   if(!nama)return alert('Masukkan nama guru!');
-  if((dc.guru||[]).some(function(g){return sama(g.nama,nama);}))return alert('Nama guru ini sudah ada dalam senarai.');
+  var ada=senaraiGuruGabung().filter(function(g){return g.nama===nama;})[0];
+  if(ada&&ada.koko&&(ada.portal||!_pt))return alert('Nama guru ini sudah ada dalam senarai.');
   showLoad();
+  function kePortal(){guruPortal({nama:nama},function(r){hideLoad();document.getElementById('guru-nama').value='';paparGuru();isiDatalist();
+    toast(r.success===false?'✅ Guru ditambah dalam KokoSmart. Portal: '+r.error:'✅ Guru ditambah (KokoSmart & Portal).',r.success===false?'info':'ok');});}
+  if(ada&&ada.koko)return kePortal();
   google.script.run.withSuccessHandler(function(res){
-    hideLoad();
-    if(res&&res.success){dc.guru.push({nama:nama,jawatan:'-'});document.getElementById('guru-nama').value='';paparGuru();toast('✅ Guru ditambah!','ok');}
-    else alert('Gagal: '+(res?res.error:''));
+    if(res&&res.success){dc.guru.push({nama:nama,jawatan:'-'});kePortal();}
+    else{hideLoad();alert('Gagal: '+(res?res.error:''));}
   }).withFailureHandler(function(e){hideLoad();alert('Ralat: '+e.message);}).simpanGuruBaru(nama);
 }
-function buangGuru(nama){
-  if(!confirm('Buang cikgu '+nama+'?'))return;showLoad();
+function tukarNamaGuru(lama){
+  var baru=prompt('Nama baharu untuk '+lama+':\n(Nama dalam semua jawatankuasa Portal juga akan dibetulkan)',lama);
+  if(!baru)return;baru=baru.trim().toUpperCase().replace(/\s+/g,' ');if(!baru||baru===lama)return;
+  var g=senaraiGuruGabung().filter(function(x){return x.nama===lama;})[0]||{};showLoad();
+  function kePortal(){
+    if(!g.portal&&!_pt){hideLoad();paparGuru();return toast('✅ Nama dikemas kini.','ok');}
+    guruPortal({namaLama:lama,nama:baru},function(r){hideLoad();paparGuru();isiDatalist();if(_viewSemasa==='jkguru')paparJkGuru();
+      toast(r.success===false?'Nama dikemas kini dalam KokoSmart. Portal: '+r.error:'✅ Nama dikemas kini (KokoSmart & Portal'+(r.ahliDibetulkan?', '+r.ahliDibetulkan+' jawatan JK dibetulkan':'')+').',r.success===false?'info':'ok');});
+  }
+  if(!g.koko)return kePortal();
   google.script.run.withSuccessHandler(function(res){
-    hideLoad();
-    if(res&&res.success){dc.guru=dc.guru.filter(function(g){return g.nama!==nama;});paparGuru();toast('✅ Guru dibuang.','ok');}
-    else alert('Gagal: '+(res?res.error:''));
+    if(!res||!res.success){hideLoad();return alert('Gagal: '+(res&&res.error||''));}
+    google.script.run.withSuccessHandler(function(r2){
+      dc.guru=dc.guru.filter(function(x){return String(x.nama).toUpperCase()!==lama;});if(r2&&r2.success)dc.guru.push({nama:baru,jawatan:'-'});kePortal();
+    }).withFailureHandler(function(e){hideLoad();alert('Ralat: '+e.message);}).simpanGuruBaru(baru);
+  }).withFailureHandler(function(e){hideLoad();alert('Ralat: '+e.message);}).padamGuruRecord(lama);
+}
+function buangGuru(nama){
+  var g=senaraiGuruGabung().filter(function(x){return x.nama===nama;})[0]||{koko:true};
+  if(!confirm('Buang cikgu '+nama+'?'+(g.portal?'\n\nDalam Portal, status guru ini akan ditukar kepada "Tidak Aktif" (rekod JK lama tidak dipadam).':'')+(g.tugas&&g.tugas.length?'\n\nGuru ini masih ada '+g.tugas.length+' tugasan JK Kokurikulum.':'')))return;
+  showLoad();
+  function kePortal(){if(!g.portal){hideLoad();paparGuru();isiDatalist();return toast('✅ Guru dibuang.','ok');}
+    guruPortal({nama:nama,status:'Tidak Aktif'},function(r){hideLoad();paparGuru();isiDatalist();toast(r.success===false?'Dibuang dalam KokoSmart. Portal: '+r.error:'✅ Guru dibuang (Portal: Tidak Aktif).',r.success===false?'info':'ok');});}
+  if(!g.koko)return kePortal();
+  google.script.run.withSuccessHandler(function(res){
+    if(res&&res.success){dc.guru=dc.guru.filter(function(x){return String(x.nama).toUpperCase()!==nama;});kePortal();}
+    else{hideLoad();alert('Gagal: '+(res?res.error:''));}
   }).withFailureHandler(function(e){hideLoad();alert('Ralat: '+e.message);}).padamGuruRecord(nama);
+}
+function selarasGuru(){
+  var L=senaraiGuruGabung(),kP=L.filter(function(g){return g.koko&&!g.portal;}),kK=L.filter(function(g){return g.portal&&!g.koko;});
+  if(!confirm('Selaraskan senarai guru?\n\n'+kP.length+' guru akan ditambah ke Portal.\n'+kK.length+' guru akan ditambah ke KokoSmart.'))return;
+  var kerja=kP.map(function(g){return ['p',g.nama];}).concat(kK.map(function(g){return ['k',g.nama];})),i=0,gagal=0;showLoad();
+  (function satu(){
+    if(i>=kerja.length){hideLoad();paparGuru();isiDatalist();return toast('✅ Senarai guru diselaraskan'+(gagal?' ('+gagal+' gagal)':'')+'.',gagal?'info':'ok');}
+    var k=kerja[i++];
+    if(k[0]==='p')guruPortal({nama:k[1]},function(r){if(r.success===false)gagal++;satu();});
+    else google.script.run.withSuccessHandler(function(res){if(res&&res.success)dc.guru.push({nama:k[1],jawatan:'-'});else gagal++;satu();}).withFailureHandler(function(){gagal++;satu();}).simpanGuruBaru(k[1]);
+  })();
 }
 
 // ===== PENCAPAIAN =====
@@ -4354,7 +4419,7 @@ function muatPortal(paksa){
     if(!res||!res.success){_ptRalat=res&&res.error||'Gagal membaca Portal';if(paksa)alert('Portal: '+_ptRalat+'\n\nPastikan Sheet Portal dikongsi dengan email PKKo sebagai Editor.');if(_viewSemasa==='jkguru')paparJkGuru();return;}
     ['guru','jk','takwim','cuti'].forEach(function(k){res[k]=res[k]||[];});_pt=res;_ptTiada=false;_ptRalat='';try{localStorage.setItem('kokoPortal',JSON.stringify(res));}catch(e){}
     gabungTakwim();isiDatalist();if(paksa)toast('✅ Data Portal dikemas kini.','ok');
-    if(_viewSemasa==='jkguru')paparJkGuru();else if(_viewSemasa==='modul'&&_modSemasa==='takwim')paparModul();else if(_viewSemasa==='home'){hTakwim();hPantas();}
+    if(_viewSemasa==='jkguru')paparJkGuru();else if(_viewSemasa==='modul'&&_modSemasa==='takwim')paparModul();else if(_viewSemasa==='home'){hTakwim();hPantas();}else if(_viewSemasa==='guru')paparGuru();
   }).withFailureHandler(function(e){
     if(paksa)hideLoad();var m=e&&e.message||String(e||'');
     if(/tidak dibenarkan|tidak dijumpai/i.test(m)){_ptTiada=true;_ptRalat='fail Apps Script Portal.gs belum dipasang';}else _ptRalat=m;
@@ -4441,13 +4506,20 @@ function paparJkGuru(){
    +'<select class="form-select" style="flex:0 1 240px;" onchange="_jkQ.k=this.value;paparJkGuru()"><option value="">Semua kategori</option>'+kat.map(function(k){return '<option'+(k===_jkQ.k?' selected':'')+'>'+esc(k)+'</option>';}).join('')+'</select></div>';
   if(q&&q.length>=3){var tg=[];J.forEach(function(j){j.ahli.forEach(function(a){if(a.nama.indexOf(q)>=0)tg.push({j:j,a:a});});});
     if(tg.length){var nm=tg[0].a.nama;h+='<div class="banner" style="margin-top:10px;background:var(--p2);"><b>'+esc(nm)+'</b>: '+tg.length+' tugasan Kokurikulum — '+tg.map(function(t){return esc(t.a.jawatan)+' '+esc(t.j.nama);}).join(' · ')+'</div>';}}
+  if(!q){var Ku=['Unit Beruniform','Kelab & Persatuan','Sukan & Permainan','Rumah Sukan','Pasukan Elit','Pentaksiran (PAJSK)','Jawatankuasa'].filter(function(k){return J.some(function(j){return j.kategori===k;});});
+    h+='<div class="bx rs-sek" style="margin-top:14px;"><div class="bx-h"><h6>Bilangan guru ikut unit</h6><small style="color:var(--sub);font-weight:800;">Unit paling sedikit guru di atas — sesuai untuk guru baharu</small></div>'
+     +'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;">'+Ku.filter(function(k){return !_jkQ.k||k===_jkQ.k;}).map(function(k){
+       var L2=J.filter(function(j){return j.kategori===k;}).map(function(j){var n={};j.ahli.forEach(function(a){n[a.nama]=1;});return {j:j,n:Object.keys(n).length};}).sort(function(a,b){return a.n-b.n||a.j.nama.localeCompare(b.j.nama);});
+       var mx=Math.max.apply(null,L2.map(function(x){return x.n;}).concat([1]));
+       return '<div><b style="font-size:10.5px;letter-spacing:.1em;color:var(--sub);">'+esc(k.toUpperCase())+'</b><div style="display:flex;flex-direction:column;gap:4px;margin-top:6px;">'+L2.map(function(x){var w=x.n<=2?'#dc2626':x.n<=4?'#eab308':'#1f9d55';
+         return '<div style="display:flex;align-items:center;gap:8px;font-size:11px;font-weight:800;cursor:pointer;" onclick="bukaCarta(\''+x.j.id+'\')" title="Buka carta"><span style="flex:0 0 120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc(x.j.nama)+'</span><span style="flex:1;height:8px;border-radius:5px;background:var(--inp);overflow:hidden;"><i style="display:block;height:100%;width:'+Math.max(4,Math.round(x.n/mx*100))+'%;background:'+w+';"></i></span><b style="flex:0 0 24px;text-align:right;">'+x.n+'</b></div>';}).join('')+'</div></div>';}).join('')+'</div></div>';}
   var induk=J.filter(function(j){return /induk/i.test(j.nama);})[0];
   if(induk&&!q&&!_jkQ.k)h+='<div class="bx-h" style="margin-top:14px;"><h6>Carta organisasi '+esc(induk.nama)+'</h6><button class="mini" onclick="cetakCarta(\''+induk.id+'\')"><i class="fa-solid fa-print me-1"></i>Cetak</button></div><div class="oc-wrap">'+ocHtml(induk)+'</div>';
   h+='<p style="margin:8px 0 0;font-size:11px;font-weight:800;color:var(--sub);">'+L.length+' jawatankuasa · dikemas kini '+esc(new Date(_pt.masa||Date.now()).toLocaleString('ms-MY'))+'</p></div>';
   h+='<div class="rs-grid" style="margin-top:16px;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));">'+L.map(function(j){
     var u=UJ[j.id],grp={},ord=[];j.ahli.forEach(function(a){if(!grp[a.jawatan]){grp[a.jawatan]=[];ord.push(a.jawatan);}grp[a.jawatan].push(a.nama);});
     return '<div class="bx" style="padding:14px;"><div style="display:flex;justify-content:space-between;gap:8px;"><b style="font-size:12px;letter-spacing:.04em;">'+esc(j.nama)+'</b><span class="tag">'+esc(j.id)+'</span></div>'
-     +'<small style="color:var(--sub);font-weight:800;font-size:10.5px;display:block;margin-top:2px;">'+esc(j.kategori)+(u?(u.unit?' · unit sistem: '+esc(u.unit):' · <span style="color:var(--c4);">tiada padanan unit</span>'):'')+'</small>'
+     +'<small style="color:var(--sub);font-weight:800;font-size:10.5px;display:block;margin-top:2px;">'+(function(){var n={};j.ahli.forEach(function(a){n[a.nama]=1;});return '<b style="color:var(--txt);">'+Object.keys(n).length+' guru</b> · ';})()+esc(j.kategori)+(u?(u.unit?' · unit sistem: '+esc(u.unit):' · <span style="color:var(--c4);">tiada padanan unit</span>'):'')+'</small>'
      +'<div style="margin-top:8px;display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:700;">'
      +(ord.length?ord.map(function(k){return '<div><span style="color:var(--sub);">'+esc(k)+':</span> '+grp[k].map(function(n){return '<span'+(q&&n.indexOf(q)>=0?' style="background:var(--p4);border-radius:4px;padding:0 3px;"':'')+'>'+esc(n)+'</span>';}).join(', ')+'</div>';}).join(''):'<span style="color:var(--sub);">Tiada ahli direkod</span>')
      +(j.catatan?'<div style="color:var(--sub);">'+esc(j.catatan)+'</div>':'')+'</div>'
@@ -4514,7 +4586,7 @@ function jkEdit(id){
   _jkE={id:id,kategori:j?j.kategori:'Jawatankuasa',nama:j?j.nama:'',tugas:j?j.tugas||'':'',catatan:j?j.catatan||'':'',ahli:j?j.ahli.map(function(a){return {jawatan:a.jawatan,nama:a.nama};}):[{jawatan:'Pengerusi',nama:''},{jawatan:'Setiausaha',nama:''}]};
   var el=pastiModal('mod-jke');el.firstChild.style.width='min(760px,100%)';
   var jw={};(_pt.jk||[]).forEach(function(x){x.ahli.forEach(function(a){jw[a.jawatan]=1;});});
-  var dl='<datalist id="dl-jkjw">'+Object.keys(jw).sort().map(function(k){return '<option value="'+esc(k)+'">';}).join('')+'</datalist><datalist id="dl-ptguru">'+(_pt.guru||[]).map(function(g){return '<option value="'+esc(g.nama)+'">';}).join('')+'</datalist>';
+  var dl='<datalist id="dl-jkjw">'+Object.keys(jw).sort().map(function(k){return '<option value="'+esc(k)+'">';}).join('')+'</datalist><datalist id="dl-ptguru">'+semuaGuru().map(function(g){return '<option value="'+esc(g.nama)+'">';}).join('')+'</datalist>';
   var K=['Jawatankuasa','Unit Beruniform','Kelab & Persatuan','Sukan & Permainan','Rumah Sukan','Pentaksiran (PAJSK)','Pasukan Elit'];
   el.firstChild.innerHTML=dl+'<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;"><h5 style="margin:0;">'+(id?'Edit '+esc(id):'JK Kokurikulum baharu')+'</h5><button class="ib" style="width:38px;height:38px;" onclick="document.getElementById(\'mod-jke\').classList.remove(\'show\')" aria-label="Tutup"><i class="fa-solid fa-xmark"></i></button></div>'
    +'<div class="fgrid"><div class="full"><label>NAMA JAWATANKUASA *</label><input id="jke-nama" class="form-control" value="'+esc(_jkE.nama)+'"></div>'
@@ -4523,13 +4595,13 @@ function jkEdit(id){
    +'<div class="full"><label>SENARAI TUGAS</label><textarea id="jke-tug" class="form-control" rows="2">'+esc(_jkE.tugas)+'</textarea></div></div>'
    +'<div class="bx-h" style="margin:14px 0 6px;"><b style="font-size:11px;letter-spacing:.1em;">AHLI JAWATANKUASA</b><button class="mini" onclick="jkBaris(-1)"><i class="fa-solid fa-plus me-1"></i>Tambah ahli</button></div>'
    +'<div id="jke-ahli" style="display:flex;flex-direction:column;gap:6px;max-height:42vh;overflow-y:auto;"></div>'
-   +'<p style="margin:8px 0 0;font-size:10.5px;font-weight:800;color:var(--sub);">Pilih nama daripada senarai guru Portal. Nama merah = tiada dalam senarai GURU Portal.</p>'
+   +'<p style="margin:8px 0 0;font-size:10.5px;font-weight:800;color:var(--sub);">Pilih nama daripada senarai guru (KokoSmart &amp; Portal). Nama merah = belum didaftar dalam Senarai Guru.</p>'
    +'<div class="pk-row" style="margin-top:14px;"><button class="btn btn-danger" onclick="jkSimpan()"><i class="fa-solid fa-floppy-disk me-1"></i>Simpan ke Portal</button><button class="btn btn-secondary" onclick="document.getElementById(\'mod-jke\').classList.remove(\'show\')">Batal</button></div>';
   el.classList.add('show');jkLukis();
 }
 function jkAmbil(){var b=document.querySelectorAll('#jke-ahli .jke-r');_jkE.ahli=[].map.call(b,function(r){return {jawatan:r.querySelector('.jke-j').value.trim(),nama:r.querySelector('.jke-n').value.trim().toUpperCase()};});}
 function jkLukis(){
-  var G={};(_pt.guru||[]).forEach(function(g){G[g.nama]=1;});
+  var G={};semuaGuru().forEach(function(g){G[g.nama]=1;});
   document.getElementById('jke-ahli').innerHTML=_jkE.ahli.map(function(a,i){var luar=a.nama&&!G[a.nama];
     return '<div class="jke-r" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;"><input class="form-control jke-j" list="dl-jkjw" placeholder="Jawatan" value="'+esc(a.jawatan)+'" style="flex:1 1 150px;">'
      +'<input class="form-control jke-n" list="dl-ptguru" placeholder="Nama guru" value="'+esc(a.nama)+'" style="flex:2 1 220px;'+(luar?'border-color:#dc2626;color:#dc2626;':'')+'" onchange="jkAmbil();jkLukis()">'
@@ -4541,6 +4613,10 @@ function jkGerak(i,d){jkAmbil();var j=i+d;if(j<0||j>=_jkE.ahli.length)return;var
 function jkSimpan(){
   jkAmbil();var nama=document.getElementById('jke-nama').value.trim();if(!nama)return alert('Isi nama jawatankuasa.');
   var ahli=_jkE.ahli.filter(function(a){return a.nama;});
+  var Gp={};(_pt.guru||[]).forEach(function(g){Gp[g.nama]=1;});
+  _jkE.cuba=_jkE.cuba||{};
+  var tambah=ahli.map(function(a){return a.nama;}).filter(function(n,i,A){return !Gp[n]&&!_jkE.cuba[n]&&A.indexOf(n)===i&&semuaGuru().some(function(g){return g.nama===n;});});
+  if(tambah.length){var n0=tambah[0];_jkE.cuba[n0]=1;return guruPortal({nama:n0},function(){jkSimpan();});}
   var o={id:_jkE.id,kategori:document.getElementById('jke-kat').value,nama:nama,tugas:document.getElementById('jke-tug').value.trim(),catatan:document.getElementById('jke-cat').value.trim(),ahli:ahli};
   showLoad();
   google.script.run.withSuccessHandler(function(res){hideLoad();
