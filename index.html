@@ -470,7 +470,7 @@ body[data-theme="dark"] .sw-tema i{transform:translateX(30px);color:var(--c2);}
 <div id="view-home" class="view-section active">
   <div class="bento">
     <div class="bx bx-12">
-      <div class="bx-h"><h6>Menu pantas pemantauan</h6><span style="font-size:10.5px;font-weight:800;color:var(--sub);letter-spacing:.08em;">Nazir · JPN · PPD</span></div>
+      <div class="bx-h"><h6>Menu pantas</h6></div>
       <div class="qk-grid" id="h-pantas"></div>
     </div>
     <div class="bx bx-6">
@@ -3998,7 +3998,7 @@ function eksportTransisi(){
 
 
 
-// ---------- MENU PANTAS PEMANTAUAN (laman utama) ----------
+// ---------- MENU PANTAS (laman utama) ----------
 function hPantas(){
   var z=document.getElementById('h-pantas');if(!z)return;
   var d=new Date(),L=takwimBulan(d.getFullYear(),d.getMonth()),kh=dc.kehadiran||[],hd=kh.filter(function(l){return /^hadir$/i.test(l.status);}).length;
