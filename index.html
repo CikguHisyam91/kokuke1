@@ -1977,20 +1977,23 @@ function senaraiGuruGabung(){
   if(_pt)(_pt.guru||[]).forEach(function(g){var k=n(g.nama);if(!k)return;var aktif=!/tidak|bersara|pindah/i.test(g.status||'');if(!o[k]){o[k]={nama:k,koko:false,portal:true,aktif:aktif,id:g.id};L.push(o[k]);}else{o[k].portal=true;o[k].aktif=aktif;o[k].id=g.id;}});
   var T={};if(_pt)(_pt.jk||[]).forEach(function(j){j.ahli.forEach(function(a){(T[a.nama]=T[a.nama]||[]).push(a.jawatan+' '+j.nama);});});
   L.forEach(function(g){g.tugas=T[g.nama]||[];});
-  return L.filter(function(g){return g.aktif;}).sort(function(a,b){return a.nama.localeCompare(b.nama);});
+  return L.filter(function(g){return g.aktif||_guruTakAktif;}).sort(function(a,b){return (b.aktif?1:0)-(a.aktif?1:0)||a.nama.localeCompare(b.nama);});
 }
+var _guruTakAktif=false;
 function paparGuru(){
   var tbody=document.getElementById('tbody-guru');if(!tbody)return;
   var L=senaraiGuruGabung(),q=(document.getElementById('guru-q')||{}).value||'';q=q.trim().toUpperCase();
-  var hanyaK=L.filter(function(g){return g.koko&&!g.portal;}),hanyaP=L.filter(function(g){return g.portal&&!g.koko;});
+  var hanyaK=L.filter(function(g){return g.aktif&&g.koko&&!g.portal;}),hanyaP=L.filter(function(g){return g.aktif&&g.portal&&!g.koko;});
+  var tak=_pt?(_pt.guru||[]).filter(function(g){return /tidak|bersara|pindah/i.test(g.status||'');}).length:0;
   var sy=document.getElementById('guru-sync');
   if(sy)sy.innerHTML=_pt&&(hanyaK.length||hanyaP.length)?'<div class="banner" style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;"><span><i class="fa-solid fa-arrows-rotate me-1"></i>'+(hanyaK.length?hanyaK.length+' guru hanya dalam KokoSmart':'')+(hanyaK.length&&hanyaP.length?' · ':'')+(hanyaP.length?hanyaP.length+' guru hanya dalam Portal':'')+'.</span><button class="mini" onclick="selarasGuru()">Selaraskan sekarang</button></div>'
     :(_pt?'<div class="banner" style="background:var(--p3);"><i class="fa-solid fa-link me-1"></i>'+L.length+' guru · senarai KokoSmart &amp; Portal Pengurusan Sekolah sudah selaras.</div>':'');
+  if(sy&&tak)sy.innerHTML+='<div style="margin:-6px 0 12px;"><label style="font-size:11px;font-weight:800;cursor:pointer;"><input type="checkbox" '+(_guruTakAktif?'checked ':'')+'onchange="_guruTakAktif=this.checked;paparGuru()"> Tunjuk '+tak+' guru Tidak Aktif dalam Portal</label></div>';
   var V=L.filter(function(g){return !q||g.nama.indexOf(q)>=0;});
   if(!V.length){tbody.innerHTML='<tr><td colspan="5" class="text-center py-3 text-muted">'+(L.length?'Tiada padanan.':'Belum ada guru. Tambah di atas.')+'</td></tr>';return;}
   tbody.innerHTML=V.map(function(g,i){
     return '<tr><td class="text-center" style="color:var(--sub);">'+(i+1)+'</td><td class="fw-bold">'+esc(g.nama)+'</td>'
-     +'<td>'+(g.koko?'<span class="tag s-ok">KOKOSMART</span> ':'')+(g.portal?'<span class="tag s-baru">PORTAL</span>':'')+'</td>'
+     +'<td>'+(g.koko?'<span class="tag s-ok">KOKOSMART</span> ':'')+(g.portal?'<span class="tag s-baru">PORTAL</span>':'')+(g.aktif?'':' <span class="tag s-batal">TIDAK AKTIF</span>')+'</td>'
      +'<td title="'+esc(g.tugas.join('\n'))+'"><b>'+g.tugas.length+'</b> <small style="color:var(--sub);">'+esc(g.tugas.slice(0,2).join(' · '))+(g.tugas.length>2?' …':'')+'</small></td>'
      +'<td class="no-print" style="white-space:nowrap;"><button class="mini" data-e="'+esc(g.nama)+'"><i class="fa-solid fa-pen"></i> Nama</button> <button class="mini mer" data-b="'+esc(g.nama)+'"><i class="fa-solid fa-trash"></i></button></td></tr>';
   }).join('');
@@ -2040,11 +2043,16 @@ function tukarNamaGuru(lama){
   }).withFailureHandler(function(e){hideLoad();alert('Ralat: '+e.message);}).padamGuruRecord(lama);
 }
 function buangGuru(nama){
-  var g=senaraiGuruGabung().filter(function(x){return x.nama===nama;})[0]||{koko:true};
-  if(!confirm('Buang cikgu '+nama+'?'+(g.portal?'\n\nDalam Portal, status guru ini akan ditukar kepada "Tidak Aktif" (rekod JK lama tidak dipadam).':'')+(g.tugas&&g.tugas.length?'\n\nGuru ini masih ada '+g.tugas.length+' tugasan JK Kokurikulum.':'')))return;
+  var g=senaraiGuruGabung().filter(function(x){return x.nama===nama;})[0]||{koko:true,tugas:[]},n=(g.tugas||[]).length;
+  if(!confirm(n?'Cikgu '+nama+' masih ada '+n+' tugasan JK Kokurikulum:\n- '+g.tugas.slice(0,6).join('\n- ')+(n>6?'\n…':'')+'\n\nGuru ini akan dibuang daripada KokoSmart dan ditanda "Tidak Aktif" dalam Portal (tidak dipadam terus supaya carta JK tidak rosak). Keluarkan guru ini daripada JK dahulu jika mahu padam terus.\n\nTeruskan?'
+    :'PADAM TERUS cikgu '+nama+'?\n\nNama ini akan dipadam daripada KokoSmart'+(g.portal?' dan Portal':'')+'. Tindakan ini tidak boleh dibatalkan.'))return;
   showLoad();
-  function kePortal(){if(!g.portal){hideLoad();paparGuru();isiDatalist();return toast('✅ Guru dibuang.','ok');}
-    guruPortal({nama:nama,status:'Tidak Aktif'},function(r){hideLoad();paparGuru();isiDatalist();toast(r.success===false?'Dibuang dalam KokoSmart. Portal: '+r.error:'✅ Guru dibuang (Portal: Tidak Aktif).',r.success===false?'info':'ok');});}
+  function kePortal(){if(!g.portal){hideLoad();paparGuru();isiDatalist();return toast('✅ Guru dipadam.','ok');}
+    guruPortal(n?{nama:nama,status:'Tidak Aktif'}:{nama:nama,padam:true},function(r){
+      if(r.success&&r.dipadam&&_pt)_pt.guru=_pt.guru.filter(function(x){return x.nama!==nama;});
+      try{localStorage.setItem('kokoPortal',JSON.stringify(_pt));}catch(e){}
+      hideLoad();paparGuru();isiDatalist();
+      toast(r.success===false?'Dibuang dalam KokoSmart. Portal: '+r.error:(n?'✅ Guru dibuang (Portal: Tidak Aktif).':'✅ Guru dipadam terus (KokoSmart & Portal).'),r.success===false?'info':'ok');});}
   if(!g.koko)return kePortal();
   google.script.run.withSuccessHandler(function(res){
     if(res&&res.success){dc.guru=dc.guru.filter(function(x){return String(x.nama).toUpperCase()!==nama;});kePortal();}

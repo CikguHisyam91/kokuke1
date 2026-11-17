@@ -205,7 +205,7 @@ function simpanJkPortal(jk) {
 
 
 // Tambah / tukar nama / tukar status guru dalam tab GURU Portal.
-// g: { nama, namaLama (jika tukar nama), status (cth. 'Aktif' / 'Tidak Aktif'), jawatan }
+// g: { nama, namaLama (jika tukar nama), status (cth. 'Aktif' / 'Tidak Aktif'), jawatan, padam (true = padam terus) }
 // Tukar nama turut membetulkan NAMA_GURU dalam AHLI_JK.
 function simpanGuruPortal(g) {
   var lock = LockService.getScriptLock();
@@ -226,6 +226,15 @@ function simpanGuruPortal(g) {
     });
     if (baris < 0 && g.namaLama && nama !== lama) {
       G.rows.forEach(function (r, i) { if (baris < 0 && _ptS(r[c('NAMA')]).toUpperCase() === nama) { baris = i + 2; id = _ptS(r[c('ID')]); } });
+    }
+    // Padam terus (hanya jika guru tiada dalam mana-mana jawatankuasa)
+    if (g.padam) {
+      if (baris < 0) return { success: true, tiada: true };
+      var Ap = _ptJadual(ss, 'AHLI_JK'), cN = Ap.h.indexOf('NAMA_GURU'), cI = Ap.h.indexOf('ID_GURU'), guna = 0;
+      Ap.rows.forEach(function (r) { if ((cN >= 0 && _ptS(r[cN]).toUpperCase() === lama) || (cI >= 0 && id && _ptS(r[cI]) === id)) guna++; });
+      if (guna) return { success: false, error: 'Guru ini masih ada ' + guna + ' jawatan dalam JK. Keluarkan daripada JK dahulu.' };
+      G.sh.deleteRow(baris);
+      return { success: true, dipadam: true, id: id };
     }
     var baru = baris < 0;
     function tulis(k, v) { var i = c(k); if (i < 0) return; var sel = G.sh.getRange(baris, i + 1); sel.setNumberFormat('@'); sel.setValue(v); }
