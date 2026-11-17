@@ -1,7 +1,7 @@
 // ============================================================
 // KOKOSMART PRO — Portal.gs
 // Sambungan terus ke Google Sheet "Portal Pengurusan Sekolah" (Portal Tugas Guru).
-//  - GURU                       : dibaca sahaja
+//  - GURU                       : dibaca DAN ditulis (simpanGuruPortal: tambah, tukar nama, status)
 //  - JAWATANKUASA, AHLI_JK (unit Kokurikulum): dibaca DAN ditulis (simpanJkPortal)
 //  - TAKWIM (kategori Kokurikulum): dibaca DAN ditulis — edit di KokoSmart terus masuk ke Portal,
 //    edit di Portal terus nampak di KokoSmart.
@@ -199,6 +199,51 @@ function simpanJkPortal(jk) {
     if (nBaru < nLama) A.sh.deleteRows(2 + nBaru, nLama - nBaru);
 
     return { success: true, id: id, baru: baru, ahli: ahliBaru.length, tiadaDalamGuru: tiadaId };
+  } catch (e) { return { success: false, error: e.toString() };
+  } finally { try { lock.releaseLock(); } catch (x) {} }
+}
+
+
+// Tambah / tukar nama / tukar status guru dalam tab GURU Portal.
+// g: { nama, namaLama (jika tukar nama), status (cth. 'Aktif' / 'Tidak Aktif'), jawatan }
+// Tukar nama turut membetulkan NAMA_GURU dalam AHLI_JK.
+function simpanGuruPortal(g) {
+  var lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(20000);
+    g = g || {};
+    var nama = _ptS(g.nama).toUpperCase(), lama = _ptS(g.namaLama).toUpperCase() || nama;
+    if (!nama) return { success: false, error: 'Nama guru kosong.' };
+    var ss = _ptSS(), G = _ptJadual(ss, 'GURU');
+    if (!G.sh) return { success: false, error: 'Tab GURU tiada dalam Portal.' };
+    var h = G.h.length ? G.h : G.sh.getRange(1, 1, 1, G.sh.getLastColumn()).getValues()[0].map(function (x) { return _ptS(x).toUpperCase(); });
+    var c = function (k) { return h.indexOf(k); };
+    var baris = -1, maks = 0, id = '';
+    G.rows.forEach(function (r, i) {
+      var x = _ptS(r[c('ID')]), m = x.match(/^G(\d+)$/i);
+      if (m) maks = Math.max(maks, parseInt(m[1], 10));
+      if (baris < 0 && _ptS(r[c('NAMA')]).toUpperCase() === lama) { baris = i + 2; id = x; }
+    });
+    if (baris < 0 && g.namaLama && nama !== lama) {
+      G.rows.forEach(function (r, i) { if (baris < 0 && _ptS(r[c('NAMA')]).toUpperCase() === nama) { baris = i + 2; id = _ptS(r[c('ID')]); } });
+    }
+    var baru = baris < 0;
+    function tulis(k, v) { var i = c(k); if (i < 0) return; var sel = G.sh.getRange(baris, i + 1); sel.setNumberFormat('@'); sel.setValue(v); }
+    if (baru) {
+      if (g.status && /tidak/i.test(g.status)) return { success: true, tiada: true };
+      id = 'G' + ('0' + (maks + 1)).slice(-2); baris = G.sh.getLastRow() + 1;
+      tulis('ID', id); tulis('JAWATAN', _ptS(g.jawatan) || 'Guru'); tulis('KATEGORI', 'Guru'); tulis('STATUS', 'Aktif');
+    }
+    tulis('NAMA', nama);
+    if (g.status) tulis('STATUS', _ptS(g.status));
+    var dibetul = 0;
+    if (!baru && lama !== nama) {
+      var A = _ptJadual(ss, 'AHLI_JK'), cn = A.h.indexOf('NAMA_GURU');
+      if (cn >= 0) A.rows.forEach(function (r, i) {
+        if (_ptS(r[cn]).toUpperCase() === lama) { var sel = A.sh.getRange(i + 2, cn + 1); sel.setNumberFormat('@'); sel.setValue(nama); dibetul++; }
+      });
+    }
+    return { success: true, id: id, baru: baru, ahliDibetulkan: dibetul };
   } catch (e) { return { success: false, error: e.toString() };
   } finally { try { lock.releaseLock(); } catch (x) {} }
 }
