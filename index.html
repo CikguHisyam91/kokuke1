@@ -810,7 +810,7 @@ body[data-theme="dark"] .sw-tema i{transform:translateX(30px);color:var(--c2);}
       <div class="col-5"><label class="small mb-1">Nama Unit</label><select id="jk-unit" class="form-select form-select-sm" onchange="jkMuat()"></select></div>
       <div class="col-3"><label class="small mb-1">Tahun</label><select id="jk-thn" class="form-select form-select-sm" onchange="jkMuat()"><option value="4">4</option><option value="5">5</option><option value="6">6</option></select></div>
     </div>
-    <div class="mb-3"><label class="small text-info fw-bold mb-2"><i class="fa-solid fa-hand-pointer me-1"></i>Klik kotak jawatan, kemudian klik nama murid di bawah:</label>
+    <div class="mb-3"><label class="small text-info fw-bold mb-2"><i class="fa-solid fa-keyboard me-1"></i>Taip nama dalam kotak jawatan — cadangan nama &amp; kelas akan keluar. Atau klik kotak, kemudian klik nama di bawah:</label>
       <div id="jk-pool" class="d-flex flex-wrap gap-2 p-3 rounded" style="max-height:160px;overflow-y:auto;background:rgba(0,0,0,.04);border:1px solid var(--glow);"><span class="text-muted small">Pilih unit dahulu...</span></div>
     </div>
     <div class="row g-2">
@@ -2611,7 +2611,30 @@ function jkTab(tab){
   if(tab==='daftar')jkKategori();else pajskMuatKelas();
 }
 var jkAktifBox=null;
-function jkSetAktif(el){jkAktifBox=el;}
+function jkSetAktif(el){jkAktifBox=el;jkCadang(el);}
+// Cadangan nama semasa menaip (ahli unit & tahun dipilih, dengan kelas)
+var _jkSel=0;
+function jkCadangBox(){var b=document.getElementById('jk-cadang');if(!b){b=document.createElement('div');b.id='jk-cadang';b.style.cssText='position:absolute;z-index:9000;background:var(--card);border:1px solid var(--glow);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.18);max-height:260px;overflow-y:auto;display:none;';document.body.appendChild(b);
+  b.addEventListener('mousedown',function(e){var it=e.target.closest('[data-n]');if(!it)return;e.preventDefault();jkPilih(it.getAttribute('data-n'));});}return b;}
+function jkGuna(){var o={};document.querySelectorAll('.jk-input').forEach(function(i){if(i.value&&i!==jkAktifBox)o[i.value.toUpperCase()]=i.getAttribute('data-jawatan');});return o;}
+function jkCadang(el){
+  var b=jkCadangBox(),q=String(el.value||'').trim().toUpperCase(),guna=jkGuna();
+  var L=(_jkSenarai||[]).filter(function(m){var n=m.nama.toUpperCase();return !q||n.indexOf(q)>=0||q.split(/\s+/).every(function(w){return n.indexOf(w)>=0;});}).slice(0,12);
+  if(!L.length||(L.length===1&&L[0].nama.toUpperCase()===q)){b.style.display='none';return;}
+  _jkSel=Math.min(_jkSel,L.length-1);
+  b.innerHTML=L.map(function(m,i){var g=guna[m.nama.toUpperCase()];return '<div data-n="'+esc(m.nama)+'" style="padding:8px 12px;cursor:pointer;font-size:12px;font-weight:800;display:flex;justify-content:space-between;gap:10px;'+(i===_jkSel?'background:var(--inp);':'')+(g?'opacity:.5;':'')+'"><span>'+esc(m.nama)+'</span><span style="color:var(--sub);white-space:nowrap;">'+esc(m.kelas)+(g?' · '+esc(g):'')+'</span></div>';}).join('');
+  var r=el.getBoundingClientRect();b.style.left=(r.left+window.scrollX)+'px';b.style.top=(r.bottom+window.scrollY+4)+'px';b.style.width=Math.max(r.width,320)+'px';b.style.display='block';b._L=L;
+}
+function jkPilih(nama){if(!jkAktifBox)return;jkCadangBox().style.display='none';_jkSel=0;jkIsikan(nama);}
+document.addEventListener('input',function(e){if(e.target.classList&&e.target.classList.contains('jk-input')){jkAktifBox=e.target;_jkSel=0;jkCadang(e.target);}});
+document.addEventListener('keydown',function(e){
+  if(!(e.target.classList&&e.target.classList.contains('jk-input')))return;var b=document.getElementById('jk-cadang');if(!b||b.style.display==='none')return;
+  if(e.key==='ArrowDown'){e.preventDefault();_jkSel=Math.min(_jkSel+1,b._L.length-1);jkCadang(e.target);}
+  else if(e.key==='ArrowUp'){e.preventDefault();_jkSel=Math.max(_jkSel-1,0);jkCadang(e.target);}
+  else if(e.key==='Enter'){e.preventDefault();jkPilih(b._L[_jkSel].nama);}
+  else if(e.key==='Escape'){b.style.display='none';}
+});
+document.addEventListener('focusout',function(e){if(e.target.classList&&e.target.classList.contains('jk-input'))setTimeout(function(){var b=document.getElementById('jk-cadang');if(b&&!(document.activeElement&&document.activeElement.classList.contains('jk-input')))b.style.display='none';},150);});
 function jkIsikan(nama){
   if(!jkAktifBox)return alert('Klik kotak jawatan dahulu!');
   jkAktifBox.value=nama;
