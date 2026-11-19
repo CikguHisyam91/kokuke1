@@ -813,18 +813,8 @@ body[data-theme="dark"] .sw-tema i{transform:translateX(30px);color:var(--c2);}
     <div class="mb-3"><label class="small text-info fw-bold mb-2"><i class="fa-solid fa-keyboard me-1"></i>Taip nama dalam kotak jawatan — cadangan nama &amp; kelas akan keluar. Atau klik kotak, kemudian klik nama di bawah:</label>
       <div id="jk-pool" class="d-flex flex-wrap gap-2 p-3 rounded" style="max-height:160px;overflow-y:auto;background:rgba(0,0,0,.04);border:1px solid var(--glow);"><span class="text-muted small">Pilih unit dahulu...</span></div>
     </div>
-    <div class="row g-2">
-      <div class="col-md-6 mb-2"><label class="small fw-bold">🥇 Pengerusi / Ketua</label><input type="text" class="form-control form-control-sm jk-input" data-jawatan="Pengerusi" onfocus="jkSetAktif(this)" style="cursor:pointer;"></div>
-      <div class="col-md-6 mb-2"><label class="small fw-bold">🥈 Naib Pengerusi</label><input type="text" class="form-control form-control-sm jk-input" data-jawatan="Naib Pengerusi" onfocus="jkSetAktif(this)" style="cursor:pointer;"></div>
-      <div class="col-md-6 mb-2"><label class="small fw-bold">📝 Setiausaha</label><input type="text" class="form-control form-control-sm jk-input" data-jawatan="Setiausaha" onfocus="jkSetAktif(this)" style="cursor:pointer;"></div>
-      <div class="col-md-6 mb-2"><label class="small fw-bold">💰 Bendahari</label><input type="text" class="form-control form-control-sm jk-input" data-jawatan="Bendahari" onfocus="jkSetAktif(this)" style="cursor:pointer;"></div>
-      <div class="col-12"><hr><h6>AJK</h6></div>
-      <div class="col-md-4 mb-2"><label class="small">AJK 1</label><input type="text" class="form-control form-control-sm jk-input" data-jawatan="AJK 1" onfocus="jkSetAktif(this)" style="cursor:pointer;"></div>
-      <div class="col-md-4 mb-2"><label class="small">AJK 2</label><input type="text" class="form-control form-control-sm jk-input" data-jawatan="AJK 2" onfocus="jkSetAktif(this)" style="cursor:pointer;"></div>
-      <div class="col-md-4 mb-2"><label class="small">AJK 3</label><input type="text" class="form-control form-control-sm jk-input" data-jawatan="AJK 3" onfocus="jkSetAktif(this)" style="cursor:pointer;"></div>
-      <div class="col-md-6 mb-2"><label class="small">AJK 4</label><input type="text" class="form-control form-control-sm jk-input" data-jawatan="AJK 4" onfocus="jkSetAktif(this)" style="cursor:pointer;"></div>
-      <div class="col-md-6 mb-2"><label class="small">AJK 5</label><input type="text" class="form-control form-control-sm jk-input" data-jawatan="AJK 5" onfocus="jkSetAktif(this)" style="cursor:pointer;"></div>
-    </div>
+    <div class="row g-2" id="jk-slot"></div>
+    <div class="pk-row" style="margin-top:6px;"><button type="button" class="mini" onclick="jkTambahSlot()"><i class="fa-solid fa-plus me-1"></i>Tambah AJK</button><button type="button" class="mini" onclick="jkSlotLalai()"><i class="fa-solid fa-rotate-left me-1"></i>Susunan asal</button></div>
     <button class="btn btn-info text-dark fw-bold w-100 mt-3 py-2" onclick="jkSimpan()"><i class="fa-solid fa-square-check me-1"></i>Simpan Jawatankuasa</button>
   </div>
   <!-- PAJSK -->
@@ -2643,6 +2633,19 @@ function jkIsikan(nama){
   var i=semua.indexOf(jkAktifBox);
   for(var k=i+1;k<semua.length;k++){if(!semua[k].value){semua[k].focus();return;}}
 }
+var JK_IKON={'Pengerusi':'🥇','Naib Pengerusi':'🥈','Setiausaha':'📝','Penolong Setiausaha':'🗒️','Bendahari':'💰','Penolong Bendahari':'🪙'},_jkSlot=[],_jkBuang=[];
+function jkSlotLalai(){_jkSlot=['Pengerusi','Naib Pengerusi','Setiausaha','Penolong Setiausaha','Bendahari','Penolong Bendahari','AJK 1','AJK 2','AJK 3','AJK 4','AJK 5','AJK 6'];_jkBuang=[];jkLukisSlot();}
+function jkLukisSlot(nilai){
+  var v=nilai||{};document.querySelectorAll('.jk-input').forEach(function(i){v[i.getAttribute('data-jawatan')]=i.value;});
+  var ajkMula=_jkSlot.findIndex(function(j){return /^AJK/.test(j);});
+  document.getElementById('jk-slot').innerHTML=_jkSlot.map(function(j,i){var ajk=/^AJK/.test(j);
+    return (i===ajkMula?'<div class="col-12"><hr style="margin:6px 0;"><h6 style="margin:0;">AJK</h6></div>':'')+'<div class="'+(ajk?'col-md-4':'col-md-6')+' mb-2"><label class="small fw-bold" style="display:flex;justify-content:space-between;">'+(JK_IKON[j]||'👤')+' '+esc(j)
+     +(j==='Pengerusi'?'':'<a href="#" onclick="jkBuangSlot(\''+j+'\');return false;" title="Buang jawatan ini" style="color:var(--c4);text-decoration:none;">✕</a>')+'</label><input type="text" class="form-control form-control-sm jk-input" data-jawatan="'+esc(j)+'" value="'+esc(v[j]||'')+'" onfocus="jkSetAktif(this)" autocomplete="off"></div>';}).join('');
+}
+function jkBuangSlot(j){var i=_jkSlot.indexOf(j);if(i<0)return;var v={};document.querySelectorAll('.jk-input').forEach(function(x){v[x.getAttribute('data-jawatan')]=x.value;});_jkSlot.splice(i,1);_jkBuang.push(j);delete v[j];
+  if(/^AJK/.test(j)){var n=0;var V2={};_jkSlot=_jkSlot.map(function(x){if(/^AJK/.test(x)){n++;V2['AJK '+n]=v[x];return 'AJK '+n;}V2[x]=v[x];return x;});v=V2;}
+  document.getElementById('jk-slot').innerHTML='';jkLukisSlot(v);}
+function jkTambahSlot(){var n=_jkSlot.filter(function(x){return /^AJK/.test(x);}).length+1;_jkSlot.push('AJK '+n);_jkBuang=_jkBuang.filter(function(x){return x!=='AJK '+n;});jkLukisSlot();}
 function jkKategori(){
   var kat=document.getElementById('jk-kat').value;
   isiSelect('jk-unit',dc.rujukan[kat]||[]);
@@ -2651,7 +2654,7 @@ function jkKategori(){
 var _jkSenarai=[];
 function jkMuat(){
   var kat=document.getElementById('jk-kat').value;var unit=document.getElementById('jk-unit').value;var thn=document.getElementById('jk-thn').value;
-  document.querySelectorAll('.jk-input').forEach(function(i){i.value='';});
+  jkSlotLalai();document.querySelectorAll('.jk-input').forEach(function(i){i.value='';});
   var pool=document.getElementById('jk-pool');
   if(!unit){pool.innerHTML='<span class="text-muted small">Pilih unit dahulu...</span>';return;}
   _jkSenarai=dc.murid.filter(function(m){return sama(m[kat],unit)&&m.tahun===thn;});
@@ -2661,15 +2664,15 @@ function jkMuat(){
     pool.onclick=function(e){var c=e.target.closest('.jk-chip');if(!c)return;var m=_jkSenarai[parseInt(c.getAttribute('data-i'),10)];if(m)jkIsikan(m.nama);};
   }
   var sediaAda=(dc.jawatankuasa||[]).filter(function(j){return sama(j.kategori,kat)&&sama(j.namaUnit,unit)&&j.tahunAliran===thn;});
-  sediaAda.forEach(function(item){
-    document.querySelectorAll('.jk-input').forEach(function(box){if(box.getAttribute('data-jawatan')===item.jawatan)box.value=item.namaMurid;});
-  });
+  var nil={};sediaAda.forEach(function(item){if(!item.jawatan)return;if(_jkSlot.indexOf(item.jawatan)<0)_jkSlot.push(item.jawatan);nil[item.jawatan]=item.namaMurid;});
+  document.getElementById('jk-slot').innerHTML='';jkLukisSlot(nil);
 }
 function jkSimpan(){
   var kat=document.getElementById('jk-kat').value;var unit=document.getElementById('jk-unit').value;var thn=document.getElementById('jk-thn').value;
   if(!unit)return alert('Pilih unit!');
   var arr=[];
   document.querySelectorAll('.jk-input').forEach(function(b){arr.push({jawatan:b.getAttribute('data-jawatan'),nama:b.value.trim()});});
+  _jkBuang.forEach(function(j){if(!arr.some(function(a){return a.jawatan===j;}))arr.push({jawatan:j,nama:''});});
   showLoad();
   google.script.run.withSuccessHandler(function(res){
     hideLoad();
@@ -4854,7 +4857,7 @@ function jkEdit(id){
    +'<div class="bx-h" style="margin:14px 0 6px;"><b style="font-size:11px;letter-spacing:.1em;">AHLI JAWATANKUASA</b><button class="mini" onclick="jkBaris(-1)"><i class="fa-solid fa-plus me-1"></i>Tambah ahli</button></div>'
    +'<div id="jke-ahli" style="display:flex;flex-direction:column;gap:6px;max-height:42vh;overflow-y:auto;"></div>'
    +'<p style="margin:8px 0 0;font-size:10.5px;font-weight:800;color:var(--sub);">Pilih nama daripada senarai guru (KokoSmart &amp; Portal). Nama merah = belum didaftar dalam Senarai Guru.</p>'
-   +'<div class="pk-row" style="margin-top:14px;"><button class="btn btn-danger" onclick="jkSimpan()"><i class="fa-solid fa-floppy-disk me-1"></i>Simpan ke Portal</button><button class="btn btn-secondary" onclick="document.getElementById(\'mod-jke\').classList.remove(\'show\')">Batal</button></div>';
+   +'<div class="pk-row" style="margin-top:14px;"><button class="btn btn-danger" onclick="jkGuruSimpan()"><i class="fa-solid fa-floppy-disk me-1"></i>Simpan ke Portal</button><button class="btn btn-secondary" onclick="document.getElementById(\'mod-jke\').classList.remove(\'show\')">Batal</button></div>';
   el.classList.add('show');jkLukis();
 }
 function jkAmbil(){var b=document.querySelectorAll('#jke-ahli .jke-r');_jkE.ahli=[].map.call(b,function(r){return {jawatan:r.querySelector('.jke-j').value.trim(),nama:r.querySelector('.jke-n').value.trim().toUpperCase()};});}
@@ -4873,13 +4876,13 @@ function jkLukis(){
 }
 function jkBaris(i){jkAmbil();if(i<0)_jkE.ahli.push({jawatan:'AJK',nama:''});else _jkE.ahli.splice(i,1);jkLukis();}
 function jkGerak(i,d){jkAmbil();var j=i+d;if(j<0||j>=_jkE.ahli.length)return;var t=_jkE.ahli[i];_jkE.ahli[i]=_jkE.ahli[j];_jkE.ahli[j]=t;jkLukis();}
-function jkSimpan(){
+function jkGuruSimpan(){
   jkAmbil();var nama=document.getElementById('jke-nama').value.trim();if(!nama)return alert('Isi nama jawatankuasa.');
   var ahli=_jkE.ahli.filter(function(a){return a.nama;});
   var Gp={};(_pt.guru||[]).forEach(function(g){Gp[g.nama]=1;});
   _jkE.cuba=_jkE.cuba||{};
   var tambah=ahli.map(function(a){return a.nama;}).filter(function(n,i,A){return !Gp[n]&&!_jkE.cuba[n]&&A.indexOf(n)===i&&semuaGuru().some(function(g){return g.nama===n;});});
-  if(tambah.length){var n0=tambah[0];_jkE.cuba[n0]=1;return guruPortal({nama:n0},function(){jkSimpan();});}
+  if(tambah.length){var n0=tambah[0];_jkE.cuba[n0]=1;return guruPortal({nama:n0},function(){jkGuruSimpan();});}
   var o={id:_jkE.id,kategori:document.getElementById('jke-kat').value,nama:nama,tugas:document.getElementById('jke-tug').value.trim(),catatan:document.getElementById('jke-cat').value.trim(),ahli:ahli};
   showLoad();
   google.script.run.withSuccessHandler(function(res){hideLoad();
