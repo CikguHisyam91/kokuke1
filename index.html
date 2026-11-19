@@ -3899,6 +3899,11 @@ var MODUL={
   tajukK:'aktiviti',statusK:'',tapisK:'unit',tarikhK:'',
   medan:[{k:'kategori',l:'KATEGORI',t:'select',wajib:1,o:['UNIT BERUNIFORM','KELAB & PERSATUAN','SUKAN & PERMAINAN']},{k:'unit',l:'UNIT',t:'unit',wajib:1},{k:'perjumpaan',l:'PERJUMPAAN KE-',t:'number',wajib:1},
    {k:'aktiviti',l:'AKTIVITI',t:'text',wajib:1,full:1},{k:'objektif',l:'OBJEKTIF',t:'textarea',full:1},{k:'kekuatan',l:'CADANGAN KEKUATAN',t:'textarea',full:1},{k:'kelemahan',l:'CADANGAN KELEMAHAN',t:'textarea',full:1},{k:'penambahbaikan',l:'CADANGAN PENAMBAHBAIKAN',t:'textarea',full:1}]},
+ sijilibubapa:{sheet:'SIJIL IBU BAPA',nama:'Sijil dari Ibu Bapa',ikon:'fa-certificate',ket:'Sijil / surat pengiktirafan aktiviti luar sekolah yang dihantar ibu bapa melalui halaman semakan. Sahkan untuk dimasukkan ke Rekod Pencapaian.',
+  tajukK:'aktiviti',statusK:'status',tapisK:'peringkat',tarikhK:'',
+  medan:[{k:'tarikhHantar',l:'TARIKH HANTAR',t:'text'},{k:'nama',l:'NAMA MURID',t:'text',wajib:1},{k:'kelas',l:'KELAS',t:'text'},{k:'aktiviti',l:'AKTIVITI',t:'text',wajib:1,full:1},{k:'penganjur',l:'PENGANJUR',t:'text'},
+   {k:'peringkat',l:'PERINGKAT',t:'select',o:['Sekolah','Zon','Daerah','Negeri','Kebangsaan','Antarabangsa']},{k:'pencapaian',l:'PENCAPAIAN',t:'text'},{k:'tarikhAktiviti',l:'TARIKH AKTIVITI',t:'text'},
+   {k:'gambar',l:'GAMBAR',t:'hidden'},{k:'status',l:'STATUS',t:'select',o:['MENUNGGU SEMAKAN','DISAHKAN','DITOLAK']},{k:'catatan',l:'CATATAN PK',t:'textarea',full:1}]},
  taglaporan:{sheet:'TAG LAPORAN',nama:'Tagging Laporan Lain-lain',ikon:'fa-tags',ket:'Laporan kategori Lain-lain yang telah disemak PKKo / SU Koku dan ditag kepada unit kokurikulum sekolah.',
   tajukK:'program',statusK:'',tapisK:'kategori',tarikhK:'',
   medan:[{k:'kunci',l:'KUNCI',t:'hidden'},{k:'tarikh',l:'TARIKH LAPORAN',t:'text'},{k:'program',l:'PROGRAM ASAL',t:'text',wajib:1,full:1},
@@ -3938,6 +3943,7 @@ var JUBIN={
  'sop':{n:'Proses Kerja (SOP)',k:'13 aliran kerja',i:'fa-route',c:'sop proses kerja carta aliran senarai semak'},
  'tugas':{n:'Senarai Tugas PK',k:'Fail meja',i:'fa-list-check',c:'tugas fail meja pk'},
  'simpanan':{n:'Simpanan & Tahun Lepas',k:'Lihat & pulihkan data',i:'fa-clock-rotate-left',c:'simpanan backup tahun lepas pulih data drive'},
+ 'm-sijilibubapa':{n:'Sijil dari Ibu Bapa',k:'Sahkan ke pencapaian',i:'fa-certificate',c:'sijil ibu bapa luar sekolah pengiktirafan sahkan pencapaian'},
  'm-modulunit':{n:'Modul 12 Perjumpaan',k:'Aktiviti & refleksi unit',i:'fa-book-open',c:'modul perjumpaan aktiviti refleksi unit kekuatan kelemahan'},
  'm-rujukan':{n:'Dokumen & Pautan',k:'Pekeliling, borang',i:'fa-book-bookmark',c:'rujukan dokumen borang pekeliling panduan pautan'},
  'tetapan':{n:'Tetapan',k:'Sekolah & kata laluan',i:'fa-sliders',c:'tetapan kata laluan sekolah'}
@@ -3946,7 +3952,7 @@ var RUANG=[
  {t:'Perancangan & Pentadbiran',k:'Takwim, mesyuarat, surat dan kewangan berjalan bersama',w:'--p2',j:['m-takwim','m-mesyuarat','m-surat','m-kewangan']},
  {t:'Unit & Murid',k:'Organisasi unit, keahlian dan jawatankuasa murid',w:'--p3',j:['m-entiti','rumah','murid','datamurid','jawatankuasa','semak','arkib','transisi']},
  {t:'Program & Pelaksanaan',k:'Kertas cadangan, JK, senarai semak, kehadiran dan OPR',w:'--p4',j:['m-program','sukantahunan','statushadir','koleksiopr','kehadiran','m-modulunit']},
- {t:'Pencapaian & Penilaian',k:'Pencapaian murid, PAJSK dan laporan',w:'--p1',j:['pencapaian','utama','laporan']},
+ {t:'Pencapaian & Penilaian',k:'Pencapaian murid, PAJSK dan laporan',w:'--p1',j:['pencapaian','m-sijilibubapa','utama','laporan']},
  {t:'Sumber Manusia & Aset',k:'Guru, kursus dan peralatan',w:'--p6',j:['guru','jkguru','m-kursus','m-aset']},
  {t:'Rujukan & Tetapan',k:'Proses kerja, tugas PK dan dokumen rasmi',w:'--p5',j:['sop','tugas','m-rujukan','simpanan','tetapan']}
 ];
@@ -4597,7 +4603,7 @@ function paparTakwimRingkas(el,list){
 
 
 // ---------- HALAMAN SEMAKAN IBU BAPA (semak.html + Semakan.gs) ----------
-var SEMAK_KUNCI=[['SEMAK_BUKA','Buka halaman semakan kepada ibu bapa','TIDAK'],['SEMAK_UNIT','Paparkan unit kokurikulum','YA'],['SEMAK_HADIR','Paparkan kehadiran perjumpaan','YA'],['SEMAK_CAPAI','Paparkan pencapaian','YA'],['SEMAK_PAJSK','Paparkan markah PAJSK','TIDAK']];
+var SEMAK_KUNCI=[['SEMAK_BUKA','Buka halaman semakan kepada ibu bapa','TIDAK'],['SEMAK_UNIT','Paparkan unit kokurikulum','YA'],['SEMAK_HADIR','Paparkan kehadiran perjumpaan','YA'],['SEMAK_CAPAI','Paparkan pencapaian','YA'],['SEMAK_PAJSK','Paparkan markah PAJSK','TIDAK'],['SEMAK_SIJIL','Benarkan ibu bapa hantar sijil aktiviti luar sekolah','TIDAK']];
 function semakNilai(k,d){var o=(dr.tetapanpk||[]).filter(function(x){return x.kunci===k;})[0];return o?o.nilai:d;}
 function paparSemakTetapan(){
   var z=document.getElementById('semak-tetapan');if(!z)return;
@@ -4616,6 +4622,36 @@ function simpanSemakTetapan(){
   var v={};document.querySelectorAll('.sm-k').forEach(function(c){v[c.getAttribute('data-k')]=c.checked?'YA':'TIDAK';});v.SEMAK_HUBUNGI=document.getElementById('sm-hub').value.trim();
   var kerja=Object.keys(v).map(function(k){var o=(dr.tetapanpk||[]).filter(function(x){return x.kunci===k;})[0];return {mk:'tetapanpk',o:{id:o?o.id:'',kunci:k,nilai:v[k]}};});
   skSiri(kerja,function(){toast('✅ Tetapan semakan disimpan.','ok');paparSemakTetapan();});
+}
+
+
+// ---------- SIJIL DARIPADA IBU BAPA: sahkan → Rekod Pencapaian ----------
+function sjSahkan(id){
+  var o=dr.sijilibubapa.filter(function(x){return x.id===id;})[0];if(!o)return;
+  var el=pastiModal('mod-sj');el._kunci=true;el.firstChild.style.width='min(520px,100%)';
+  var pk=['Sekolah','Zon','Daerah','Negeri','Kebangsaan','Antarabangsa'],tier=Object.keys(MATA_PENCAPAIAN).concat(Object.keys(MATA_PANGKAT));
+  var pk0=pk.filter(function(x){return sama(x,o.peringkat);})[0]||'Daerah',t0=tier.filter(function(x){return sama(x,o.pencapaian);})[0]||'Peserta';
+  el.firstChild.innerHTML='<h5 style="margin:0 0 6px;">Sahkan sijil</h5><p style="font-size:11px;font-weight:800;color:var(--sub);margin:0 0 10px;">'+esc(o.nama)+' · '+esc(o.kelas)+'<br>'+esc(o.aktiviti)+(o.penganjur?' · '+esc(o.penganjur):'')+'</p>'
+   +'<div class="fgrid"><div><label>KATEGORI</label><select id="sj-k" class="form-select"><option value="Unit Uniform">Unit Uniform</option><option value="Kelab Persatuan">Kelab Persatuan</option><option value="Sukan Permainan" selected>Sukan Permainan</option></select></div>'
+   +'<div><label>PERINGKAT</label><select id="sj-p" class="form-select">'+pk.map(function(x){return '<option'+(x===pk0?' selected':'')+'>'+x+'</option>';}).join('')+'</select></div>'
+   +'<div><label>PENCAPAIAN</label><select id="sj-c" class="form-select">'+tier.map(function(x){return '<option'+(x===t0?' selected':'')+'>'+x+'</option>';}).join('')+'</select></div>'
+   +'<div><label>NAMA PERTANDINGAN</label><input id="sj-n" class="form-control" value="'+esc(o.aktiviti)+'"></div></div>'
+   +'<div class="pk-row" style="margin-top:14px;"><button class="btn btn-danger" id="sj-ok"><i class="fa-solid fa-check me-1"></i>Sahkan &amp; masukkan ke Rekod Pencapaian</button><button class="btn btn-secondary" onclick="var e=document.getElementById(\'mod-sj\');e._kunci=false;e.classList.remove(\'show\')">Batal</button></div>';
+  el.classList.add('show');
+  document.getElementById('sj-ok').onclick=function(){
+    var pkt=document.getElementById('sj-p').value,tr=document.getElementById('sj-c').value,kat=document.getElementById('sj-k').value,pt=document.getElementById('sj-n').value.trim().toUpperCase();
+    var dAm={tarikh:o.tarikhAktiviti&&/^\d{4}-/.test(o.tarikhAktiviti)?fmtTgl(o.tarikhAktiviti):(o.tarikhHantar||tarikhMs(new Date())),kategori:kat,peringkat:pkt,pertandingan:pt,pencapaian:tr,mata:hitungMata(pkt,tr),namaGuru:'SIJIL IBU BAPA',jenisAktiviti:'LUAR SEKOLAH'};
+    showLoad();
+    google.script.run.withSuccessHandler(function(res){
+      if(!res||!res.success){hideLoad();return alert('Gagal: '+(res&&res.error||''));}
+      simpanRekod('sijilibubapa',Object.assign({},o,{status:'DISAHKAN',catatan:o.catatan||('Disahkan '+tarikhMs(new Date()))}),function(){el._kunci=false;el.classList.remove('show');toast('✅ Sijil disahkan & dimasukkan ke Rekod Pencapaian.','ok');muatSemua(true);paparModul();});
+    }).withFailureHandler(function(e){hideLoad();alert('Ralat: '+e.message);}).simpanPencapaianDanLaporanPukal(dAm,[o.nama],['','','','']);
+  };
+}
+function sjTolak(id){
+  var o=dr.sijilibubapa.filter(function(x){return x.id===id;})[0];if(!o)return;
+  var sebab=prompt('Sebab ditolak (dipaparkan kepada ibu bapa):','Sijil tidak jelas / tidak berkaitan');if(sebab==null)return;
+  simpanRekod('sijilibubapa',Object.assign({},o,{status:'DITOLAK',catatan:sebab.trim()}),function(){toast('Sijil ditolak.','info');paparModul();});
 }
 
 // ---------- MENU PANTAS (laman utama) ----------
@@ -5528,7 +5564,8 @@ function paparSenaraiModul(){
       return '<div><b>'+esc(f.l)+':</b> '+esc(nilaiMedan(o,f))+'</div>';}).join('');
     var prog='';
     if(mk==='program'){var t=tickProgram(o),d=t.filter(Boolean).length;if(t.length)prog='<div><div style="display:flex;justify-content:space-between;font-size:10px;font-weight:900;letter-spacing:.08em;margin-bottom:4px;"><span>SENARAI SEMAK</span><span>'+d+'/'+t.length+'</span></div><div class="prog-bar"><i style="width:'+Math.round(d/t.length*100)+'%"></i></div></div>';}
-    var act=o._prog?'<button class="mini utama" onclick="tukarMenu(\'m-program\')">Buka program</button>'
+    if(mk==='sijilibubapa'){var gb=String(o.gambar||'').split(' | ').filter(Boolean);prog='<div style="display:flex;gap:6px;flex-wrap:wrap;">'+gb.map(function(u,i){return '<a href="'+esc(u)+'" target="_blank" rel="noopener" class="mini"><i class="fa-solid fa-image me-1"></i>Gambar '+(i+1)+'</a>';}).join('')+'</div>';}
+    var act=mk==='sijilibubapa'&&!/DISAHKAN|DITOLAK/.test(o.status||'')?'<button class="mini utama" onclick="hsSahPk(function(){sjSahkan(\''+o.id+'\');})"><i class="fa-solid fa-check me-1"></i>Sahkan</button><button class="mini mer" onclick="hsSahPk(function(){sjTolak(\''+o.id+'\');})"><i class="fa-solid fa-xmark me-1"></i>Tolak</button>':o._prog?'<button class="mini utama" onclick="tukarMenu(\'m-program\')">Buka program</button>'
       :(mk==='program'?'<button class="mini utama" onclick="bukaSemak(\''+o.id+'\')"><i class="fa-solid fa-list-check me-1"></i>Senarai semak</button>':'')
        +'<button class="mini" onclick="bukaBorang(\''+mk+'\',\''+o.id+'\')"><i class="fa-solid fa-pen me-1"></i>Edit</button><button class="mini mer" onclick="padamRekod(\''+mk+'\',\''+o.id+'\')"><i class="fa-solid fa-trash"></i></button>';
     return '<article class="clay rek"><div class="rek-top"><div class="rek-t">'+esc(tj)+'</div></div><div class="rek-meta">'+meta.join('')+'</div>'+prog+(body?'<div class="rek-body">'+body+'</div>':'')+'<div class="rek-act">'+act+'</div></article>';

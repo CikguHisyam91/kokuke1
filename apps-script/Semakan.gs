@@ -10,7 +10,8 @@
 //  4. Deploy → New deployment → Web app → Execute as: Me · Who has access: Anyone → Deploy → salin URL /exec
 //  5. Beri URL itu kepada Claude (atau tampal dalam config.js: SEMAK_API).
 //
-// Fail ini HANYA MEMBACA data. Tiada kata laluan sistem di sini.
+// Fail ini membaca data, dan hanya MENAMBAH rekod sijil ibu bapa (status MENUNGGU SEMAKAN).
+// Ia tidak boleh mengubah atau memadam data murid. Tiada kata laluan sistem di sini.
 // ============================================================
 
 function _sDB() {
@@ -26,7 +27,7 @@ function _sTgl(v, tz) { return v instanceof Date ? Utilities.formatDate(v, tz, '
 
 // Tetapan daripada KokoSmart (sheet "KOKO - TETAPAN PK": KUNCI / NILAI)
 function _sTetapan(ss) {
-  var t = { SEMAK_BUKA: 'TIDAK', SEMAK_UNIT: 'YA', SEMAK_PAJSK: 'TIDAK', SEMAK_HADIR: 'YA', SEMAK_CAPAI: 'YA', SEMAK_HUBUNGI: '' };
+  var t = { SEMAK_BUKA: 'TIDAK', SEMAK_UNIT: 'YA', SEMAK_PAJSK: 'TIDAK', SEMAK_HADIR: 'YA', SEMAK_CAPAI: 'YA', SEMAK_SIJIL: 'TIDAK', SEMAK_HUBUNGI: '' };
   var R = _sRows(ss.getSheetByName('KOKO - TETAPAN PK')), k = R.h.indexOf('KUNCI'), n = R.h.indexOf('NILAI');
   if (k >= 0 && n >= 0) R.r.forEach(function (r) { var kk = _sS(r[k]); if (/^SEMAK_/.test(kk)) t[kk] = _sS(r[n]); });
   return t;
@@ -70,6 +71,7 @@ function doPost(e) {
     cache.remove(kC);
 
     var nama = _sS(row[iN]), NU = nama.toUpperCase(), tahunIni = Utilities.formatDate(new Date(), tz, 'yyyy');
+    if (req.tindakan === 'sijil') return _sJ(_sSimpanSijil(ss, t, req, nama, thn + ' ' + kls, mykid, tz));
     var out = { success: true, nama: nama, tahun: thn, kelas: kls, sekolah: ss.getName(), hubungi: t.SEMAK_HUBUNGI };
     if (/^YA$/i.test(t.SEMAK_UNIT)) out.unit = { rumah: _sS(row[iR]) || '-', uniform: _sS(row[iU]) || '-', kelab: _sS(row[iKb]) || '-', sukan: _sS(row[iS]) || '-' };
 
@@ -89,6 +91,14 @@ function doPost(e) {
       out.capai = P.r.filter(function (r) { return _sS(r[1]).toUpperCase() === NU && _sTgl(r[0], tz).slice(-4) === tahunIni; })
         .map(function (r) { return { tarikh: _sTgl(r[0], tz), pertandingan: _sS(r[4]), peringkat: _sS(r[3]), pencapaian: _sS(r[5]) }; });
     }
+    if (/^YA$/i.test(t.SEMAK_SIJIL)) {
+      out.bolehSijil = true;
+      var SJ = _sRows(ss.getSheetByName(SIJIL_SHEET)), sN = SJ.h.indexOf('NAMA MURID');
+      out.sijil = sN < 0 ? [] : SJ.r.filter(function (r) { return _sS(r[sN]).toUpperCase() === NU; }).map(function (r) {
+        var g = function (k) { var i = SJ.h.indexOf(k); return i >= 0 ? _sTgl(r[i], tz) : ''; };
+        return { aktiviti: g('AKTIVITI'), peringkat: g('PERINGKAT'), pencapaian: g('PENCAPAIAN'), tarikh: g('TARIKH AKTIVITI'), status: g('STATUS') || 'MENUNGGU SEMAKAN', catatan: g('CATATAN PK') };
+      });
+    }
     if (/^YA$/i.test(t.SEMAK_PAJSK)) {
       var J = _sRows(_sSheet(ss, 'PAJSK', 'DATA MASTER - PAJSK'));
       if (!J.h.length) { // tajuk mungkin bukan di baris 1: cari baris yang ada NAMA
@@ -101,6 +111,38 @@ function doPost(e) {
     }
     return _sJ(out);
   } catch (x) { return _sJ({ success: false, error: 'Ralat sistem. Cuba sebentar lagi.' }); }
+}
+
+
+// ---------- SIJIL DARIPADA IBU BAPA (aktiviti luar sekolah) ----------
+var SIJIL_SHEET = 'KOKO - SIJIL IBU BAPA', SIJIL_FOLDER = 'KOKOSMART SIJIL IBU BAPA';
+var SIJIL_TAJUK = ['ID', 'DIKEMASKINI', 'TARIKH HANTAR', 'NAMA MURID', 'KELAS', 'AKTIVITI', 'PENGANJUR', 'PERINGKAT', 'PENCAPAIAN', 'TARIKH AKTIVITI', 'GAMBAR', 'STATUS', 'CATATAN PK'];
+function _sSimpanSijil(ss, t, req, nama, kelas, mykid, tz) {
+  if (!/^YA$/i.test(t.SEMAK_SIJIL)) return { success: false, error: 'Penghantaran sijil ditutup buat masa ini.' };
+  var akt = _sS(req.aktiviti).slice(0, 200), pkt = _sS(req.peringkat), cap = _sS(req.pencapaian), pjr = _sS(req.penganjur).slice(0, 100), tg = _sS(req.tarikh);
+  var G = (req.gambar || []).filter(function (x) { return /^data:image\/(jpeg|png|webp);base64,/.test(String(x)) && String(x).length < 2500000; }).slice(0, 3);
+  if (!akt || !pkt || !cap || !G.length) return { success: false, error: 'Isi nama aktiviti, peringkat, pencapaian dan sekurang-kurangnya 1 gambar.' };
+  var cache = CacheService.getScriptCache(), kH = 'sj_' + mykid, n = +(cache.get(kH) || 0);
+  if (n >= 5) return { success: false, error: 'Had 5 penghantaran sehari telah dicapai.' };
+  var it = DriveApp.getFoldersByName(SIJIL_FOLDER), folder = it.hasNext() ? it.next() : DriveApp.createFolder(SIJIL_FOLDER);
+  var masa = Utilities.formatDate(new Date(), tz, 'yyyyMMdd-HHmmss'), url = [];
+  G.forEach(function (d, i) {
+    var m = String(d).match(/^data:(image\/\w+);base64,(.*)$/);
+    var blob = Utilities.newBlob(Utilities.base64Decode(m[2]), m[1], nama + ' - ' + akt.slice(0, 40) + ' - ' + masa + '-' + (i + 1) + '.jpg');
+    url.push(folder.createFile(blob).getUrl());
+  });
+  var lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try {
+    var sh = ss.getSheetByName(SIJIL_SHEET);
+    if (!sh) { sh = ss.insertSheet(SIJIL_SHEET); sh.getRange(1, 1, 1, SIJIL_TAJUK.length).setValues([SIJIL_TAJUK]).setFontWeight('bold'); sh.setFrozenRows(1); }
+    var h = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(function (x) { return _sS(x).toUpperCase(); });
+    var v = { 'ID': 'SJ' + masa + Math.floor(Math.random() * 1000), 'DIKEMASKINI': Utilities.formatDate(new Date(), tz, 'dd/MM/yyyy HH:mm'), 'TARIKH HANTAR': Utilities.formatDate(new Date(), tz, 'dd/MM/yyyy'),
+      'NAMA MURID': nama, 'KELAS': kelas, 'AKTIVITI': akt.toUpperCase(), 'PENGANJUR': pjr.toUpperCase(), 'PERINGKAT': pkt, 'PENCAPAIAN': cap, 'TARIKH AKTIVITI': tg, 'GAMBAR': url.join(' | '), 'STATUS': 'MENUNGGU SEMAKAN', 'CATATAN PK': '' };
+    var row = h.map(function (k) { return v[k] == null ? '' : v[k]; });
+    var rg = sh.getRange(sh.getLastRow() + 1, 1, 1, row.length); rg.setNumberFormat('@'); rg.setValues([row]);
+  } finally { lock.releaseLock(); }
+  cache.put(kH, String(n + 1), 86400);
+  return { success: true };
 }
 
 // ===== TAMAT Semakan.gs =====
