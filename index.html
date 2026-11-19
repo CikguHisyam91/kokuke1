@@ -1049,7 +1049,9 @@ body[data-theme="dark"] .sw-tema i{transform:translateX(30px);color:var(--c2);}
   <div class="mod-head"><div><h3><i class="fa-solid fa-forward me-2" style="color:var(--c1);"></i>Transisi Tahun Baharu <span id="tr-thn"></span></h3>
   <p>Simulasi sahaja: tiada data diubah. Semak hasil di bawah sebelum transisi sebenar dijalankan.</p>
   <div class="pk-row" style="align-items:center;margin-top:8px;"><label for="tr-lama" style="font-size:10.5px;color:var(--sub);margin:0;">Data semasa ialah tahun</label><select id="tr-lama" class="form-select" style="width:auto;min-width:120px;" onchange="paparTransisi()"></select></div></div>
-  <button class="btn btn-success" onclick="eksportTransisi()"><i class="fa-solid fa-file-excel me-1"></i>Muat turun senarai simulasi</button></div>
+  <div class="pk-row"><select id="tr-cetak-thn" class="form-select" style="width:auto;"><option value="">Semua tahun</option><option value="2">Tahun 2</option><option value="3">Tahun 3</option><option value="4">Tahun 4</option><option value="5">Tahun 5</option><option value="6">Tahun 6</option></select>
+  <button class="btn btn-danger" onclick="cetakSenaraiBaru()"><i class="fa-solid fa-print me-1"></i>Cetak senarai unit ikut kelas</button>
+  <button class="btn btn-success" onclick="eksportTransisi()"><i class="fa-solid fa-file-excel me-1"></i>Muat turun senarai simulasi</button></div></div>
   <div id="tr-zone" style="margin-top:16px;"></div>
 </div>
 
@@ -4348,6 +4350,21 @@ function jalankanTransisi(){
     else alert('Gagal: '+(res&&res.error?res.error:'Ralat'));
   }).withFailureHandler(function(e){hideLoad();alert(/tidak dibenarkan|tidak dijumpai/i.test(e.message)?'Fail Apps Script Transisi.gs belum dipasang. Tiada data diubah.':'Ralat: '+e.message);}).laksanaTransisiTahun(pwd,pelan,S.lama);
 }
+
+// Cetak senarai unit tahun baharu ikut kelas (daripada simulasi — data sebenar tidak diubah)
+function cetakSenaraiBaru(){
+  var S=simulasiTransisi(),f=(document.getElementById('tr-cetak-thn')||{}).value||'',g={},td='border:1px solid #000;padding:4px 6px;font-size:9.5pt;';
+  S.rows.forEach(function(r){if(r.status!=='NAIK'||(f&&r.thnBaru!==f))return;var k=r.thnBaru+'|'+r.m.kelas;(g[k]=g[k]||[]).push(r);});
+  var K=Object.keys(g).sort(function(a,b){var x=a.split('|'),y=b.split('|');return (+x[0])-(+y[0])||x[1].localeCompare(y[1]);});
+  if(!K.length)return alert('Tiada murid untuk dicetak.');
+  var hub=semakNilai('SEMAK_HUBUNGI','')||'PK Kokurikulum / SU Kokurikulum';
+  paparKertas(K.map(function(k){var p=k.split('|'),L=g[k].sort(function(a,b){return a.m.nama.localeCompare(b.m.nama);}),t4=+p[0]>=4;
+    return kepalaKertas('SENARAI UNIT KOKURIKULUM '+S.baru,'TAHUN '+p[0]+' '+String(p[1]).toUpperCase()+' · '+L.length+' MURID')
+     +'<table><thead><tr style="background:#d9e2f3;font-weight:bold;"><th style="'+td+'width:5%;">BIL</th><th style="'+td+'">NAMA MURID</th><th style="'+td+'">RUMAH SUKAN</th>'+(t4?'<th style="'+td+'">UNIT BERUNIFORM</th><th style="'+td+'">KELAB &amp; PERSATUAN</th><th style="'+td+'">SUKAN &amp; PERMAINAN</th>':'')+'</tr></thead>'
+     +L.map(function(r,i){return '<tr><td style="'+td+'text-align:center;">'+(i+1)+'</td><td style="'+td+'">'+esc(r.m.nama)+'</td><td style="'+td+'">'+esc(r.m.rumah||'-')+'</td>'+(t4?'<td style="'+td+'">'+esc(r.uniformBaru)+'</td><td style="'+td+'">'+esc(r.kelabBaru)+'</td><td style="'+td+'">'+esc(r.sukanBaru)+'</td>':'')+'</tr>';}).join('')+'</table>'
+     +'<p style="font-size:9.5pt;margin-top:10px;"><b>Makluman:</b> Senarai ini untuk sesi '+S.baru+'. Sebarang permohonan pertukaran unit, sila berjumpa '+esc(hub)+'.</p>';}),'Senarai unit '+S.baru);
+}
+
 function eksportTransisi(){
   var S=simulasiTransisi();if(!S.rows.length)return alert('Tiada data murid.');
   var x=function(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');};
