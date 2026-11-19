@@ -28,7 +28,7 @@ button:disabled{opacity:.6}
 <div id="z"><div class="bx">Memuatkan…</div></div>
 </div>
 <script>
-var z=document.getElementById('z'),INFO=null;
+var z=document.getElementById('z'),INFO=null,SAH=null,GBR=[];
 function e(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 var WR={CAMERON:'#2f6fb3',STAINER:'#c0102c',STEVEN:'#1f7a45',FREEMAN:'#c9a227'};
 function wr(r){r=String(r).toUpperCase();for(var k in WR)if(r.indexOf(k)>=0)return WR[k];return '#888';}
@@ -45,7 +45,7 @@ function semak(){
   var mk=document.getElementById('mk').value.replace(/\D/g,''),kl=document.getElementById('kl').value,b=document.getElementById('bt'),ms=document.getElementById('ms');
   if(mk.length!==12)return ms.textContent='No. MyKid mesti 12 digit.';if(!kl)return ms.textContent='Sila pilih kelas.';
   b.disabled=true;b.textContent='Menyemak…';ms.textContent='';
-  fetch(SEMAK_API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({mykid:mk,kelas:kl})}).then(function(r){return r.json();})
+  SAH={mykid:mk,kelas:kl};fetch(SEMAK_API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({mykid:mk,kelas:kl})}).then(function(r){return r.json();})
    .then(function(d){if(!d.success){b.disabled=false;b.textContent='Semak';ms.textContent=d.error||'Gagal.';return;}papar(d);})
    .catch(function(){b.disabled=false;b.textContent='Semak';ms.textContent='Tiada sambungan. Cuba lagi.';});
 }
@@ -56,8 +56,33 @@ function papar(d){
   if(d.pajsk&&d.pajsk.length)h+='<div class="bx"><h6>Markah PAJSK</h6><div class="g2">'+d.pajsk.map(function(x){return '<div class="u"><small>'+e(x.k)+'</small><b>'+e(x.v)+'</b></div>';}).join('')+'</div></div>';
   if(d.hadir)h+='<div class="bx"><h6>Kehadiran perjumpaan '+new Date().getFullYear()+'</h6>'+(d.hadir.length?d.hadir.map(function(x){var p=x.jumlah?Math.round(x.hadir/x.jumlah*100):0;return '<div class="br"><span>'+e(x.unit)+'</span><span class="t"><i style="width:'+p+'%;background:'+(p>=80?'#1f9d55':p>=60?'#c9a227':'#c0102c')+'"></i></span><span>'+x.hadir+'/'+x.jumlah+' ('+p+'%)</span></div>';}).join(''):'<p class="nt">Belum ada rekod kehadiran tahun ini.</p>')+'</div>';
   if(d.capai)h+='<div class="bx"><h6>Pencapaian '+new Date().getFullYear()+'</h6>'+(d.capai.length?d.capai.map(function(x){return '<div class="li">'+e(x.pencapaian)+' · '+e(x.pertandingan)+'<small>'+e(x.peringkat)+' · '+e(x.tarikh)+'</small></div>';}).join(''):'<p class="nt">Belum ada rekod pencapaian tahun ini.</p>')+'</div>';
+  if(d.bolehSijil){
+    h+='<div class="bx"><h6>Sijil aktiviti luar sekolah</h6>'+(d.sijil&&d.sijil.length?d.sijil.map(function(x){var w=/DISAHKAN/.test(x.status)?'#1f9d55':/DITOLAK/.test(x.status)?'#c0102c':'#c9a227';return '<div class="li">'+e(x.aktiviti)+' <span style="color:'+w+'">· '+e(x.status)+'</span><small>'+e(x.peringkat)+' · '+e(x.pencapaian)+(x.tarikh?' · '+e(x.tarikh):'')+(x.catatan?' · '+e(x.catatan):'')+'</small></div>';}).join(''):'<p class="nt">Belum ada sijil dihantar.</p>')
+     +'<p class="nt" style="margin-top:10px;">Jika anak menyertai aktiviti kokurikulum di luar sekolah (anjuran KPM / JPN / PPD dan lain-lain), hantar gambar sijil atau surat pengiktirafan di sini untuk disemak oleh PK Kokurikulum.</p>'
+     +'<label for="sj-a">Nama aktiviti / pertandingan</label><input id="sj-a" placeholder="cth. Kejohanan Catur MSSD Larut Matang">'
+     +'<label for="sj-o">Penganjur</label><select id="sj-o"><option>KPM</option><option>JPN</option><option>PPD</option><option>Persatuan / Kelab luar</option><option>Lain-lain</option></select>'
+     +'<div class="g2"><div><label for="sj-p">Peringkat</label><select id="sj-p"><option>Zon</option><option>Daerah</option><option>Negeri</option><option>Kebangsaan</option><option>Antarabangsa</option></select></div>'
+     +'<div><label for="sj-c">Pencapaian</label><select id="sj-c"><option>Johan</option><option>Naib Johan</option><option>Ketiga</option><option>Tempat Keempat</option><option>Tempat Kelima</option><option>Peserta</option></select></div></div>'
+     +'<label for="sj-t">Tarikh aktiviti</label><input id="sj-t" type="date">'
+     +'<label>Gambar sijil / surat (1–3)</label><input id="sj-g" type="file" accept="image/*" capture="environment" multiple><div id="sj-pv" style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;"></div>'
+     +'<button id="sj-b">Hantar sijil</button><div class="msg" id="sj-m"></div></div>';
+  }
   h+='<div class="bx"><p class="nt">Untuk pertukaran unit atau sebarang pertanyaan, sila hubungi '+(d.hubungi?e(d.hubungi):'guru kelas atau PK Kokurikulum')+'.</p><button class="ghost" onclick="borang()">Semak murid lain</button></div>';
-  z.innerHTML=h;window.scrollTo(0,0);
+  z.innerHTML=h;window.scrollTo(0,0);GBR=[];
+  var gi=document.getElementById('sj-g');if(gi){gi.onchange=function(){[].slice.call(gi.files||[]).slice(0,3-GBR.length).forEach(function(f){kecil(f,function(u){if(u&&GBR.length<3){GBR.push(u);pv();}});});gi.value='';};document.getElementById('sj-b').onclick=hantarSijil;}
+}
+function pv(){document.getElementById('sj-pv').innerHTML=GBR.map(function(u,i){return '<div style="position:relative"><img src="'+u+'" style="width:84px;height:84px;object-fit:cover;border-radius:10px;border:1px solid var(--line)"><span onclick="GBR.splice('+i+',1);pv()" style="position:absolute;top:-6px;right:-6px;background:#c0102c;color:#fff;border-radius:50%;width:22px;height:22px;text-align:center;line-height:22px;cursor:pointer;font-size:12px">✕</span></div>';}).join('');}
+function kecil(f,cb){var r=new FileReader();r.onload=function(){var im=new Image();im.onload=function(){var s=Math.min(1,1400/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);var x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);cb(c.toDataURL('image/jpeg',.75));};im.onerror=function(){cb('');};im.src=r.result;};r.readAsDataURL(f);}
+function hantarSijil(){
+  var b=document.getElementById('sj-b'),m=document.getElementById('sj-m'),a=document.getElementById('sj-a').value.trim();
+  if(!a)return m.textContent='Isi nama aktiviti.';if(!GBR.length)return m.textContent='Sila ambil sekurang-kurangnya 1 gambar sijil / surat.';
+  b.disabled=true;b.textContent='Menghantar…';m.textContent='';
+  var o={tindakan:'sijil',mykid:SAH.mykid,kelas:SAH.kelas,aktiviti:a,penganjur:document.getElementById('sj-o').value,peringkat:document.getElementById('sj-p').value,pencapaian:document.getElementById('sj-c').value,tarikh:document.getElementById('sj-t').value,gambar:GBR};
+  fetch(SEMAK_API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(o)}).then(function(r){return r.json();}).then(function(d){
+    if(!d.success){b.disabled=false;b.textContent='Hantar sijil';m.textContent=d.error||'Gagal.';return;}
+    m.style.color='#1f9d55';m.textContent='✓ Sijil dihantar. Status: menunggu semakan PK Kokurikulum.';
+    setTimeout(function(){fetch(SEMAK_API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(SAH)}).then(function(r){return r.json();}).then(function(x){if(x.success)papar(x);});},1200);
+  }).catch(function(){b.disabled=false;b.textContent='Hantar sijil';m.textContent='Tiada sambungan. Cuba lagi.';});
 }
 if(!window.SEMAK_API){z.innerHTML='<div class="bx"><p class="nt">Halaman semakan belum disediakan.</p></div>';}
 else fetch(SEMAK_API).then(function(r){return r.json();}).then(function(d){if(!d.success)throw 0;INFO=d;borang();}).catch(function(){z.innerHTML='<div class="bx"><p class="nt">Tidak dapat menyambung. Cuba lagi sebentar.</p></div>';});
