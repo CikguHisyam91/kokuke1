@@ -1009,6 +1009,7 @@ body[data-theme="dark"] .sw-tema i{transform:translateX(30px);color:var(--c2);}
 
 <!-- TETAPAN -->
 <div id="view-tetapan" class="view-section">
+  <div class="card-g" id="semak-tetapan" style="max-width:720px;"></div>
   <div class="card-g" style="max-width:520px;">
     <h4 class="mb-3"><i class="fa-solid fa-school me-2" style="color:var(--c3);"></i>Nama Sekolah</h4>
     <div class="mb-3"><label class="small fw-bold mb-1">Nama Penuh Sekolah</label><input type="text" id="tet-nama" class="form-control" placeholder="SK King Edward VII (1)" style="font-weight:700;"></div>
@@ -1220,7 +1221,7 @@ function tukarMenu(id){
   if(id==='koleksiopr'){koprTab('hadir');}
   if(id==='jawatankuasa'){jkTab('daftar');}
   if(id==='semak'){semakKelas();}
-  if(id==='tetapan'){var f=document.getElementById('tet-nama');if(f)f.value=dc.namaSekolah||'SK KING EDWARD VII (1)';}
+  if(id==='tetapan'){try{paparSemakTetapan();}catch(e){}var f=document.getElementById('tet-nama');if(f)f.value=dc.namaSekolah||'SK KING EDWARD VII (1)';}
 }
 
 // ===== LOAD DATA =====
@@ -4592,6 +4593,29 @@ function paparTakwimRingkas(el,list){
        return '<div class="tk-i'+(b&&b<hi?' lepas':'')+(now?' ini':'')+'" style="border-left-color:'+TK_WARNA[kk]+';align-items:center;"><div class="tk-tg"><b>'+(d?d.getDate():'–')+'</b><small>'+(d?HARI_MY[d.getDay()]:'')+'</small></div>'
         +'<div style="min-width:0;flex:1;"><div class="t">'+esc(o.aktiviti)+(now?' <span class="tag s-ok">HARI INI</span>':'')+(o.status?' <span class="tag '+kelasStatus(o.status)+'">'+esc(o.status)+'</span>':'')+(o._prog?' <span class="tag s-proses">PROGRAM</span>':'')+'</div>'+(meta?'<div class="m">'+meta+'</div>':'')+'</div>'
         +'<div class="pk-row" style="flex:0 0 auto;gap:4px;">'+act+'</div></div>';}).join('')+'</div></div>';}).join('');
+}
+
+
+// ---------- HALAMAN SEMAKAN IBU BAPA (semak.html + Semakan.gs) ----------
+var SEMAK_KUNCI=[['SEMAK_BUKA','Buka halaman semakan kepada ibu bapa','TIDAK'],['SEMAK_UNIT','Paparkan unit kokurikulum','YA'],['SEMAK_HADIR','Paparkan kehadiran perjumpaan','YA'],['SEMAK_CAPAI','Paparkan pencapaian','YA'],['SEMAK_PAJSK','Paparkan markah PAJSK','TIDAK']];
+function semakNilai(k,d){var o=(dr.tetapanpk||[]).filter(function(x){return x.kunci===k;})[0];return o?o.nilai:d;}
+function paparSemakTetapan(){
+  var z=document.getElementById('semak-tetapan');if(!z)return;
+  var url=new URL('semak.html',location.href).href,buka=hsBukaPk();
+  z.innerHTML='<div class="bx-h" style="margin-bottom:8px;"><h4 style="margin:0;"><i class="fa-solid fa-people-roof me-2" style="color:var(--c1);"></i>Halaman Semakan Ibu Bapa</h4>'
+   +(buka?'':'<button class="btn btn-secondary" onclick="hsSahPk(function(){paparSemakTetapan();})"><i class="fa-solid fa-lock me-1"></i>PK Kokurikulum</button>')+'</div>'
+   +'<p style="font-size:11px;font-weight:800;color:var(--sub);">Ibu bapa masukkan No. MyKid + kelas untuk melihat unit, kehadiran, pencapaian dan markah PAJSK anak (seorang sahaja).</p>'
+   +'<div class="pk-row" style="align-items:center;margin-bottom:10px;"><input class="form-control" readonly value="'+esc(url)+'" style="flex:1 1 260px;text-transform:none;" onclick="this.select()"><button class="mini" onclick="navigator.clipboard&&navigator.clipboard.writeText(\''+esc(url)+'\');toast(\'✅ Pautan disalin.\',\'ok\')"><i class="fa-solid fa-copy me-1"></i>Salin pautan</button><a class="mini" href="'+esc(url)+'" target="_blank" rel="noopener">Buka</a></div>'
+   +(window.SEMAK_API?'':'<div class="banner">Fail Semakan.gs belum dipasang (SEMAK_API kosong dalam config.js).</div>')
+   +(buka?'<div style="display:flex;flex-direction:column;gap:6px;">'+SEMAK_KUNCI.map(function(k){var v=semakNilai(k[0],k[2]);return '<label style="display:flex;gap:10px;align-items:center;font-size:12px;font-weight:800;cursor:pointer;"><input type="checkbox" class="sm-k" data-k="'+k[0]+'"'+(/^YA$/i.test(v)?' checked':'')+'> '+esc(k[1])+'</label>';}).join('')
+     +'<label style="font-size:11px;font-weight:900;margin-top:6px;">UNTUK PERTANYAAN, HUBUNGI</label><input id="sm-hub" class="form-control" style="text-transform:none;" placeholder="cth. PK Kokurikulum, 012-3456789" value="'+esc(semakNilai('SEMAK_HUBUNGI',''))+'">'
+     +'<div class="pk-row" style="margin-top:8px;"><button class="btn btn-danger" onclick="simpanSemakTetapan()"><i class="fa-solid fa-floppy-disk me-1"></i>Simpan tetapan semakan</button></div></div>'
+    :'<p style="font-size:12px;font-weight:800;">Status: <b style="color:'+(/^YA$/i.test(semakNilai('SEMAK_BUKA','TIDAK'))?'#1f9d55">DIBUKA':'#c0102c">DITUTUP')+'</b> · tekan PK Kokurikulum untuk ubah tetapan.</p>');
+}
+function simpanSemakTetapan(){
+  var v={};document.querySelectorAll('.sm-k').forEach(function(c){v[c.getAttribute('data-k')]=c.checked?'YA':'TIDAK';});v.SEMAK_HUBUNGI=document.getElementById('sm-hub').value.trim();
+  var kerja=Object.keys(v).map(function(k){var o=(dr.tetapanpk||[]).filter(function(x){return x.kunci===k;})[0];return {mk:'tetapanpk',o:{id:o?o.id:'',kunci:k,nilai:v[k]}};});
+  skSiri(kerja,function(){toast('✅ Tetapan semakan disimpan.','ok');paparSemakTetapan();});
 }
 
 // ---------- MENU PANTAS (laman utama) ----------

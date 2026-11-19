@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ms"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Semakan Kokurikulum</title>
+<link rel="icon" href="logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@600;700;800;900&display=swap" rel="stylesheet">
+<script src="config.js"></script>
+<style>
+:root{--bg:#f5f5f2;--card:#fff;--txt:#141414;--sub:#6b6b6b;--line:#e4ded8;--c1:#c0102c;--inp:#efece8}
+@media (prefers-color-scheme:dark){:root{--bg:#121212;--card:#1c1c1c;--txt:#f3f3f0;--sub:#a8a8a2;--line:#2e2e2e;--inp:#262626}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font-family:Urbanist,Arial,sans-serif;text-transform:uppercase;letter-spacing:.04em}
+.w{max-width:720px;margin:0 auto;padding:20px 16px 40px}
+.hd{display:flex;gap:14px;align-items:center;margin-bottom:18px}.hd img{height:64px}.hd b{display:block;font-size:20px;font-weight:900}.hd small{font-size:11px;font-weight:800;color:var(--c1);letter-spacing:.1em}
+.bx{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;margin-bottom:14px}
+h6{margin:0 0 10px;font-size:11px;font-weight:900;letter-spacing:.14em;color:var(--sub)}
+label{display:block;font-size:11px;font-weight:900;margin:10px 0 6px}
+input,select{width:100%;font:inherit;font-size:16px;font-weight:800;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:var(--inp);color:var(--txt);text-transform:none}
+button{width:100%;margin-top:16px;padding:14px;border:none;border-radius:14px;background:var(--c1);color:#fff;font:inherit;font-size:14px;font-weight:900;letter-spacing:.1em;cursor:pointer}
+button:disabled{opacity:.6}
+.msg{margin-top:12px;font-size:12px;font-weight:800;color:var(--c1);min-height:16px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.u{border:1px solid var(--line);border-radius:14px;padding:12px}.u small{display:block;font-size:9.5px;font-weight:900;color:var(--sub);letter-spacing:.12em}.u b{font-size:14px;font-weight:900}
+.u i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px}
+.br{display:flex;align-items:center;gap:10px;margin:8px 0;font-size:12px;font-weight:800}.br span:first-child{flex:0 0 40%}.br .t{flex:1;height:10px;border-radius:6px;background:var(--inp);overflow:hidden}.br .t i{display:block;height:100%;background:#1f9d55}
+.li{border-top:1px solid var(--line);padding:8px 0;font-size:12px;font-weight:800}.li small{display:block;color:var(--sub);font-size:10px}
+.nm{font-size:22px;font-weight:900}.nt{font-size:11px;font-weight:700;color:var(--sub);text-transform:none;letter-spacing:.02em;line-height:1.5}
+.ghost{background:transparent;color:var(--txt);border:1px solid var(--line)}
+</style></head><body><div class="w">
+<div class="hd"><img src="logo.png" alt=""><div><small>Semakan Kokurikulum</small><b id="sk">SK KING EDWARD VII (1)</b></div></div>
+<div id="z"><div class="bx">Memuatkan…</div></div>
+</div>
+<script>
+var z=document.getElementById('z'),INFO=null;
+function e(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+var WR={CAMERON:'#2f6fb3',STAINER:'#c0102c',STEVEN:'#1f7a45',FREEMAN:'#c9a227'};
+function wr(r){r=String(r).toUpperCase();for(var k in WR)if(r.indexOf(k)>=0)return WR[k];return '#888';}
+function borang(msg){
+  if(!INFO.buka){z.innerHTML='<div class="bx"><h6>Semakan ditutup</h6><p class="nt">Semakan kokurikulum belum dibuka buat masa ini. Sila cuba lagi kemudian.'+(INFO.hubungi?'<br><br>Pertanyaan: '+e(INFO.hubungi):'')+'</p></div>';return;}
+  z.innerHTML='<div class="bx"><h6>Semak maklumat kokurikulum anak</h6>'
+   +'<label for="mk">No. MyKid anak (12 digit)</label><input id="mk" inputmode="numeric" autocomplete="off" maxlength="14" placeholder="cth. 150101081234">'
+   +'<label for="kl">Kelas anak</label><select id="kl"><option value="">— Pilih kelas —</option>'+INFO.kelas.map(function(k){return '<option>'+e(k)+'</option>';}).join('')+'</select>'
+   +'<button id="bt">Semak</button><div class="msg" id="ms">'+e(msg||'')+'</div>'
+   +'<p class="nt" style="margin-top:12px;">Maklumat ini hanya untuk semakan ibu bapa / penjaga. No. MyKid tidak dipaparkan atau disimpan dalam peranti anda.</p></div>';
+  document.getElementById('bt').onclick=semak;
+}
+function semak(){
+  var mk=document.getElementById('mk').value.replace(/\D/g,''),kl=document.getElementById('kl').value,b=document.getElementById('bt'),ms=document.getElementById('ms');
+  if(mk.length!==12)return ms.textContent='No. MyKid mesti 12 digit.';if(!kl)return ms.textContent='Sila pilih kelas.';
+  b.disabled=true;b.textContent='Menyemak…';ms.textContent='';
+  fetch(SEMAK_API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({mykid:mk,kelas:kl})}).then(function(r){return r.json();})
+   .then(function(d){if(!d.success){b.disabled=false;b.textContent='Semak';ms.textContent=d.error||'Gagal.';return;}papar(d);})
+   .catch(function(){b.disabled=false;b.textContent='Semak';ms.textContent='Tiada sambungan. Cuba lagi.';});
+}
+function papar(d){
+  var h='<div class="bx"><h6>Maklumat murid</h6><div class="nm">'+e(d.nama)+'</div><div style="font-weight:800;color:var(--sub);font-size:12px;margin-top:4px;">TAHUN '+e(d.tahun)+' · '+e(d.kelas)+'</div></div>';
+  if(d.unit)h+='<div class="bx"><h6>Unit kokurikulum</h6><div class="g2">'
+   +[['Rumah sukan',d.unit.rumah,1],['Unit beruniform',d.unit.uniform],['Kelab & persatuan',d.unit.kelab],['Sukan & permainan',d.unit.sukan]].map(function(x){return '<div class="u"><small>'+x[0]+'</small><b>'+(x[2]?'<i style="background:'+wr(x[1])+'"></i>':'')+e(x[1])+'</b></div>';}).join('')+'</div></div>';
+  if(d.pajsk&&d.pajsk.length)h+='<div class="bx"><h6>Markah PAJSK</h6><div class="g2">'+d.pajsk.map(function(x){return '<div class="u"><small>'+e(x.k)+'</small><b>'+e(x.v)+'</b></div>';}).join('')+'</div></div>';
+  if(d.hadir)h+='<div class="bx"><h6>Kehadiran perjumpaan '+new Date().getFullYear()+'</h6>'+(d.hadir.length?d.hadir.map(function(x){var p=x.jumlah?Math.round(x.hadir/x.jumlah*100):0;return '<div class="br"><span>'+e(x.unit)+'</span><span class="t"><i style="width:'+p+'%;background:'+(p>=80?'#1f9d55':p>=60?'#c9a227':'#c0102c')+'"></i></span><span>'+x.hadir+'/'+x.jumlah+' ('+p+'%)</span></div>';}).join(''):'<p class="nt">Belum ada rekod kehadiran tahun ini.</p>')+'</div>';
+  if(d.capai)h+='<div class="bx"><h6>Pencapaian '+new Date().getFullYear()+'</h6>'+(d.capai.length?d.capai.map(function(x){return '<div class="li">'+e(x.pencapaian)+' · '+e(x.pertandingan)+'<small>'+e(x.peringkat)+' · '+e(x.tarikh)+'</small></div>';}).join(''):'<p class="nt">Belum ada rekod pencapaian tahun ini.</p>')+'</div>';
+  h+='<div class="bx"><p class="nt">Untuk pertukaran unit atau sebarang pertanyaan, sila hubungi '+(d.hubungi?e(d.hubungi):'guru kelas atau PK Kokurikulum')+'.</p><button class="ghost" onclick="borang()">Semak murid lain</button></div>';
+  z.innerHTML=h;window.scrollTo(0,0);
+}
+if(!window.SEMAK_API){z.innerHTML='<div class="bx"><p class="nt">Halaman semakan belum disediakan.</p></div>';}
+else fetch(SEMAK_API).then(function(r){return r.json();}).then(function(d){if(!d.success)throw 0;INFO=d;borang();}).catch(function(){z.innerHTML='<div class="bx"><p class="nt">Tidak dapat menyambung. Cuba lagi sebentar.</p></div>';});
+</script></body></html>
