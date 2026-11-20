@@ -808,7 +808,7 @@ body[data-theme="dark"] .sw-tema i{transform:translateX(30px);color:var(--c2);}
     <div class="row g-2 mb-3" style="background:rgba(6,182,212,.02);border:1px solid var(--glow);border-radius:10px;padding:12px;margin:0;">
       <div class="col-4"><label class="small mb-1">Kategori</label><select id="jk-kat" class="form-select form-select-sm" onchange="jkKategori()"><option value="uniform">🛡️ Uniform</option><option value="kelab">🧠 Kelab</option><option value="sukan">⚽ Sukan</option><option value="rumah">🏠 Rumah</option></select></div>
       <div class="col-5"><label class="small mb-1">Nama Unit</label><select id="jk-unit" class="form-select form-select-sm" onchange="jkMuat()"></select></div>
-      <div class="col-3"><label class="small mb-1">Tahun</label><select id="jk-thn" class="form-select form-select-sm" onchange="jkMuat()"><option value="4">4</option><option value="5">5</option><option value="6">6</option></select></div>
+      <div class="col-3"><label class="small mb-1">Tahun</label><select id="jk-thn" class="form-select form-select-sm" onchange="jkMuat()"><option value="ALL">4–6 (gabung)</option><option value="4">4</option><option value="5">5</option><option value="6">6</option></select></div>
     </div>
     <div class="mb-3"><label class="small text-info fw-bold mb-2"><i class="fa-solid fa-keyboard me-1"></i>Taip nama dalam kotak jawatan — cadangan nama &amp; kelas akan keluar. Atau klik kotak, kemudian klik nama di bawah:</label>
       <div id="jk-pool" class="d-flex flex-wrap gap-2 p-3 rounded" style="max-height:160px;overflow-y:auto;background:rgba(0,0,0,.04);border:1px solid var(--glow);"><span class="text-muted small">Pilih unit dahulu...</span></div>
@@ -2615,7 +2615,7 @@ function jkCadang(el){
   var L=(_jkSenarai||[]).filter(function(m){var n=m.nama.toUpperCase();return !q||n.indexOf(q)>=0||q.split(/\s+/).every(function(w){return n.indexOf(w)>=0;});}).slice(0,12);
   if(!L.length||(L.length===1&&L[0].nama.toUpperCase()===q)){b.style.display='none';return;}
   _jkSel=Math.min(_jkSel,L.length-1);
-  b.innerHTML=L.map(function(m,i){var g=guna[m.nama.toUpperCase()];return '<div data-n="'+esc(m.nama)+'" style="padding:8px 12px;cursor:pointer;font-size:12px;font-weight:800;display:flex;justify-content:space-between;gap:10px;'+(i===_jkSel?'background:var(--inp);':'')+(g?'opacity:.5;':'')+'"><span>'+esc(m.nama)+'</span><span style="color:var(--sub);white-space:nowrap;">'+esc(m.kelas)+(g?' · '+esc(g):'')+'</span></div>';}).join('');
+  b.innerHTML=L.map(function(m,i){var g=guna[m.nama.toUpperCase()];return '<div data-n="'+esc(m.nama)+'" style="padding:8px 12px;cursor:pointer;font-size:12px;font-weight:800;display:flex;justify-content:space-between;gap:10px;'+(i===_jkSel?'background:var(--inp);':'')+(g?'opacity:.5;':'')+'"><span>'+esc(m.nama)+'</span><span style="color:var(--sub);white-space:nowrap;">THN '+esc(m.tahun)+' · '+esc(m.kelas)+(g?' · '+esc(g):'')+'</span></div>';}).join('');
   var r=el.getBoundingClientRect();b.style.left=(r.left+window.scrollX)+'px';b.style.top=(r.bottom+window.scrollY+4)+'px';b.style.width=Math.max(r.width,320)+'px';b.style.display='block';b._L=L;
 }
 function jkPilih(nama){if(!jkAktifBox)return;jkCadangBox().style.display='none';_jkSel=0;jkIsikan(nama);}
@@ -2660,13 +2660,13 @@ function jkMuat(){
   jkSlotLalai();document.querySelectorAll('.jk-input').forEach(function(i){i.value='';});
   var pool=document.getElementById('jk-pool');
   if(!unit){pool.innerHTML='<span class="text-muted small">Pilih unit dahulu...</span>';return;}
-  _jkSenarai=dc.murid.filter(function(m){return sama(m[kat],unit)&&m.tahun===thn;});
+  _jkSenarai=dc.murid.filter(function(m){return sama(m[kat],unit)&&(thn==='ALL'?/^[456]$/.test(m.tahun):m.tahun===thn);}).sort(function(a,b){return b.tahun-a.tahun||String(a.nama).localeCompare(String(b.nama));});
   if(!_jkSenarai.length){pool.innerHTML='<span class="text-muted small">Tiada ahli.</span>';}
   else{
-    pool.innerHTML=_jkSenarai.map(function(m,i){return '<span class="jk-chip" data-i="'+i+'">🎯 '+esc(m.nama)+' ('+esc(m.kelas)+')</span>';}).join('');
+    pool.innerHTML=_jkSenarai.map(function(m,i){return '<span class="jk-chip" data-i="'+i+'">🎯 '+esc(m.nama)+' (THN '+esc(m.tahun)+' · '+esc(m.kelas)+')</span>';}).join('');
     pool.onclick=function(e){var c=e.target.closest('.jk-chip');if(!c)return;var m=_jkSenarai[parseInt(c.getAttribute('data-i'),10)];if(m)jkIsikan(m.nama);};
   }
-  var sediaAda=(dc.jawatankuasa||[]).filter(function(j){return sama(j.kategori,kat)&&sama(j.namaUnit,unit)&&j.tahunAliran===thn;});
+  var sediaAda=(dc.jawatankuasa||[]).filter(function(j){return sama(j.kategori,kat)&&sama(j.namaUnit,unit)&&(thn==='ALL'?/^[456]$/.test(j.tahunAliran):j.tahunAliran===thn);});
   var nil={};sediaAda.forEach(function(item){if(!item.jawatan)return;if(_jkSlot.indexOf(item.jawatan)<0)_jkSlot.push(item.jawatan);nil[item.jawatan]=item.namaMurid;});
   document.getElementById('jk-slot').innerHTML='';jkLukisSlot(nil);
 }
@@ -2676,12 +2676,29 @@ function jkSimpan(){
   var arr=[];
   document.querySelectorAll('.jk-input').forEach(function(b){arr.push({jawatan:b.getAttribute('data-jawatan'),nama:b.value.trim()});});
   _jkBuang.forEach(function(j){if(!arr.some(function(a){return a.jawatan===j;}))arr.push({jawatan:j,nama:''});});
+  if(thn==='ALL')return jkSimpanGabung(kat,unit,arr);
   showLoad();
   google.script.run.withSuccessHandler(function(res){
     hideLoad();
     if(res&&res.success){toast('✅ Jawatankuasa disimpan!','ok');muatSemua(true);}
     else{alert('Ralat: '+(res?res.error:''));}
   }).withFailureHandler(function(e){hideLoad();alert('Ralat: '+e.message);}).simpanJawatankuasaPukal({kategori:kat,namaUnit:unit,tahunAliran:thn},arr);
+}
+
+// Mod gabung Tahun 4–6: simpan ikut tahun setiap murid (satu panggilan bagi setiap tahun)
+function jkSimpanGabung(kat,unit,arr){
+  var lama={};(dc.jawatankuasa||[]).forEach(function(j){if(sama(j.kategori,kat)&&sama(j.namaUnit,unit))lama[String(j.namaMurid).trim().toUpperCase()]=j.tahunAliran;});
+  var ahli={};dc.murid.forEach(function(m){if(sama(m[kat],unit))ahli[String(m.nama).trim().toUpperCase()]=m.tahun;});
+  function tahunNama(n){var k=n.toUpperCase();return ahli[k]||lama[k]||((dc.murid.filter(function(m){return String(m.nama).trim().toUpperCase()===k;})[0]||{}).tahun)||'';}
+  var tLain=arr.filter(function(a){return a.nama&&!/^[456]$/.test(tahunNama(a.nama));}).map(function(a){return a.nama;});
+  if(tLain.length)return alert('Nama ini bukan murid Tahun 4–6 dalam sistem. Pilih daripada cadangan:\n'+tLain.join('\n'));
+  var T=['4','5','6'],i=0;showLoad();
+  (function seterus(){
+    if(i>=T.length){hideLoad();toast('✅ Jawatankuasa disimpan!','ok');muatSemua(true);return;}
+    var y=T[i++],sub=arr.map(function(a){return {jawatan:a.jawatan,nama:(a.nama&&tahunNama(a.nama)===y)?a.nama:''};});
+    google.script.run.withSuccessHandler(function(res){if(res&&res.success)seterus();else{hideLoad();alert('Ralat (Tahun '+y+'): '+(res?res.error:''));}})
+      .withFailureHandler(function(e){hideLoad();alert('Ralat: '+e.message);}).simpanJawatankuasaPukal({kategori:kat,namaUnit:unit,tahunAliran:y},sub);
+  })();
 }
 
 // ===== PAJSK =====
