@@ -4040,7 +4040,7 @@ function paparHome(){
   var m=dc.murid||[];
   document.getElementById('h-murid').innerHTML=m.length+'<small>murid aktif</small>';
   var c=[],mx=1;for(var t=1;t<=6;t++){var n=m.filter(function(x){return x.tahun===String(t);}).length;c.push(n);if(n>mx)mx=n;}
-  document.getElementById('hm-thn').innerHTML=c.map(function(n,i){return '<div><b>'+n+'</b><i style="height:'+Math.max(4,Math.round(n/mx*60))+'px"></i><span>THN '+(i+1)+'</span></div>';}).join('');
+  document.getElementById('hm-thn').innerHTML=c.map(function(n,i){return '<div class="klik" role="button" tabindex="0" title="Lihat murid ikut kelas" style="cursor:pointer;" onclick="kelasTahun(\''+(i+1)+'\')" onkeydown="if(event.key===\'Enter\')kelasTahun(\''+(i+1)+'\')"><b>'+n+'</b><i style="height:'+Math.max(4,Math.round(n/mx*60))+'px"></i><span>THN '+(i+1)+'</span></div>';}).join('');
   var r=dc.rujukan||{},U=[['rumah','Rumah sukan','fa-house-flag'],['uniform','Unit beruniform','fa-shield-halved'],['kelab','Kelab & persatuan','fa-lightbulb'],['sukan','Sukan & permainan','fa-futbol']],jum=0;
   document.getElementById('hm-unit').innerHTML=U.map(function(u){var n=(r[u[0]]||[]).length;jum+=n;return '<div class="unit-k klik" role="button" tabindex="0" onclick="bukaInfoKat(\''+u[0]+'\')" onkeydown="if(event.key===\'Enter\')bukaInfoKat(\''+u[0]+'\')" title="Lihat info '+esc(u[1])+'"><i class="fa-solid '+u[2]+'"></i><div style="flex:1;"><b>'+n+'</b><span>'+esc(u[1])+'</span></div><i class="fa-solid fa-chevron-right" style="border:none;background:none;width:auto;height:auto;font-size:12px;color:var(--sub);"></i></div>';}).join('');
   document.getElementById('h-unit-jum').textContent=jum+' unit semuanya';
@@ -4105,6 +4105,23 @@ function kadUnit(d,k){
     return '<div class="bx rs-k"><div class="nm"><em style="background:'+w+'"></em>'+esc(r)+'</div><div class="bn">'+n+'<small>'+KAT[k].ahli+' · '+Math.round(n/tot*100)+'%</small></div><div class="rs-tr"><i style="width:'+Math.round(n/mx*100)+'%;background:'+w+'"></i></div></div>';}).join('')+'</div>';
 }
 // Info ringkas (tetingkap kecil) bila kotak di laman utama ditekan
+function kelasTahun(t,kls){
+  var m=(dc.murid||[]).filter(function(x){return x.tahun===String(t);}),g={},el=pastiModal('mod-kat');el._kunci=false;
+  m.forEach(function(x){var k=x.kelas||'(TIADA KELAS)';(g[k]=g[k]||[]).push(x);});
+  var K=Object.keys(g).sort(),mx=Math.max.apply(null,K.map(function(k){return g[k].length;}).concat([1])),tutup='document.getElementById(\'mod-kat\').classList.remove(\'show\')',isi;
+  if(kls&&g[kls]){
+    var L=g[kls].slice().sort(function(a,b){return String(a.nama).localeCompare(String(b.nama));});
+    isi='<button class="btn btn-sm btn-outline-secondary mb-2" onclick="kelasTahun(\''+t+'\')"><i class="fa-solid fa-arrow-left me-1"></i>Semua kelas</button>'
+     +'<div style="max-height:52vh;overflow-y:auto;"><table style="width:100%;border-collapse:collapse;font-size:12.5px;">'+L.map(function(x,i){return '<tr style="border-bottom:1px solid var(--line);"><td style="padding:6px 4px;width:30px;color:var(--sub);">'+(i+1)+'</td><td style="padding:6px 4px;font-weight:700;">'+esc(x.nama)+'</td><td style="padding:6px 4px;color:var(--sub);">'+esc(x.rumah||'')+'</td></tr>';}).join('')+'</table></div>';
+  }else{
+    isi='<div class="paj-top" style="margin:10px 0 14px;"><div><b>'+m.length+'</b><span>Murid</span></div><div><b>'+K.length+'</b><span>Kelas</span></div><div><b>'+(K.length?Math.round(m.length/K.length):0)+'</b><span>Purata / kelas</span></div></div>'
+     +'<div style="display:flex;flex-direction:column;gap:8px;max-height:46vh;overflow-y:auto;">'+K.map(function(k,i){var n=g[k].length,L=g[k].filter(function(x){return jantina(x.nama)==='L';}).length,P=g[k].filter(function(x){return jantina(x.nama)==='P';}).length,w=warnaRumah(k,i);
+      return '<div class="komp-r klik" role="button" title="Lihat nama murid" onclick="kelasTahun(\''+t+'\',\''+esc(k).replace(/'/g,"\\'")+'\')" style="grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) 44px;cursor:pointer;"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><em style="display:inline-block;width:9px;height:9px;border-radius:3px;background:'+w+';margin-right:6px;"></em>'+esc(k)+((L||P)?' <small style="color:var(--sub);">L'+L+' · P'+P+'</small>':'')+'</span><div class="tr"><i style="width:'+Math.round(n/mx*100)+'%;background:'+w+'"></i></div><b>'+n+'</b></div>';}).join('')+'</div>'
+     +'<p style="margin:12px 0 0;font-size:10.5px;font-weight:700;color:var(--sub);letter-spacing:.05em;">Tekan kelas untuk lihat nama murid.</p>';
+  }
+  el.firstChild.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px;"><h5 style="margin:0;"><i class="fa-solid fa-users me-2" style="color:var(--c1);"></i>Tahun '+esc(t)+(kls?' · '+esc(kls)+' ('+(g[kls]||[]).length+')':'')+'</h5><button class="ib" style="width:38px;height:38px;" onclick="'+tutup+'" aria-label="Tutup"><i class="fa-solid fa-xmark"></i></button></div>'+isi;
+  el.classList.add('show');
+}
 function bukaInfoKat(k){
   var cfg=KAT[k],d=dataKat(k),el=pastiModal('mod-kat');el._kunci=false;el.firstChild.onclick=null;
   var urut=d.R.slice().sort(function(a,b){return d.ahli[b].length-d.ahli[a].length;});
