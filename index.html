@@ -2692,13 +2692,17 @@ function jkSimpanGabung(kat,unit,arr){
   function tahunNama(n){var k=n.toUpperCase();return ahli[k]||lama[k]||((dc.murid.filter(function(m){return String(m.nama).trim().toUpperCase()===k;})[0]||{}).tahun)||'';}
   var tLain=arr.filter(function(a){return a.nama&&!/^[456]$/.test(tahunNama(a.nama));}).map(function(a){return a.nama;});
   if(tLain.length)return alert('Nama ini bukan murid Tahun 4–6 dalam sistem. Pilih daripada cadangan:\n'+tLain.join('\n'));
-  var T=['4','5','6'],i=0;showLoad();
-  (function seterus(){
-    if(i>=T.length){hideLoad();toast('✅ Jawatankuasa disimpan!','ok');muatSemua(true);return;}
-    var y=T[i++],sub=arr.map(function(a){return {jawatan:a.jawatan,nama:(a.nama&&tahunNama(a.nama)===y)?a.nama:''};});
-    google.script.run.withSuccessHandler(function(res){if(res&&res.success)seterus();else{hideLoad();alert('Ralat (Tahun '+y+'): '+(res?res.error:''));}})
-      .withFailureHandler(function(e){hideLoad();alert('Ralat: '+e.message);}).simpanJawatankuasaPukal({kategori:kat,namaUnit:unit,tahunAliran:y},sub);
-  })();
+  // Simpan pantas: kemas kini paparan serta-merta, hantar 3 tahun serentak di latar
+  dc.jawatankuasa=(dc.jawatankuasa||[]).filter(function(j){return !(sama(j.kategori,kat)&&sama(j.namaUnit,unit)&&/^[456]$/.test(j.tahunAliran));});
+  arr.forEach(function(a){if(a.nama)dc.jawatankuasa.push({kategori:kat,namaUnit:unit,tahunAliran:tahunNama(a.nama),jawatan:a.jawatan,namaMurid:a.nama});});
+  toast('✅ Jawatankuasa disimpan!','ok');barMula();
+  var baki=3,gagal=[];
+  ['4','5','6'].forEach(function(y){
+    var sub=arr.map(function(a){return {jawatan:a.jawatan,nama:(a.nama&&tahunNama(a.nama)===y)?a.nama:''};});
+    function siap(e){if(e)gagal.push('Tahun '+y+': '+e);if(--baki)return;barTamat();if(gagal.length){alert('⚠️ Sebahagian tidak tersimpan — sila tekan Simpan sekali lagi.\n'+gagal.join('\n'));muatSemua(true);}}
+    google.script.run.withSuccessHandler(function(res){siap(res&&res.success?'':(res?res.error:'ralat'));}).withFailureHandler(function(e){siap(e.message);})
+      .simpanJawatankuasaPukal({kategori:kat,namaUnit:unit,tahunAliran:y},sub);
+  });
 }
 
 // ===== PAJSK =====
