@@ -10,17 +10,22 @@
 /* ===== JAMBATAN GITHUB → APPS SCRIPT =====
    Menggantikan google.script.run supaya kod sedia ada tak perlu diubah. */
 (function(){
-  var KEY='kokoKunci', antrian=[], sedangLogin=false;
+  var KEY='kokoKunci', KEYR='kokoPeranan', antrian=[], sedangLogin=false;
+  // peranan: 'pk' (akses penuh) · 'su' (SU Sukan) · 'js' (JK Statistik). SU/JS hanya modul Sukan Tahunan.
+  var BOLEH_PERANAN=['semakLogin','dapatkanDataSistem','dapatkanRekodModul','simpanRekodModul','simpanRekodModulPukal','padamRekodModul'];
+  function peranan(){try{return localStorage.getItem(KEYR)||'pk';}catch(e){return 'pk';}}
+  function simpanPeranan(r){try{localStorage.setItem(KEYR,r);}catch(e){}}
   function token(){try{return localStorage.getItem(KEY)||'';}catch(e){return '';}}
   function simpanToken(t){try{localStorage.setItem(KEY,t);}catch(e){}}
   function hantar(fn,args,ok,fail){
     if(!token()){antrian.push([fn,args,ok,fail]);tunjukLogin();return;}
+    if(peranan()!=='pk'&&BOLEH_PERANAN.indexOf(fn)<0)return; // di luar kebenaran peranan: abaikan senyap
     var ctl=window.AbortController?new AbortController():null,tm=setTimeout(function(){if(ctl)ctl.abort();},60000);
     fetch(KOKO_API,{signal:ctl?ctl.signal:undefined,method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn:fn,args:args,token:token()})})
       .then(function(r){clearTimeout(tm);if(!r.ok)throw new Error('Pelayan memberi ralat ('+r.status+'). Cuba lagi sebentar.');return r.text();})
       .then(function(t){try{return JSON.parse(t);}catch(e){throw new Error('Pelayan tidak memberi jawapan sah. Semak URL dalam config.js / deployment Apps Script.');}})
       .then(function(res){
-        if(res&&res.__auth===false){simpanToken('');try{localStorage.removeItem('kokoData');}catch(e){}antrian.push([fn,args,ok,fail]);tunjukLogin('Kata laluan tidak sah atau telah ditukar.');return;}
+        if(res&&res.__auth===false){simpanToken('');simpanPeranan('pk');try{localStorage.removeItem('kokoData');}catch(e){}antrian.push([fn,args,ok,fail]);tunjukLogin('Kata laluan tidak sah atau telah ditukar.');return;}
         if(res&&res.__error){if(fail)fail(new Error(res.__error));else alert('Ralat: '+res.__error);return;}
         if(ok)ok(res.result);
       })
@@ -35,7 +40,8 @@
     }});
   }
   window.google={script:{run:runner(null,null)}};
-  window.kokoLogKeluar=function(){simpanToken('');try{localStorage.removeItem('kokoData');localStorage.removeItem('kokoRekod');}catch(e){}location.reload();};
+  window.kokoPeranan=peranan;
+  window.kokoLogKeluar=function(){simpanToken('');simpanPeranan('pk');try{localStorage.removeItem('kokoData');localStorage.removeItem('kokoRekod');}catch(e){}location.reload();};
   window.kokoSetToken=function(t){if(t)simpanToken(t);};
   window.kokoAdaToken=function(){return !!token();};
   function tunjukLogin(msg){
@@ -59,7 +65,8 @@
           .then(function(r){return r.json();})
           .then(function(res){
             btn.disabled=false;btn.innerText='Masuk';
-            if(res&&res.result===true){simpanToken(v);pw.value='';el.style.display='none';sedangLogin=false;var q=antrian;antrian=[];q.forEach(function(a){hantar(a[0],a[1],a[2],a[3]);});}
+            var rl=res&&res.result===true?'pk':(res&&(res.result==='su'||res.result==='js')?res.result:'');
+            if(rl){var lama=peranan();simpanToken(v);simpanPeranan(rl);if(lama!==rl){try{localStorage.removeItem('kokoData');localStorage.removeItem('kokoRekod');}catch(e){}location.reload();return;}pw.value='';el.style.display='none';sedangLogin=false;var q=antrian;antrian=[];q.forEach(function(a){hantar(a[0],a[1],a[2],a[3]);});}
             else document.getElementById('koko-msg').innerText='Kata laluan salah.';
           })
           .catch(function(e){btn.disabled=false;btn.innerText='Masuk';document.getElementById('koko-msg').innerText='Gagal sambung ke pelayan. Semak config.js.';});
@@ -479,6 +486,8 @@ body[data-theme="dark"] .sw-tema i{transform:translateX(30px);color:var(--c2);}
 .mrow{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--glow);border-radius:12px;background:var(--bg);color:var(--txt);font-size:12px;font-weight:800;letter-spacing:.06em;cursor:pointer;text-align:left;}
 .mrow:hover{border-color:var(--c1);}
 .mrow i{color:var(--c1);width:18px;text-align:center;}
+body.terhad #btn-back,body.terhad .tb-act .ib[title="Cari murid"]{display:none!important;}
+body.terhad .tb-brand{pointer-events:none;}
 </style>
 </head>
 <body data-theme="light">
@@ -1009,6 +1018,7 @@ body[data-theme="dark"] .sw-tema i{transform:translateX(30px);color:var(--c2);}
 
 <!-- TETAPAN -->
 <div id="view-tetapan" class="view-section">
+  <div class="card-g" id="pw-peranan" style="max-width:720px;"></div>
   <div class="card-g" id="semak-tetapan" style="max-width:720px;"></div>
   <div class="card-g" style="max-width:520px;">
     <h4 class="mb-3"><i class="fa-solid fa-school me-2" style="color:var(--c3);"></i>Nama Sekolah</h4>
@@ -1194,6 +1204,7 @@ function isDark(){return document.body.getAttribute('data-theme')!=='light';}
 
 // ===== NAV =====
 function tukarMenu(id){
+  if(document.body.classList.contains('terhad'))id='sukantahunan';
   try{terapTagLaporan();}catch(e){}
   if(id==='rumah')id='kat-rumah';
   if(id.indexOf('kat-')===0){_katSemasa=id.slice(4);id='kat';}
@@ -1223,7 +1234,7 @@ function tukarMenu(id){
   if(id==='koleksiopr'){koprTab('hadir');}
   if(id==='jawatankuasa'){jkTab('daftar');}
   if(id==='semak'){semakKelas();}
-  if(id==='tetapan'){try{paparSemakTetapan();}catch(e){}var f=document.getElementById('tet-nama');if(f)f.value=dc.namaSekolah||'SK KING EDWARD VII (1)';}
+  if(id==='tetapan'){try{paparSemakTetapan();}catch(e){}try{paparPwPeranan();}catch(e){}var f=document.getElementById('tet-nama');if(f)f.value=dc.namaSekolah||'SK KING EDWARD VII (1)';}
 }
 
 // ===== LOAD DATA =====
@@ -1253,7 +1264,16 @@ document.addEventListener('DOMContentLoaded',function(){
   muatRekod();
   try{var cp=JSON.parse(localStorage.getItem('kokoPortal')||'null');if(cp&&cp.success&&window.kokoAdaToken&&kokoAdaToken()){['guru','jk','takwim','cuti'].forEach(function(k){cp[k]=cp[k]||[];});_pt=cp;gabungTakwim();}}catch(e){}
   muatPortal();
+  modTerhad();
 });
+// ===== PERANAN TERHAD (SU Sukan / JK Statistik): modul Sukan Tahunan sahaja =====
+var PERANAN_NAMA={su:'SU SUKAN',js:'JK STATISTIK'};
+function modTerhad(){
+  var r=window.kokoPeranan?kokoPeranan():'pk';if(r==='pk')return;
+  document.body.classList.add('terhad');
+  var l=document.getElementById('lbl-sekolah');if(l)l.textContent=PERANAN_NAMA[r]+' · KEJOHANAN OLAHRAGA';
+  tukarMenu('sukantahunan');
+}
 
 // Normalkan data supaya tiada medan kosong yang menyebabkan ralat
 function normalData(res){
@@ -3362,7 +3382,7 @@ function paparPeringkat(pilih){
 // ===== SERAGAM HURUF BESAR: teks yang ditaip disimpan dalam huruf besar =====
 document.addEventListener('input',function(e){
   var el=e.target;if(!el||!(el.tagName==='TEXTAREA'||(el.tagName==='INPUT'&&(!el.type||el.type==='text'||el.type==='search'))))return;
-  if(el.id==='koko-pw')return;
+  if(el.id==='koko-pw'||el.id==='pw-su'||el.id==='pw-js')return;
   var v=el.value,u=v.toUpperCase();if(v===u)return;
   var a=el.selectionStart,b=el.selectionEnd;el.value=u;try{el.setSelectionRange(a,b);}catch(x){}
 },true);
@@ -4676,6 +4696,29 @@ function paparSemakTetapan(){
      +'<label style="font-size:11px;font-weight:900;margin-top:6px;">UNTUK PERTANYAAN, HUBUNGI</label><input id="sm-hub" class="form-control" style="text-transform:none;" placeholder="cth. PK Kokurikulum, 012-3456789" value="'+esc(semakNilai('SEMAK_HUBUNGI',''))+'">'
      +'<div class="pk-row" style="margin-top:8px;"><button class="btn btn-danger" onclick="simpanSemakTetapan()"><i class="fa-solid fa-floppy-disk me-1"></i>Simpan tetapan semakan</button></div></div>'
     :'<p style="font-size:12px;font-weight:800;">Status: <b style="color:'+(/^YA$/i.test(semakNilai('SEMAK_BUKA','TIDAK'))?'#1f9d55">DIBUKA':'#c0102c">DITUTUP')+'</b> · tekan PK Kokurikulum untuk ubah tetapan.</p>');
+}
+// ---------- KATA LALUAN PERANAN (SU Sukan / JK Statistik) — PK boleh baca & tukar ----------
+var _pwPer=null,_pwNampak=false;
+function paparPwPeranan(){
+  var z=document.getElementById('pw-peranan');if(!z)return;var buka=hsBukaPk();
+  var h='<div class="bx-h" style="margin-bottom:8px;"><h4 style="margin:0;"><i class="fa-solid fa-user-shield me-2" style="color:var(--c1);"></i>Kata Laluan Peranan</h4>'
+   +(buka?'':'<button class="btn btn-secondary" onclick="hsSahPk(function(){paparPwPeranan();})"><i class="fa-solid fa-lock me-1"></i>PK Kokurikulum</button>')+'</div>'
+   +'<p style="font-size:11px;font-weight:800;color:var(--sub);">Pautan sama. Kata laluan menentukan paparan: SU Sukan dan JK Statistik hanya nampak modul Sukan Tahunan (Kejohanan Olahraga).</p>';
+  if(!buka){z.innerHTML=h;return;}
+  if(!_pwPer){z.innerHTML=h+'<p style="font-size:12px;font-weight:800;">Memuatkan…</p>';
+    google.script.run.withSuccessHandler(function(res){_pwPer=res&&res.success?res:{gagal:1};paparPwPeranan();}).withFailureHandler(function(e){_pwPer={gagal:1,msg:e.message};paparPwPeranan();}).dapatkanKataLaluanPeranan();return;}
+  if(_pwPer.gagal){z.innerHTML=h+'<div class="banner">Fail Peranan.gs belum dipasang atau belum di-deploy. '+esc(_pwPer.msg||'')+'</div>';return;}
+  var row=function(id,lab,v){return '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px;"><b style="width:130px;font-size:12px;">'+lab+'</b>'
+    +'<input id="'+id+'" class="form-control" type="'+(_pwNampak?'text':'password')+'" value="'+esc(v)+'" style="flex:1 1 180px;text-transform:none;font-weight:800;letter-spacing:.06em;" autocomplete="off"></div>';};
+  z.innerHTML=h+row('pw-su','SU SUKAN',_pwPer.su)+row('pw-js','JK STATISTIK',_pwPer.js)
+   +'<div class="pk-row" style="margin-top:6px;"><button class="btn btn-secondary" onclick="_pwNampak=!_pwNampak;paparPwPeranan()"><i class="fa-solid fa-eye'+(_pwNampak?'-slash':'')+' me-1"></i>'+(_pwNampak?'Sembunyi':'Papar')+' kata laluan</button>'
+   +'<button class="btn btn-danger" onclick="simpanPwPeranan()"><i class="fa-solid fa-floppy-disk me-1"></i>Simpan kata laluan</button></div>';
+}
+function simpanPwPeranan(){
+  var su=document.getElementById('pw-su').value.trim(),js=document.getElementById('pw-js').value.trim();
+  showLoad();
+  google.script.run.withSuccessHandler(function(res){hideLoad();if(res&&res.success){_pwPer={success:true,su:su,js:js};toast('✅ Kata laluan peranan disimpan.','ok');paparPwPeranan();}else alert('Gagal: '+(res&&res.error||'Ralat'));})
+   .withFailureHandler(function(e){hideLoad();alert('Ralat: '+e.message);}).simpanKataLaluanPeranan({su:su,js:js});
 }
 function simpanSemakTetapan(){
   var v={};document.querySelectorAll('.sm-k').forEach(function(c){v[c.getAttribute('data-k')]=c.checked?'YA':'TIDAK';});v.SEMAK_HUBUNGI=document.getElementById('sm-hub').value.trim();
