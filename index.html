@@ -12,7 +12,7 @@
 (function(){
   var KEY='kokoKunci', KEYR='kokoPeranan', antrian=[], sedangLogin=false;
   // peranan: 'pk' (akses penuh) · 'su' (SU Sukan) · 'js' (JK Statistik). SU/JS hanya modul Sukan Tahunan.
-  var BOLEH_PERANAN=['semakLogin','dapatkanDataSistem','dapatkanRekodModul','simpanRekodModul','simpanRekodModulPukal','padamRekodModul'];
+  var BOLEH_PERANAN=['semakLogin','dapatkanDataSistem','dapatkanRekodModul','simpanRekodModul','simpanRekodModulPukal','padamRekodModul','dapatkanPortal'];
   function peranan(){try{return localStorage.getItem(KEYR)||'pk';}catch(e){return 'pk';}}
   function simpanPeranan(r){try{localStorage.setItem(KEYR,r);}catch(e){}}
   function token(){try{return localStorage.getItem(KEY)||'';}catch(e){return '';}}
@@ -486,7 +486,15 @@ body[data-theme="dark"] .sw-tema i{transform:translateX(30px);color:var(--c2);}
 .mrow{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--glow);border-radius:12px;background:var(--bg);color:var(--txt);font-size:12px;font-weight:800;letter-spacing:.06em;cursor:pointer;text-align:left;}
 .mrow:hover{border-color:var(--c1);}
 .mrow i{color:var(--c1);width:18px;text-align:center;}
-body.terhad #btn-back,body.terhad .tb-act .ib[title="Cari murid"]{display:none!important;}
+body.peranan-js #btn-back,body.terhad .tb-act .ib[title="Cari murid"]{display:none!important;}
+.su-only{display:none;}body.peranan-su .su-only{display:block;}body.peranan-su .pk-only{display:none!important;}
+body.peranan-su #bx-pantas{order:1}body.peranan-su #h-takwim-bx{order:2}body.peranan-su #bx-murid{order:3;grid-column:span 12;}body.peranan-su #bx-rumah{order:4}
+.su-rumah{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;}
+@media(max-width:820px){.su-rumah{grid-template-columns:repeat(2,minmax(0,1fr));}}
+.su-r{border:1px solid var(--line,rgba(0,0,0,.12));border-radius:18px;padding:14px;text-align:center;cursor:pointer;background:var(--card);display:flex;flex-direction:column;gap:6px;align-items:center;}
+.su-r:hover{border-color:var(--c1);}.su-r img{width:110px;height:110px;object-fit:contain;}
+.su-r b{font-size:26px;font-weight:900;line-height:1;}.su-r small{font-size:10.5px;font-weight:800;color:var(--sub);letter-spacing:.08em;}
+.su-r .mt{display:flex;gap:3px;align-items:flex-end;height:34px;width:100%;justify-content:center;}.su-r .mt i{width:14px;border-radius:3px 3px 0 0;display:block;}
 body.terhad .tb-brand{pointer-events:none;}
 </style>
 </head>
@@ -518,25 +526,29 @@ body.terhad .tb-brand{pointer-events:none;}
 <!-- HOME: PUSAT SEHENTI KOKURIKULUM (Bento) -->
 <div id="view-home" class="view-section active">
   <div class="bento">
-    <div class="bx bx-12">
-      <div class="bx-h"><h6>Menu pantas</h6></div>
+    <div class="bx bx-12" id="bx-pantas">
+      <div class="bx-h"><h6 id="h-pantas-tajuk">Menu pantas</h6></div>
       <div class="qk-grid" id="h-pantas"></div>
     </div>
-    <div class="bx bx-6">
+    <div class="bx bx-6" id="bx-murid">
       <div class="bx-h"><h6>Jumlah murid</h6><span style="font-size:10.5px;font-weight:800;color:var(--sub);letter-spacing:.08em;">Ikut tahun</span></div>
       <div class="bx-big" id="h-murid">0</div>
       <div class="thn-bar" id="hm-thn"></div>
     </div>
-    <div class="bx bx-6">
+    <div class="bx bx-6 pk-only">
       <div class="bx-h"><h6>Jumlah unit</h6><span id="h-unit-jum" style="font-size:10.5px;font-weight:800;color:var(--sub);letter-spacing:.08em;"></span></div>
       <div class="unit-grid" id="hm-unit"></div>
     </div>
-    <div class="bx bx-12">
-      <div class="bx-h"><h6 id="h-tk-tajuk">Takwim bulan ini</h6><div class="pk-row" style="align-items:center;"><button class="mini" onclick="hTkGerak(-1)" aria-label="Bulan sebelum"><i class="fa-solid fa-chevron-left"></i></button><button class="mini" onclick="hTkGerak(0)">Bulan ini</button><button class="mini" onclick="hTkGerak(1)" aria-label="Bulan seterusnya"><i class="fa-solid fa-chevron-right"></i></button><button class="mini" onclick="tukarMenu('m-takwim')">Takwim penuh</button></div></div>
+    <div class="bx bx-12" id="h-takwim-bx">
+      <div class="bx-h"><h6 id="h-tk-tajuk">Takwim bulan ini</h6><div class="pk-row" style="align-items:center;"><button class="mini" onclick="hTkGerak(-1)" aria-label="Bulan sebelum"><i class="fa-solid fa-chevron-left"></i></button><button class="mini" onclick="hTkGerak(0)">Bulan ini</button><button class="mini" onclick="hTkGerak(1)" aria-label="Bulan seterusnya"><i class="fa-solid fa-chevron-right"></i></button><button class="mini pk-only" onclick="tukarMenu('m-takwim')">Takwim penuh</button></div></div>
       <div id="h-takwim"></div>
     </div>
+    <div class="bx bx-12 su-only" id="bx-rumah">
+      <div class="bx-h"><h6>Rumah sukan</h6><span style="font-size:10.5px;font-weight:800;color:var(--sub);letter-spacing:.08em;">Tekan untuk lihat data</span></div>
+      <div class="su-rumah" id="su-rumah"></div>
+    </div>
   </div>
-  <div class="bento" id="h-menu"></div>
+  <div class="bento pk-only" id="h-menu"></div>
 </div>
 
 <!-- DASHBOARD -->
@@ -1204,7 +1216,7 @@ function isDark(){return document.body.getAttribute('data-theme')!=='light';}
 
 // ===== NAV =====
 function tukarMenu(id){
-  if(document.body.classList.contains('terhad'))id='sukantahunan';
+  if(document.body.classList.contains('terhad')){var rl=kokoPeranan(),ok=PERANAN_BOLEH[rl]||[];if(id==='home'&&rl!=='su')id='sukantahunan';if(ok.indexOf(id)<0)id=rl==='su'?'home':'sukantahunan';}
   try{terapTagLaporan();}catch(e){}
   if(id==='rumah')id='kat-rumah';
   if(id.indexOf('kat-')===0){_katSemasa=id.slice(4);id='kat';}
@@ -1268,11 +1280,44 @@ document.addEventListener('DOMContentLoaded',function(){
 });
 // ===== PERANAN TERHAD (SU Sukan / JK Statistik): modul Sukan Tahunan sahaja =====
 var PERANAN_NAMA={su:'SU SUKAN',js:'JK STATISTIK'};
+var PERANAN_BOLEH={su:['home','sukantahunan','kat-rumah','m-sufail'],js:['sukantahunan']};
 function modTerhad(){
   var r=window.kokoPeranan?kokoPeranan():'pk';if(r==='pk')return;
-  document.body.classList.add('terhad');
-  var l=document.getElementById('lbl-sekolah');if(l)l.textContent=PERANAN_NAMA[r]+' · KEJOHANAN OLAHRAGA';
-  tukarMenu('sukantahunan');
+  document.body.classList.add('terhad','peranan-'+r);
+  var l=document.getElementById('lbl-sekolah');if(l)l.textContent=PERANAN_NAMA[r]+(r==='su'?' · SK KING EDWARD VII (1)':' · KEJOHANAN OLAHRAGA');
+  if(r==='su'){var t=document.getElementById('h-pantas-tajuk');if(t)t.textContent='Menu SU Sukan';paparHome();}
+  else tukarMenu('sukantahunan');
+}
+// ---------- LAMAN UTAMA SU SUKAN ----------
+var SU_MENU=[
+  ['sukantahunan','Kejohanan Sukan Tahunan','fa-medal','#c41230','Acara, peserta, keputusan, markah'],
+  ['kat-rumah','Rumah Sukan','fa-house-flag','#2563eb','Ahli 4 rumah sukan'],
+  ['m-sufail','Minit Mesyuarat','fa-file-signature','#7c3aed','Fail & pautan minit'],
+  ['m-sufail','Kertas Kerja','fa-folder-open','#1f9d55','Kertas kerja & dokumen program']];
+function suPantas(z){
+  z.innerHTML=SU_MENU.map(function(q,i){var f=i===2?'MINIT MESYUARAT':i===3?'KERTAS KERJA':'';return '<button type="button" class="qk" onclick="'+(f?'suFail(\''+f+'\')':'tukarMenu(\''+q[0]+'\')')+'"><i class="fa-solid '+q[2]+'" style="color:'+q[3]+';"></i><b>'+esc(q[1])+'</b><small>'+esc(q[4])+'</small></button>';}).join('');
+  suRumah();
+}
+function suFail(jenis){tukarMenu('m-sufail');try{_modState.sufail.f=jenis;paparModul();}catch(e){}}
+var RUMAH_WARNA={CAMERON:'#2563EB',STAINER:'#DC2626',FREEMAN:'#EAB308',STEVEN:'#16A34A'};
+function suRumah(){
+  var z=document.getElementById('su-rumah');if(!z)return;
+  var R=(dc.rujukan&&dc.rujukan.rumah||[]).slice(0,8);
+  z.innerHTML=R.map(function(r){var L=(dc.murid||[]).filter(function(m){return sama(m.rumah,r);}),c=[],mx=1;for(var t=1;t<=6;t++){var n=L.filter(function(m){return m.tahun===String(t);}).length;c.push(n);if(n>mx)mx=n;}
+    var w=RUMAH_WARNA[String(r).toUpperCase()]||'var(--c1)';
+    return '<div class="su-r" role="button" tabindex="0" onclick="suRumahModal(\''+esc(r).replace(/'/g,"\\'")+'\')" onkeydown="if(event.key===\'Enter\')this.click()" style="border-top:5px solid '+w+';"><img src="img/rumah-'+esc(String(r).toLowerCase())+'.png" alt="" onerror="this.style.display=\'none\'"><b>'+L.length+'</b><small>'+esc(r)+' · MURID</small><div class="mt">'+c.map(function(n){return '<i title="'+n+'" style="height:'+Math.max(3,Math.round(n/mx*34))+'px;background:'+w+';"></i>';}).join('')+'</div><small>THN 1 – 6</small></div>';}).join('');
+}
+function suRumahModal(r){
+  var L=(dc.murid||[]).filter(function(m){return sama(m.rumah,r);}).sort(function(a,b){return (a.tahun-b.tahun)||a.kelas.localeCompare(b.kelas)||a.nama.localeCompare(b.nama);});
+  var w=RUMAH_WARNA[String(r).toUpperCase()]||'var(--c1)',el=pastiModal('mod-kat');el._kunci=false;
+  var kel={};L.forEach(function(m){var k=m.tahun+' '+String(m.kelas).replace(/^\d+\s*/,'');kel[k]=(kel[k]||0)+1;});
+  var thn=[1,2,3,4,5,6].map(function(t){return [t,L.filter(function(m){return m.tahun===String(t);}).length];}),mx=Math.max.apply(null,thn.map(function(x){return x[1];}).concat([1]));
+  el.firstChild.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;"><div style="display:flex;gap:12px;align-items:center;"><img src="img/rumah-'+esc(String(r).toLowerCase())+'.png" alt="" style="width:64px;height:64px;object-fit:contain;" onerror="this.style.display=\'none\'"><h5 style="margin:0;">'+esc(r)+' <small style="color:var(--sub);">('+L.length+' murid)</small></h5></div><button class="ib" style="width:38px;height:38px;" onclick="document.getElementById(\'mod-kat\').classList.remove(\'show\')" aria-label="Tutup"><i class="fa-solid fa-xmark"></i></button></div>'
+   +'<div style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-bottom:12px;">'+thn.map(function(x){return '<div style="text-align:center;"><div style="height:60px;display:flex;align-items:flex-end;justify-content:center;"><i style="display:block;width:70%;border-radius:6px 6px 0 0;background:'+w+';height:'+Math.max(4,Math.round(x[1]/mx*60))+'px;"></i></div><b style="font-size:16px;">'+x[1]+'</b><div style="font-size:10px;font-weight:800;color:var(--sub);">THN '+x[0]+'</div></div>';}).join('')+'</div>'
+   +'<input class="form-control mb-2" id="su-r-cari" placeholder="Cari nama / kelas…" oninput="var q=this.value.toUpperCase();document.querySelectorAll(\'#su-r-tb tr\').forEach(function(tr){tr.style.display=tr.textContent.toUpperCase().indexOf(q)>=0?\'\':\'none\';})">'
+   +'<div style="max-height:42vh;overflow-y:auto;"><table class="rs-tbl"><thead><tr><th>Nama</th><th>Tahun</th><th>Kelas</th></tr></thead><tbody id="su-r-tb">'+L.map(function(m){return '<tr><td>'+esc(m.nama)+'</td><td>'+esc(m.tahun)+'</td><td>'+esc(m.kelas)+'</td></tr>';}).join('')+'</tbody></table></div>'
+   +'<div class="pk-row" style="margin-top:12px;"><button class="btn btn-info" onclick="document.getElementById(\'mod-kat\').classList.remove(\'show\');tukarMenu(\'kat-rumah\')"><i class="fa-solid fa-table-list me-1"></i>Paparan penuh</button><button class="btn btn-secondary" onclick="document.getElementById(\'mod-kat\').classList.remove(\'show\')">Tutup</button></div>';
+  el.classList.add('show');
 }
 
 // Normalkan data supaya tiada medan kosong yang menyebabkan ralat
@@ -3865,6 +3910,10 @@ var MODUL={
   medan:[{k:'tarikh',l:'TARIKH MULA',t:'date',wajib:1},{k:'tarikhAkhir',l:'TARIKH TAMAT',t:'date'},{k:'aktiviti',l:'AKTIVITI',t:'text',wajib:1,full:1},
    {k:'peringkat',l:'PERINGKAT',t:'select',o:PERINGKAT},{k:'kategori',l:'KATEGORI',t:'select',o:KAT_AKTIVITI},{k:'penyelaras',l:'PENYELARAS',t:'guru'},
    {k:'lokasi',l:'LOKASI',t:'text'},{k:'status',l:'STATUS',t:'select',o:STATUS_AKTIVITI},{k:'sasaran',l:'SASARAN / JK (PORTAL)',t:'sasaran',full:1,nota:'Siapa terlibat — dipaparkan kepada guru dalam Portal Pengurusan Sekolah.'},{k:'catatan',l:'CATATAN',t:'textarea',full:1}]},
+ sufail:{sheet:'SUKAN FAIL',nama:'Fail SU Sukan',ikon:'fa-folder-open',ket:'Minit mesyuarat, kertas kerja dan dokumen Kejohanan Sukan Tahunan. Simpan fail dalam Google Drive dan tampal pautannya di sini.',
+  tajukK:'tajuk',statusK:'',tapisK:'jenis',tarikhK:'tarikh',
+  medan:[{k:'tarikh',l:'TARIKH',t:'date',wajib:1},{k:'jenis',l:'JENIS',t:'select',wajib:1,o:['MINIT MESYUARAT','KERTAS KERJA','SURAT','JADUAL','LAPORAN','LAIN-LAIN']},
+   {k:'tajuk',l:'TAJUK',t:'text',wajib:1,full:1},{k:'pautan',l:'PAUTAN FAIL (GOOGLE DRIVE)',t:'url',full:1},{k:'catatan',l:'CATATAN',t:'textarea',full:1}]},
  mesyuarat:{sheet:'MESYUARAT',nama:'Mesyuarat & Minit',ikon:'fa-people-group',ket:'Rekod mesyuarat JK Kokurikulum, unit dan program beserta keputusan dan pautan minit.',
   tajukK:'jenis',statusK:'',tapisK:'jenis',tarikhK:'tarikh',
   medan:[{k:'tarikh',l:'TARIKH',t:'date',wajib:1},{k:'bil',l:'BIL. MESYUARAT',t:'text'},
@@ -4759,6 +4808,7 @@ function sjTolak(id){
 // ---------- MENU PANTAS (laman utama) ----------
 function hPantas(){
   var z=document.getElementById('h-pantas');if(!z)return;
+  if(window.kokoPeranan&&kokoPeranan()==='su')return suPantas(z);
   var d=new Date(),L=takwimBulan(d.getFullYear(),d.getMonth()),kh=dc.kehadiran||[],hd=kh.filter(function(l){return /^hadir$/i.test(l.status);}).length;
   var lap={};kh.forEach(function(l){lap[l.tarikh+'|'+l.namaUnit+'|'+l.perjumpaanKe]=1;});
   var pc={};(dc.pencapaian||[]).forEach(function(p){pc[p.tarikh+'|'+p.pertandingan+'|'+p.pencapaian]=1;});
