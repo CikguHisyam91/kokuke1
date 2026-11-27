@@ -10,7 +10,7 @@
 var PERANAN_LALAI = { SU: 'ssukanke1', JS: 'staske1' };
 
 // fungsi yang boleh dipanggil oleh SU Sukan dan JK Statistik
-var PERANAN_FUNGSI = ['dapatkanDataSistem', 'dapatkanRekodModul', 'simpanRekodModul', 'simpanRekodModulPukal', 'padamRekodModul'];
+var PERANAN_FUNGSI = ['dapatkanDataSistem', 'dapatkanRekodModul', 'simpanRekodModul', 'simpanRekodModulPukal', 'padamRekodModul', 'dapatkanPortal'];
 // fungsi tulis rekod hanya untuk sheet Sukan Tahunan ("KOKO - SUKAN ...")
 var PERANAN_TULIS = ['simpanRekodModul', 'simpanRekodModulPukal', 'padamRekodModul'];
 
@@ -37,11 +37,15 @@ function perananBoleh(peranan, fn, args) {
 }
 
 // tapis hasil supaya SU/JS hanya menerima data Sukan Tahunan daripada rekod modul
+// (SU/JS boleh BACA takwim untuk laman utama, tetapi tidak boleh mengubahnya)
 function tapisPeranan(peranan, fn, hasil) {
-  if (peranan === 'pk' || fn !== 'dapatkanRekodModul' || !hasil || !hasil.modul) return hasil;
-  var m = {};
-  Object.keys(hasil.modul).forEach(function (k) { if (/^SUKAN /i.test(k)) m[k] = hasil.modul[k]; });
-  hasil.modul = m;
+  if (peranan === 'pk' || !hasil) return hasil;
+  if (fn === 'dapatkanRekodModul' && hasil.modul) {
+    var m = {};
+    Object.keys(hasil.modul).forEach(function (k) { if (/^SUKAN /i.test(k) || k === 'TAKWIM') m[k] = hasil.modul[k]; });
+    hasil.modul = m;
+  }
+  if (fn === 'dapatkanPortal') return { success: hasil.success, takwim: hasil.takwim || [], cuti: hasil.cuti || [], guru: [], jk: [] };
   return hasil;
 }
 
